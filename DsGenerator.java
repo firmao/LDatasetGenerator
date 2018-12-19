@@ -3,17 +3,22 @@ package test.testid;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.jena.ext.com.google.common.base.Utf8;
+import org.apache.jena.graph.Triple;
 import org.apache.jena.query.Query;
 import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.QueryExecutionFactory;
@@ -22,33 +27,78 @@ import org.apache.jena.query.QuerySolution;
 import org.apache.jena.query.ResultSet;
 import org.apache.jena.query.ResultSetFormatter;
 import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.rdf.model.StmtIterator;
-import org.apache.jena.sparql.engine.http.QueryEngineHTTP;
+import org.apache.jena.riot.RDFDataMgr;
+import org.apache.jena.riot.lang.PipedRDFIterator;
+import org.apache.jena.riot.lang.PipedRDFStream;
+import org.apache.jena.riot.lang.PipedTriplesStream;
 import org.apache.jena.util.FileManager;
 
 public class DsGenerator {
 
-	public static void main(String[] args) throws FileNotFoundException, UnsupportedEncodingException {
+	public static void main(String[] args) throws IOException, InterruptedException {
 		Set<String> resources = new HashSet<String>();
-		//resources.add("http://sws.geonames.org/78428/");
-		//resources.add("http://dbpedia.org/resource/Leipzig");
-		resources.addAll(getResources());
-		
-		for (String resource : resources) {
-			generateFilePropertiesValues(resource);
+		Set<String> resError = new HashSet<String>();
+		// resources.add("http://sws.geonames.org/78428/");
+		// resources.add("http://dbpedia.org/resource/Leipzig");
+		long start = System.currentTimeMillis();
+		File f = new File("out/");
+		if (!f.exists())
+			f.mkdir();
+
+		File fResources = new File("resources.txt");
+		if (fResources.exists()) {
+			resources.addAll(getResources(fResources));
+		} else {
+			fResources.createNewFile();
 		}
+		resources.addAll(getResources());
+		System.out.println("Number of resources(Parallel): " + resources.size());
+		Util.writeFile(resources, fResources);
+		//resources.parallelStream().forEach(resource -> {
+		int iCount = 0;
+		for (String resource : resources) {
+			System.out.println("Resource: " + (++iCount) + " from " + resources.size());
+			try {
+				Map<String, String> mapPropValue = new HashMap<String, String>();
+				mapPropValue.putAll(generateFilePropertiesValues(resource));
+				if (mapPropValue.size() > 0) {
+					Util.writeFile(resource, mapPropValue);
+				} else {
+					resError.add(resource);
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+				resError.add(resource);
+			}
+		}
+		//});
+		System.out.println("Finished and writing resErrors.txt");
+		Util.writeFile(resError, new File("resErrors.txt"));
+		long total = System.currentTimeMillis() - start;
+		System.out.println("FINISHED in " + TimeUnit.MILLISECONDS.toMinutes(total) + " minutes");
 	}
-	
+
+	private static Set<String> getResources(File fResources) throws IOException {
+		Set<String> ret = new HashSet<String>();
+		List<String> lstLines = FileUtils.readLines(fResources, "UTF-8");
+		for (String resource : lstLines) {
+			ret.add(resource.trim());
+		}
+		return ret;
+	}
+
 	private static Set<String> getResources() {
 		Set<String> ret = new HashSet<String>();
-		List<String> lstQueries = getSampleQueries(new File("queries.txt"));
+		List<String> lstQueries = getSampleQueries(new File("dbpediaCitiesPop.txt"));
 		String endPoint = "http://dbpedia.org/sparql";
-		
+
 		for (String cSparql : lstQueries) {
 			ret.addAll(execQueryEndPoint(cSparql, endPoint));
 		}
-		
+
 //		String cSparql = "PREFIX owl: <http://www.w3.org/2002/07/owl#>\n" + 
 //				"PREFIX dbo: <http://dbpedia.org/ontology/>\n" + 
 //				"\n" + 
@@ -61,72 +111,165 @@ public class DsGenerator {
 //				"  } \n" + 
 //				"ORDER BY ?city";
 //		ret.addAll(execQueryEndPoint(cSparql, endPoint));
-		
+
 		return ret;
 	}
 
-	public static void generateFilePropertiesValues(String resource) throws FileNotFoundException, UnsupportedEncodingException{
-		Model model = null;
+	public static Map<String, String> generateFilePropertiesValues(String resource)
+			throws InterruptedException, IOException {
+		Map<String, String> mapPropValue = new HashMap<String, String>();
+
+		System.out.println("Resource: " + resource);
 		try {
-			model = FileManager.get().loadModel(resource);
-		}catch(Exception e) {
-			System.err.println("ErrorResource: " + resource + " Message: " + e.getMessage());
-			return;
+			TimeOutBlock timeoutBlock = new TimeOutBlock(180000); // 3 minutes
+			Runnable block = new Runnable() {
+				public void run() {
+					try {
+						mapPropValue.putAll(parseRDF(resource));
+					} catch (Exception ex) {
+						System.err.println("Error parseRDF(" + resource + ") " + ex.getMessage());
+					}
+				}
+			};
+			timeoutBlock.addBlock(block);// execute the runnable block
+		} catch (Throwable e) {
+			System.out.println("TIME-OUT-ERROR - parseRDF (Resource): " + resource);
 		}
+
+//		try {
+//			TimeOutBlock timeoutBlock = new TimeOutBlock(180000); // 3 minutes
+//			Runnable block = new Runnable() {
+//				public void run() {
+//					try {
+//						mapPropValue.putAll(parseRDF2(resource));
+//					} catch (Exception e) {
+//						System.err.println("Error parseRDF2(" + resource + ") " + e.getMessage());
+//					}
+//				}
+//			};
+//			timeoutBlock.addBlock(block);// execute the runnable block
+//		} catch (Throwable e) {
+//			System.out.println("TIME-OUT-ERROR - parseRDF2 (Resource): " + resource);
+//		}
+//
+//		try {
+//			TimeOutBlock timeoutBlock = new TimeOutBlock(180000); // 3 minutes
+//			Runnable block = new Runnable() {
+//				public void run() {
+//					try {
+//						mapPropValue.putAll(WimuUtil.getFromWIMUq(resource));
+//					} catch (Exception e) {
+//						System.err.println("Error WimuUtil.getFromWIMUq(" + resource + ") " + e.getMessage());
+//					}
+//				}
+//			};
+//			timeoutBlock.addBlock(block);// execute the runnable block
+//		} catch (Throwable e) {
+//			System.out.println("TIME-OUT-ERROR - parseRDF2 (Resource): " + resource);
+//		}
+		return mapPropValue;
+	}
+
+	private static Map<String, String> parseRDF2(String resource) {
+		Map<String, String> mapPropValue = new HashMap<String, String>();
+
+		// Model model = FileManager.get().loadModel(resource);
+		Model model = ModelFactory.createDefaultModel();
+		InputStream file = FileManager.get().open(resource);
+		model.read(file, null);
 		StmtIterator stmts = model.listStatements();
-		//String fileName = resource.substring(resource.lastIndexOf("/") + 1, resource.length());
-		String s[] = resource.split("/");
-		String fileName = s[2] + "_" + s[s.length-1] + ".tsv";
-		PrintWriter writer = new PrintWriter(fileName, "UTF-8");
-		writer.println("#---Properties and values from: " + resource);
-		writer.println("Property\tValue");
 		while (stmts.hasNext()) {
 			Statement stmt = stmts.next();
-			if(resource.equals(stmt.getSubject().toString())) {
-				writer.println(stmt.getPredicate() + "\t" + stmt.getObject());
+			if (resource.equals(stmt.getSubject().toString())) {
+				mapPropValue.put(stmt.getPredicate().toString(), stmt.getObject().toString());
 			} else {
-				writer.println(stmt.getPredicate() + "\t" + stmt.getSubject());
+				mapPropValue.put(stmt.getPredicate().toString(), stmt.getSubject().toString());
 			}
 		}
-		
-		writer.close();
-		System.out.println("File generated: " + fileName);
+
+		return mapPropValue;
 	}
-	
+
+	private static Map<String, String> parseRDF(final String resource)
+			throws FileNotFoundException, UnsupportedEncodingException {
+		Map<String, String> mapPropValue = new HashMap<String, String>();
+		PipedRDFIterator<Triple> iter = new PipedRDFIterator<Triple>();
+		final PipedRDFStream<Triple> inputStream = new PipedTriplesStream(iter);
+
+		// PipedRDFStream and PipedRDFIterator need to be on different threads
+		ExecutorService executor = Executors.newSingleThreadExecutor();
+
+		// Create a runnable for our parser thread
+		Runnable parser = new Runnable() {
+
+			public void run() {
+				// Call the parsing process.
+				RDFDataMgr.parse(inputStream, resource);
+			}
+		};
+
+		// Start the parser on another thread
+		executor.submit(parser);
+
+		while (iter.hasNext()) {
+			Triple next = iter.next();
+			if (resource.equals(next.getSubject().toString())) {
+				mapPropValue.put(next.getPredicate().toString(), next.getObject().toString());
+			} else {
+				mapPropValue.put(next.getPredicate().toString(), next.getSubject().toString());
+			}
+		}
+
+		return mapPropValue;
+	}
+
 	public static Set<String> execQueryEndPoint(String cSparql, String endPoint) {
 		System.out.println("Query endPoint: " + endPoint);
 		final Set<String> ret = new HashSet<String>();
 		final long offsetSize = 9999;
 		long offset = 0;
-//		do {
-			//System.out.println(cSparql);
-			Query query = QueryFactory.create(cSparql);
+		String sSparql = null;
+		long start = System.currentTimeMillis();
+		do {
+			sSparql = cSparql;
+			// int indOffset = cSparql.toLowerCase().indexOf("offset");
+			// int indLimit = cSparql.toLowerCase().indexOf("limit");
+			// if((indLimit < 0) && (indOffset < 0)) {
+			// sSparql = cSparql + " offset " + offset + " limit " + offsetSize;
+			sSparql = cSparql + " offset " + offset;
+			// }
+			// System.out.println(sSparql);
+			Query query = QueryFactory.create(sSparql);
 			QueryExecution qexec = QueryExecutionFactory.sparqlService(endPoint, query);
-			//QueryEngineHTTP qexec = new QueryEngineHTTP(endPoint, cSparql);
+			// QueryEngineHTTP qexec = new QueryEngineHTTP(endPoint, cSparql);
 			try {
 
 				ResultSet results = qexec.execSelect();
 				List<QuerySolution> lst = ResultSetFormatter.toList(results);
 				for (QuerySolution qSolution : lst) {
 					final StringBuffer sb = new StringBuffer();
-					for ( final Iterator<String> varNames = qSolution.varNames(); varNames.hasNext(); ) {
-		                final String varName = varNames.next();
-		                sb.append(qSolution.get(varName).toString() + " ");
-		            }
-					ret.add(sb.toString() + "\n");
+					for (final Iterator<String> varNames = qSolution.varNames(); varNames.hasNext();) {
+						final String varName = varNames.next();
+						ret.add(qSolution.get(varName).toString());
+					}
 				}
 			} catch (Exception e) {
-				e.printStackTrace();
-				//break;
+				// e.printStackTrace();
+				// System.out.println(sSparql);
+				break;
 			} finally {
 				qexec.close();
 			}
-//			offset += offsetSize;
-//		} while (true);
-		
+			offset += offsetSize;
+		} while (true);
+
+		long total = System.currentTimeMillis() - start;
+		long seconds = TimeUnit.MILLISECONDS.toSeconds(total);
+		System.out.println("Time to get all resources(seconds): " + seconds);
+
 		return ret;
 	}
-	
+
 	public static List<String> getSampleQueries(File file) {
 		List<String> ret = new ArrayList<String>();
 		try {
