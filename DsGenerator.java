@@ -62,8 +62,8 @@ public class DsGenerator {
 		for (String resource : resources) {
 			System.out.println("Resource: " + (++iCount) + " from " + resources.size());
 			try {
-				Map<String, String> mapPropValue = new HashMap<String, String>();
-				mapPropValue.putAll(generateFilePropertiesValues(resource));
+				Map<String, Set<String>> mapPropValue = new HashMap<String, Set<String>>();
+				mapPropValue.putAll(generatePropertiesValues(resource));
 				if (mapPropValue.size() > 0) {
 					Util.writeFile(resource, mapPropValue);
 				} else {
@@ -115,9 +115,9 @@ public class DsGenerator {
 		return ret;
 	}
 
-	public static Map<String, String> generateFilePropertiesValues(String resource)
+	public static Map<String, Set<String>> generatePropertiesValues(String resource)
 			throws InterruptedException, IOException {
-		Map<String, String> mapPropValue = new HashMap<String, String>();
+		Map<String, Set<String>> mapPropValue = new HashMap<String, Set<String>>();
 
 		System.out.println("Resource: " + resource);
 		try {
@@ -152,21 +152,21 @@ public class DsGenerator {
 //			System.out.println("TIME-OUT-ERROR - parseRDF2 (Resource): " + resource);
 //		}
 //
-//		try {
-//			TimeOutBlock timeoutBlock = new TimeOutBlock(180000); // 3 minutes
-//			Runnable block = new Runnable() {
-//				public void run() {
-//					try {
-//						mapPropValue.putAll(WimuUtil.getFromWIMUq(resource));
-//					} catch (Exception e) {
-//						System.err.println("Error WimuUtil.getFromWIMUq(" + resource + ") " + e.getMessage());
-//					}
-//				}
-//			};
-//			timeoutBlock.addBlock(block);// execute the runnable block
-//		} catch (Throwable e) {
-//			System.out.println("TIME-OUT-ERROR - parseRDF2 (Resource): " + resource);
-//		}
+		try {
+			TimeOutBlock timeoutBlock = new TimeOutBlock(180000); // 3 minutes
+			Runnable block = new Runnable() {
+				public void run() {
+					try {
+						mapPropValue.putAll(WimuUtil.getFromWIMUq(resource));
+					} catch (Exception e) {
+						System.err.println("Error WimuUtil.getFromWIMUq(" + resource + ") " + e.getMessage());
+					}
+				}
+			};
+			timeoutBlock.addBlock(block);// execute the runnable block
+		} catch (Throwable e) {
+			System.out.println("TIME-OUT-ERROR - WimuUtil.getFromWIMUq(Resource): " + resource);
+		}
 		return mapPropValue;
 	}
 
@@ -190,9 +190,9 @@ public class DsGenerator {
 		return mapPropValue;
 	}
 
-	private static Map<String, String> parseRDF(final String resource)
+	private static Map<String, Set<String>> parseRDF(final String resource)
 			throws FileNotFoundException, UnsupportedEncodingException {
-		Map<String, String> mapPropValue = new HashMap<String, String>();
+		Map<String, Set<String>> mPropValue = new HashMap<String, Set<String>>();
 		PipedRDFIterator<Triple> iter = new PipedRDFIterator<Triple>();
 		final PipedRDFStream<Triple> inputStream = new PipedTriplesStream(iter);
 
@@ -212,15 +212,28 @@ public class DsGenerator {
 		executor.submit(parser);
 
 		while (iter.hasNext()) {
-			Triple next = iter.next();
-			if (resource.equals(next.getSubject().toString())) {
-				mapPropValue.put(next.getPredicate().toString(), next.getObject().toString());
+			Triple triple = iter.next();
+			if(resource.equals(triple.getSubject().toString())) {
+				if(mPropValue.containsKey(triple.getPredicate().toString().trim())) {
+					mPropValue.get(triple.getPredicate().toString().trim()).add(triple.getObject().toString());
+				} else {
+					Set<String> value = new HashSet<String>();
+					value.add(triple.getObject().toString());
+					mPropValue.put(triple.getPredicate().toString(), value);
+				}
 			} else {
-				mapPropValue.put(next.getPredicate().toString(), next.getSubject().toString());
+				if(mPropValue.containsKey(triple.getPredicate().toString().trim())) {
+					mPropValue.get(triple.getPredicate().toString().trim()).add(triple.getSubject().toString());
+				} else {
+					Set<String> value = new HashSet<String>();
+					value.add(triple.getSubject().toString());
+					mPropValue.put(triple.getPredicate().toString(), value);
+				}
+				//mPropValue.put(triple.getPredicate().toString(), triple.getSubject().toString());
 			}
 		}
 
-		return mapPropValue;
+		return mPropValue;
 	}
 
 	public static Set<String> execQueryEndPoint(String cSparql, String endPoint) {
