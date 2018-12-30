@@ -40,7 +40,7 @@ public class DsGenerator {
 
 	public static void main(String[] args) throws IOException, InterruptedException {
 		Set<String> resources = new HashSet<String>();
-		Set<String> resError = new HashSet<String>();
+		Set<String> resErrorParallel = new HashSet<String>();
 		// resources.add("http://sws.geonames.org/78428/");
 		// resources.add("http://dbpedia.org/resource/Leipzig");
 		long start = System.currentTimeMillis();
@@ -54,31 +54,93 @@ public class DsGenerator {
 		} else {
 			fResources.createNewFile();
 		}
-		resources.addAll(getResources());
+		resources.addAll(getResources(args[0]));
 		System.out.println("Number of resources(Parallel): " + resources.size());
 		Util.writeFile(resources, fResources);
-		//resources.parallelStream().forEach(resource -> {
-		int iCount = 0;
-		for (String resource : resources) {
-			System.out.println("Resource: " + (++iCount) + " from " + resources.size());
+		resources.parallelStream().forEach(resource -> {
+			// int iCount = 0;
+			// for (String resource : resources) {
+			// System.out.println("Resource: " + (++iCount) + " from " + resources.size());
 			try {
 				Map<String, Set<String>> mapPropValue = new HashMap<String, Set<String>>();
-				mapPropValue.putAll(generatePropertiesValues(resource));
+				mapPropValue.putAll(generatePropertiesValues(resource,false));
 				if (mapPropValue.size() > 0) {
 					Util.writeFile(resource, mapPropValue);
 				} else {
-					resError.add(resource);
+					resErrorParallel.add(resource);
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
-				resError.add(resource);
+				resErrorParallel.add(resource);
+			}
+			// }
+		});
+
+		System.out.println("Number of resources(Serial): " + resErrorParallel.size());
+		Set<String> resErrorSerial = new HashSet<String>();
+		int iCount = 0;
+		for (String resource : resErrorParallel) {
+			System.out.println("ResourceError: " + (++iCount) + " from " + resErrorParallel.size());
+			try {
+				Map<String, Set<String>> mapPropValue = new HashMap<String, Set<String>>();
+				mapPropValue.putAll(generatePropertiesValues(resource,false));
+				if (mapPropValue.size() > 0) {
+					Util.writeFile(resource, mapPropValue);
+				} else {
+					resErrorSerial.add(resource);
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+				resErrorSerial.add(resource);
 			}
 		}
-		//});
+		resErrorParallel.clear();
+
+		System.out.println("Number of resources WIMU(Parallel): " + resErrorSerial.size());
+		resErrorSerial.parallelStream().forEach(resource -> {
+			// int iCount = 0;
+			// for (String resource : resources) {
+			// System.out.println("Resource: " + (++iCount) + " from " + resources.size());
+			try {
+				Map<String, Set<String>> mapPropValue = new HashMap<String, Set<String>>();
+				mapPropValue.putAll(generatePropertiesValues(resource,true));
+				if (mapPropValue.size() > 0) {
+					Util.writeFile(resource, mapPropValue);
+				} else {
+					resErrorParallel.add(resource);
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+				resErrorParallel.add(resource);
+			}
+			// }
+		});
+		resErrorSerial.clear();
+
+		System.out.println("Number of resources WIMU(Serial): " + resErrorParallel.size());
+		iCount = 0;
+		for (String resource : resErrorParallel) {
+			System.out.println("ResourceError: " + (++iCount) + " from " + resErrorParallel.size());
+			try {
+				Map<String, Set<String>> mapPropValue = new HashMap<String, Set<String>>();
+				mapPropValue.putAll(generatePropertiesValues(resource,true));
+				if (mapPropValue.size() > 0) {
+					Util.writeFile(resource, mapPropValue);
+				} else {
+					resErrorSerial.add(resource);
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+				resErrorSerial.add(resource);
+			}
+		}
+		resErrorParallel.clear();
+
 		System.out.println("Finished and writing resErrors.txt");
-		Util.writeFile(resError, new File("resErrors.txt"));
+		Util.writeFile(resErrorSerial, new File("resErrors.txt"));
 		long total = System.currentTimeMillis() - start;
 		System.out.println("FINISHED in " + TimeUnit.MILLISECONDS.toMinutes(total) + " minutes");
+		System.exit(0);
 	}
 
 	private static Set<String> getResources(File fResources) throws IOException {
@@ -90,9 +152,9 @@ public class DsGenerator {
 		return ret;
 	}
 
-	private static Set<String> getResources() {
+	private static Set<String> getResources(String fQuery) {
 		Set<String> ret = new HashSet<String>();
-		List<String> lstQueries = getSampleQueries(new File("dbpediaCitiesPop.txt"));
+		List<String> lstQueries = getSampleQueries(new File(fQuery));
 		String endPoint = "http://dbpedia.org/sparql";
 
 		for (String cSparql : lstQueries) {
@@ -115,57 +177,43 @@ public class DsGenerator {
 		return ret;
 	}
 
-	public static Map<String, Set<String>> generatePropertiesValues(String resource)
+	public static Map<String, Set<String>> generatePropertiesValues(String resource, boolean wimu)
 			throws InterruptedException, IOException {
 		Map<String, Set<String>> mapPropValue = new HashMap<String, Set<String>>();
 
 		System.out.println("Resource: " + resource);
-		try {
-			TimeOutBlock timeoutBlock = new TimeOutBlock(180000); // 3 minutes
-			Runnable block = new Runnable() {
-				public void run() {
-					try {
-						mapPropValue.putAll(parseRDF(resource));
-					} catch (Exception ex) {
-						System.err.println("Error parseRDF(" + resource + ") " + ex.getMessage());
+		if (!wimu) {
+			try {
+				TimeOutBlock timeoutBlock = new TimeOutBlock(180000); // 3 minutes
+				Runnable block = new Runnable() {
+					public void run() {
+						try {
+							mapPropValue.putAll(parseRDF(resource));
+						} catch (Exception ex) {
+							System.err.println("Error parseRDF(" + resource + ") " + ex.getMessage());
+						}
 					}
-				}
-			};
-			timeoutBlock.addBlock(block);// execute the runnable block
-		} catch (Throwable e) {
-			System.out.println("TIME-OUT-ERROR - parseRDF (Resource): " + resource);
-		}
-
-//		try {
-//			TimeOutBlock timeoutBlock = new TimeOutBlock(180000); // 3 minutes
-//			Runnable block = new Runnable() {
-//				public void run() {
-//					try {
-//						mapPropValue.putAll(parseRDF2(resource));
-//					} catch (Exception e) {
-//						System.err.println("Error parseRDF2(" + resource + ") " + e.getMessage());
-//					}
-//				}
-//			};
-//			timeoutBlock.addBlock(block);// execute the runnable block
-//		} catch (Throwable e) {
-//			System.out.println("TIME-OUT-ERROR - parseRDF2 (Resource): " + resource);
-//		}
-//
-		try {
-			TimeOutBlock timeoutBlock = new TimeOutBlock(180000); // 3 minutes
-			Runnable block = new Runnable() {
-				public void run() {
-					try {
-						mapPropValue.putAll(WimuUtil.getFromWIMUq(resource));
-					} catch (Exception e) {
-						System.err.println("Error WimuUtil.getFromWIMUq(" + resource + ") " + e.getMessage());
+				};
+				timeoutBlock.addBlock(block);// execute the runnable block
+			} catch (Throwable e) {
+				System.out.println("TIME-OUT-ERROR - parseRDF (Resource): " + resource);
+			}
+		} else {
+			try {
+				TimeOutBlock timeoutBlock = new TimeOutBlock(180000); // 3 minutes
+				Runnable block = new Runnable() {
+					public void run() {
+						try {
+							mapPropValue.putAll(WimuUtil.getFromWIMUq(resource));
+						} catch (Exception e) {
+							System.err.println("Error WimuUtil.getFromWIMUq(" + resource + ") " + e.getMessage());
+						}
 					}
-				}
-			};
-			timeoutBlock.addBlock(block);// execute the runnable block
-		} catch (Throwable e) {
-			System.out.println("TIME-OUT-ERROR - WimuUtil.getFromWIMUq(Resource): " + resource);
+				};
+				timeoutBlock.addBlock(block);// execute the runnable block
+			} catch (Throwable e) {
+				System.out.println("TIME-OUT-ERROR - WimuUtil.getFromWIMUq(Resource): " + resource);
+			}
 		}
 		return mapPropValue;
 	}
@@ -213,8 +261,8 @@ public class DsGenerator {
 
 		while (iter.hasNext()) {
 			Triple triple = iter.next();
-			if(resource.equals(triple.getSubject().toString())) {
-				if(mPropValue.containsKey(triple.getPredicate().toString().trim())) {
+			if (resource.equals(triple.getSubject().toString())) {
+				if (mPropValue.containsKey(triple.getPredicate().toString().trim())) {
 					mPropValue.get(triple.getPredicate().toString().trim()).add(triple.getObject().toString());
 				} else {
 					Set<String> value = new HashSet<String>();
@@ -222,14 +270,15 @@ public class DsGenerator {
 					mPropValue.put(triple.getPredicate().toString(), value);
 				}
 			} else {
-				if(mPropValue.containsKey(triple.getPredicate().toString().trim())) {
+				if (mPropValue.containsKey(triple.getPredicate().toString().trim())) {
 					mPropValue.get(triple.getPredicate().toString().trim()).add(triple.getSubject().toString());
 				} else {
 					Set<String> value = new HashSet<String>();
 					value.add(triple.getSubject().toString());
 					mPropValue.put(triple.getPredicate().toString(), value);
 				}
-				//mPropValue.put(triple.getPredicate().toString(), triple.getSubject().toString());
+				// mPropValue.put(triple.getPredicate().toString(),
+				// triple.getSubject().toString());
 			}
 		}
 
