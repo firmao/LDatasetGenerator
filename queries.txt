@@ -6,7 +6,7 @@ WHERE
   {
     ?city  a                          dbo:City ; 
            (owl:sameAs|^owl:sameAs)*  ?so2 .
-    FILTER ( !regex(str(?so2), "dbpedia" ) )
+#    FILTER ( !regex(str(?so2), "dbpedia" ) )
   } 
 ORDER BY ?city
 #----------------------
