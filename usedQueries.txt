@@ -10,74 +10,57 @@ SameAs links of 10 million cities.
 10 million of cities with sameAs links.
 
 (1) All cities from DBpedia:
-PREFIX dbo: <http://dbpedia.org/ontology/>
-PREFIX dbr: <http://dbpedia.org/resource/>
-SELECT ?s WHERE {
- ?s a dbo:City
+#28675 results
+SELECT count(?s) WHERE {
+ ?s a <http://dbpedia.org/ontology/City>
 }
 
 (2) All cities from DBpedia (sameAs links):
-PREFIX dbo: <http://dbpedia.org/ontology/>
-PREFIX dbr: <http://dbpedia.org/resource/>
-SELECT * WHERE {
- ?s a dbo:City ; (owl:sameAs|^owl:sameAs)* ?so2
+#727320 results
+SELECT count(*) WHERE {
+ ?s a <http://dbpedia.org/ontology/City> ; (<http://www.w3.org/2002/07/owl#sameAs>|^<http://www.w3.org/2002/07/owl#sameAs>)* ?so2
 }
 
 (3) Number of sameAs links of each city from DBpedia:
-PREFIX dbo: <http://dbpedia.org/ontology/>
-PREFIX dbr: <http://dbpedia.org/resource/>
 SELECT ?city (count(?city)-1) as ?numberSameAs WHERE {
- ?city a dbo:City ; (owl:sameAs|^owl:sameAs)* ?so2
+ ?city a <http://dbpedia.org/ontology/City> ; (<http://www.w3.org/2002/07/owl#sameAs>|^<http://www.w3.org/2002/07/owl#sameAs>)* ?so2
 } group by ?city
 
 (4) SameAs links, cities, DBpedia to other datasets(including DBpedia sameAs DBpedia):
-PREFIX dbo: <http://dbpedia.org/ontology/>
-PREFIX dbr: <http://dbpedia.org/resource/>
 SELECT ?city owl:sameAs ?so2 WHERE {
- ?city a dbo:City ; (owl:sameAs|^owl:sameAs)* ?so2
+ ?city a <http://dbpedia.org/ontology/City> ; (<http://www.w3.org/2002/07/owl#sameAs>|^<http://www.w3.org/2002/07/owl#sameAs>)* ?so2
 } order by ?city
 
 (5) SameAs links, cities, DBpedia to other datasets:
-PREFIX dbo: <http://dbpedia.org/ontology/>
-PREFIX dbr: <http://dbpedia.org/resource/>
 SELECT ?city owl:sameAs ?so2 WHERE {
- ?city a dbo:City ; (owl:sameAs|^owl:sameAs)* ?so2 .
+ ?city a <http://dbpedia.org/ontology/City> ; (<http://www.w3.org/2002/07/owl#sameAs>|^<http://www.w3.org/2002/07/owl#sameAs>)* ?so2 .
  filter( !regex(str(?so2), "dbpedia" ))
 } order by ?city
 
 (6) List of resources(cities) from datasets, without duplicates (excluding DBpedia):
-PREFIX owl: <http://www.w3.org/2002/07/owl#>
-PREFIX dbo: <http://dbpedia.org/ontology/>
-
 SELECT DISTINCT ?so2  
 WHERE
   {
-    ?city  a                          dbo:City ; 
-           (owl:sameAs|^owl:sameAs)*  ?so2 .
+    ?city  a                          <http://dbpedia.org/ontology/City> ; 
+           (<http://www.w3.org/2002/07/owl#sameAs>|^<http://www.w3.org/2002/07/owl#sameAs>)* ?so2 .
     FILTER ( !regex(str(?so2), "dbpedia" ) )
   } 
 ORDER BY ?city
 
-PREFIX owl: <http://www.w3.org/2002/07/owl#>
-PREFIX dbo: <http://dbpedia.org/ontology/>
-
 SELECT DISTINCT ?so2  
 WHERE
   {
-    ?city  a                          dbo:City ; 
-           (owl:sameAs|^owl:sameAs)*  ?so2 .
+    ?city  a                          <http://dbpedia.org/ontology/City> ; 
+           (<http://www.w3.org/2002/07/owl#sameAs>|^<http://www.w3.org/2002/07/owl#sameAs>)* ?so2 .
 #    FILTER ( !regex(str(?so2), "dbpedia" ) )
   } 
 ORDER BY ?city
 #----------------------
-PREFIX owl: <http://www.w3.org/2002/07/owl#>
-PREFIX dbo: <http://dbpedia.org/ontology/>
-
 SELECT DISTINCT ?so2  
 WHERE
   {
-    ?person  a                          dbo:Person ; 
-           (owl:sameAs|^owl:sameAs)*  ?so2 .
+    ?person  a                          <http://dbpedia.org/ontology/Person> ; 
+           (<http://www.w3.org/2002/07/owl#sameAs>|^<http://www.w3.org/2002/07/owl#sameAs>)* ?so2 .
 #    FILTER ( !regex(str(?so2), "dbpedia" ) )
   } 
 ORDER BY ?person
