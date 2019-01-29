@@ -622,4 +622,40 @@ public class Util {
 		}
 		return ds;
 	}
+
+	public static void generateStatistics(List<String> datasets, String fileName) throws FileNotFoundException, UnsupportedEncodingException {
+		String cSparql = "Select ?mod where{\n" + 
+				"?s <http://purl.org/dc/terms/modified> ?mod\n" + 
+				"}";
+		Map<String, String> mDsTimeStamp = new HashMap<String, String>();
+		Set<String> ret = new HashSet<String>();
+		PrintWriter writer = new PrintWriter(fileName, "UTF-8");
+		
+		for (String source : datasets) {
+		//lstSources.parallelStream().forEach( source -> {
+			try {
+				TimeOutBlock timeoutBlock = new TimeOutBlock(300000); // 3 minutes
+				Runnable block = new Runnable() {
+					public void run() {
+						
+						if (Util.isEndPoint(source)) {
+							//ret.addAll(execQueryEndPoint(cSparql, source));
+							ret.addAll(Util.execQueryEndPoint(cSparql, source, true));
+						} else {
+							ret.addAll(Util.execQueryRDFRes(cSparql, source));
+						}
+						for (String timeStamp : ret) {
+							mDsTimeStamp.put(source, timeStamp);
+							writer.println(source + "\t" + timeStamp);
+						}
+						ret.clear();
+					}
+				};
+				timeoutBlock.addBlock(block);// execute the runnable block
+			} catch (Throwable e) {
+				System.out.println("TIME-OUT-ERROR - dataset/source: " + source);
+			}
+		}
+		writer.close();
+	}
 }

@@ -33,7 +33,7 @@ public class WimuUtil {
 
 		String nURI = URLEncoder.encode(uri, "UTF-8");
 		
-		URL urlSearch = new URL("http://139.18.8.58:8080/LinkLion2_WServ/Find?uri=" + nURI);
+		URL urlSearch = new URL("http://wimu.aksw.org/Find?uri=" + nURI);
 		InputStreamReader reader = null;
 		try {
 			reader = new InputStreamReader(urlSearch.openStream());

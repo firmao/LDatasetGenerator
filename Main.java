@@ -39,13 +39,15 @@ import org.apache.jena.util.FileManager;
 
 public class Main {
 	public static Set<String> goodSources = new HashSet<String>();
-
+	public static final Set<String> setPropFilter = new HashSet<String>();
+	
 	public static void main(String[] args) throws IOException, InterruptedException, URISyntaxException {
 		Set<String> resources = new HashSet<String>();
 		Set<String> resourcesNotDeref = new HashSet<String>();
 		Set<String> resErrorParallel = new HashSet<String>();
 		Set<String> resErrorSerial = new HashSet<String>();
 
+		setPropFilter.addAll(getResources(new File("filterProp.txt")));
 		boolean useWimu = false;
 		// resources.add("http://sws.geonames.org/78428/");
 		// resources.add("http://dbpedia.org/resource/Leipzig");
@@ -66,19 +68,20 @@ public class Main {
 
 		System.out.println("Number of resources(Not verified yet): " + resources.size());
 		
-		resourcesNotDeref.addAll(Util.getNotDeref(resources));
-		System.out.println("Resources Not dereferenceable: " + resourcesNotDeref.size());
+		//resourcesNotDeref.addAll(Util.getNotDeref(resources));
+		//System.out.println("Resources Not dereferenceable: " + resourcesNotDeref.size());
 
 		Util.writeFileStatistics(resources, "statistics.tsv");
 
-		resources.removeAll(resourcesNotDeref);
+		//resources.removeAll(resourcesNotDeref);
 
 		System.out.println("Number of resources(Parallel)Starting with: " + resources.size());
 		//System.exit(0);
+		System.out.println("Starting to generate the entity files");
 		resErrorParallel.addAll(executeParallel(resources, useWimu));
 
 		System.out.println("Number of resources(Serial): " + resErrorParallel.size());
-
+		
 		resErrorSerial.addAll(processSerial(resErrorParallel, useWimu));
 		resErrorParallel.clear();
 
@@ -140,6 +143,7 @@ public class Main {
 			try {
 				Map<String, Set<String>> mapPropValue = new HashMap<String, Set<String>>();
 				mapPropValue.putAll(generatePropertiesValues(resource, useWimu));
+				filterProperties(mapPropValue, setPropFilter);
 				if (mapPropValue.size() > 0) {
 					Util.writeFile(resource, mapPropValue);
 				} else {
@@ -153,6 +157,15 @@ public class Main {
 		return resErrorParallel;
 	}
 
+	private static void filterProperties(Map<String, Set<String>> map, Set<String> setPropFilter) {
+		Map<String, Set<String>> newMapPropValue = new HashMap<String, Set<String>>();
+		for (String prop : setPropFilter) {
+			newMapPropValue.put(prop, map.get(prop));
+		}
+		map.clear();
+		map.putAll(newMapPropValue);
+	}
+	
 	private static Set<String> getResources(File fResources) throws IOException {
 		Set<String> ret = new HashSet<String>();
 		List<String> lstLines = FileUtils.readLines(fResources, "UTF-8");
@@ -173,11 +186,13 @@ public class Main {
 		// String endPoint2 = "http://lod.openlinksw.com/sparql";
 		lstSources.addAll(getSources(new File(fEndPoints)));
 		lstSources.addAll(getSources(new File(dirHDT)));
+		System.out.println("Sources/Datasets: " + lstSources.size());
 		
 		LODStatistics.generateStatistics(lstSources, "http://www.w3.org/2002/07/owl#sameAs");
+		Util.generateStatistics(lstSources, "ListDsTimeStamp.tsv");
+		System.out.println("File with Dataset Time Stamps - Most Updated datasets - generated with success");
 		
 		for (String cSparql : lstQueries) {
-			System.out.println("Sources/Datasets: " + lstSources.size());
 			for (String source : lstSources) {
 			//lstSources.parallelStream().forEach( source -> {
 				try {
