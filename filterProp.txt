@@ -1,0 +1,3 @@
+http://linkedgeodata.org/ontology/is_in%3Acountry_code
+http://linkedgeodata.org/ontology/population
+
