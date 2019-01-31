@@ -106,3 +106,100 @@ select distinct ?property where{
 select distinct ?property where { 
    ?property <http://www.w3.org/2000/01/rdf-schema#domain> 
                              ?o . }
+
+
+
+#-------------------------------------------------------
+# Obtain the label of a given class (:class1).
+SELECT DISTINCT ?c (STR(?l) AS ?lb)
+    WHERE {
+      ?c a :class1 ;
+        <http://www.w3.org/2000/01/rdf-schema#label> ?l .
+    }
+
+# Obtain a list of classes.
+SELECT DISTINCT ?c
+    WHERE {
+      GRAPH :graph
+        {[] a ?c .}
+    }
+
+# Count instances belonging to a given class (:class1).
+SELECT (COUNT(?s) AS ?rc)
+    WHERE {
+      GRAPH :graph
+        {?s a :class1 .}
+    }
+
+# Enumerate classes linked from a given class (:class1) and predicates that link instances of the given class and the target classes.
+# below q1 to q3 are indentical to each other (I think)
+### q1
+SELECT ?p ?c (COUNT(?p) AS ?pc) {
+  ?f a :class1 .
+  ?t a ?c .
+  ?f ?p ?t .
+  FILTER(?c != owl:Class)
+} GROUP BY ?p ?c
+### q2
+SELECT ?p ?c (COUNT(?p) AS ?pc) {
+  ?f a :class1 ;
+     ?p [ a ?c ].
+FILTER(!sameTerm(?c, owl:Class))
+} GROUP BY ?p ?c
+### q3
+SELECT ?p ?c (COUNT(?p) AS ?pc) {
+  ?f a :class1 ;
+     ?p ?t ;
+     !rdf:type ?t .
+  ?t a ?c .
+} GROUP BY ?p ?c
+
+# Enumerate all the predicates with their counts under the condition that their subject and object belong to :c1 and :c2, respectively.
+SELECT ?p (COUNT(?p) AS ?rc)
+    WHERE {
+      GRAPH :graph {
+        ?s ?p ?o .
+        ?s a :c1 .
+        ?o a :c2 .
+      }}
+  GROUP BY ?p
+
+# Count triples whose subject and object belong to :c1 and a locally-undeclared class, respectively.
+SELECT (COUNT(?s) AS ?rc)
+    WHERE {
+      GRAPH :graph {
+        ?s ?p ?o .
+        ?s a :c1 .
+        MINUS {?o a ?oc}
+	  FILTER(!isLiteral(?o) && ?p != rdf:type)
+      }}
+
+# Enumerate all the predicates with their counts under the condition that their subject and object belong to :c1 and a locally-undeclared class, respectively.
+SELECT ?p (COUNT(?p) AS ?rc)
+    WHERE {
+      GRAPH :graph {
+        ?s ?p ?o .
+        ?s a :c1 .
+        MINUS {?o a ?oc}
+        FILTER(!isLiteral(?o) && ?p != rdf:type)
+      }}
+  GROUP BY ?p
+
+# Count triples whose subject belongs to :c1 and whose object is literal.
+SELECT (COUNT(?s) AS ?rc)
+    WHERE {
+      GRAPH :graph {
+        ?s ?p ?o .
+        ?s a :c1 .
+        FILTER(isLiteral(?o))
+      }}
+
+# Enumerate all the predicates with their counts under the condition that their subject belongs to :c1 and their object is literal.
+SELECT ?p (COUNT(?p) AS ?rc)
+    WHERE {
+      GRAPH :graph {
+        ?s ?p ?o .
+        ?s a :c1 .
+        FILTER(isLiteral(?o))
+      }}
+GROUP BY ?p
