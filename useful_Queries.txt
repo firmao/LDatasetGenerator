@@ -89,3 +89,20 @@ WHERE {
   ?s a ?type.
 #filter(?type=<http://dbpedia.org/ontology/City>)
 }
+
+
+#All properties (more complete with 107827 properties):
+select distinct ?property where{
+{
+  ?property rdfs:domain ?class . 
+  ?s rdfs:subClassOf+ ?class.
+} UNION {
+  ?property rdfs:domain ?s.
+}
+#FILTER(?property=<http://dbpedia.org/ontology/service>)
+}
+
+#or, all properties (only 2421 properties):
+select distinct ?property where { 
+   ?property <http://www.w3.org/2000/01/rdf-schema#domain> 
+                             ?o . }
