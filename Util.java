@@ -74,8 +74,16 @@ public class Util {
 		for (Entry<String, Set<String>> entry : mapPropValue.entrySet()) {
 			String prop = entry.getKey();
 			Set<String> values = entry.getValue();
-			for (String value : values) {
-				writer.println(prop + "\t" + value);
+			if(values != null) {
+				for (String value : values) {
+					if(value.contains("@")){ 
+						if(value.contains("@en")) {
+							writer.println(prop + "\t" + value);
+						}
+					} else {
+						writer.println(prop + "\t" + value);
+					}
+				}
 			}
 		}
 		writer.close();
@@ -368,7 +376,7 @@ public class Util {
 		return source.toLowerCase().contains("sparql");
 	}
 
-	public static Set<String> execQueryRDFRes(String cSparql, String dataset) {
+	public static Set<String> execQueryRDFRes(String cSparql, String dataset, int maxEntities) {
 		final Set<String> ret = new HashSet<String>();
 		File file = null;
 		try {
@@ -392,7 +400,7 @@ public class Util {
 			// return ret;
 			// }
 			if (file.getName().endsWith("hdt")) {
-				return execQueryHDTRes(cSparql, file.getAbsolutePath());
+				return execQueryHDTRes(cSparql, file.getAbsolutePath(), maxEntities);
 			}
 
 			long start = System.currentTimeMillis();
@@ -434,13 +442,25 @@ public class Util {
 			resultSet = qe.execSelect();
 			if (resultSet != null) {
 				List<QuerySolution> lQuerySolution = ResultSetFormatter.toList(resultSet);
+				int count = 0;
 				for (QuerySolution qSolution : lQuerySolution) {
 					final StringBuffer sb = new StringBuffer();
 					for (final Iterator<String> varNames = qSolution.varNames(); varNames.hasNext();) {
 						final String varName = varNames.next();
-						sb.append(qSolution.get(varName).toString() + " ");
+						
+						if(qSolution.get(varName).isLiteral()) {
+							String s = qSolution.get(varName).asLiteral().getString();
+							sb.append(s);
+						} else {
+							sb.append(qSolution.get(varName).toString() + " ");
+						}
+						//sb.append(qSolution.get(varName).toString() + " ");
 					}
 					ret.add(sb.toString());
+					count++;
+					if((maxEntities != -1) && (count >= maxEntities)) {
+						break;
+					}
 				}
 			}
 			long total = System.currentTimeMillis() - start;
@@ -457,7 +477,7 @@ public class Util {
 		return ret;
 	}
 
-	public static Set<String> execQueryHDTRes(String cSparql, String dataset) throws IOException {
+	public static Set<String> execQueryHDTRes(String cSparql, String dataset, int maxEntities) throws IOException {
 		final Set<String> ret = new HashSet<String>();
 		File file = null;
 		HDT hdt = null;
@@ -491,13 +511,25 @@ public class Util {
 			ResultSet results = qe.execSelect();
 
 			List<QuerySolution> lQuerySolution = ResultSetFormatter.toList(results);
+			int count = 0;
 			for (QuerySolution qSolution : lQuerySolution) {
 				final StringBuffer sb = new StringBuffer();
 				for (final Iterator<String> varNames = qSolution.varNames(); varNames.hasNext();) {
 					final String varName = varNames.next();
-					sb.append(qSolution.get(varName).toString() + " ");
+					
+					if(qSolution.get(varName).isLiteral()) {
+						String s = qSolution.get(varName).asLiteral().getString();
+						sb.append(s);
+					} else {
+						sb.append(qSolution.get(varName).toString() + " ");
+					}
+					//sb.append(qSolution.get(varName).toString() + " ");
 				}
 				ret.add(sb.toString());
+				count++;
+				if((maxEntities != -1) && (count >= maxEntities)) {
+					break;
+				}
 			}
 
 			total = System.currentTimeMillis() - start;
@@ -572,7 +604,7 @@ public class Util {
 		return ret;
 	}
 
-	public static Set<String> execQueryEndPoint(String cSparql, String endPoint, boolean noOffset) {
+	public static Set<String> execQueryEndPoint(String cSparql, String endPoint, boolean noOffset, int maxEntities) {
 		System.out.println("Query endPoint: " + endPoint);
 		final Set<String> ret = new HashSet<String>();
 		long start = System.currentTimeMillis();
@@ -584,14 +616,24 @@ public class Util {
 
 			ResultSet results = qexec.execSelect();
 			List<QuerySolution> lst = ResultSetFormatter.toList(results);
+			int count =0;
 			for (QuerySolution qSolution : lst) {
 				final StringBuffer sb = new StringBuffer();
 				for (final Iterator<String> varNames = qSolution.varNames(); varNames.hasNext();) {
 					final String varName = varNames.next();
 					String res = qSolution.get(varName).toString();
 					if (res.contains("http")) {
-						ret.add(qSolution.get(varName).toString());
+						if(qSolution.get(varName).isLiteral()) {
+							String s = qSolution.get(varName).asLiteral().getString();
+							ret.add(s);
+						} else {
+							ret.add(qSolution.get(varName).toString());
+						}
 					}
+				}
+				count++;
+				if((maxEntities != -1) && (count >= maxEntities)) {
+					break;
 				}
 			}
 		} catch (Exception e) {
@@ -623,10 +665,11 @@ public class Util {
 		return ds;
 	}
 
-	public static void generateStatistics(List<String> datasets, String fileName) throws FileNotFoundException, UnsupportedEncodingException {
-		String cSparql = "Select ?mod where{\n" + 
-				"?s <http://purl.org/dc/terms/modified> ?mod\n" + 
-				"}";
+	public static void generateStatistics(List<String> lstDs, String fileName) throws FileNotFoundException, UnsupportedEncodingException {
+		Set<String> datasets = new HashSet<String>(lstDs);
+		String cSparql = "Select ?date where{\n" + 
+				"?s <http://purl.org/dc/terms/modified> ?date\n" + 
+				"} order by DESC(?date) limit 1";
 		Map<String, String> mDsTimeStamp = new HashMap<String, String>();
 		Set<String> ret = new HashSet<String>();
 		PrintWriter writer = new PrintWriter(fileName, "UTF-8");
@@ -640,9 +683,9 @@ public class Util {
 						
 						if (Util.isEndPoint(source)) {
 							//ret.addAll(execQueryEndPoint(cSparql, source));
-							ret.addAll(Util.execQueryEndPoint(cSparql, source, true));
+							ret.addAll(Util.execQueryEndPoint(cSparql, source, true, -1));
 						} else {
-							ret.addAll(Util.execQueryRDFRes(cSparql, source));
+							ret.addAll(Util.execQueryRDFRes(cSparql, source, -1));
 						}
 						for (String timeStamp : ret) {
 							mDsTimeStamp.put(source, timeStamp);
@@ -657,5 +700,6 @@ public class Util {
 			}
 		}
 		writer.close();
+		System.out.println("File Generated: " + fileName);
 	}
 }

@@ -27,6 +27,7 @@ import org.apache.jena.query.QueryFactory;
 import org.apache.jena.query.QuerySolution;
 import org.apache.jena.query.ResultSet;
 import org.apache.jena.query.ResultSetFormatter;
+import org.apache.jena.query.Syntax;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Statement;
@@ -36,10 +37,18 @@ import org.apache.jena.riot.lang.PipedRDFIterator;
 import org.apache.jena.riot.lang.PipedRDFStream;
 import org.apache.jena.riot.lang.PipedTriplesStream;
 import org.apache.jena.util.FileManager;
+import org.squin.dataset.QueriedDataset;
+import org.squin.dataset.hashimpl.combined.QueriedDatasetImpl;
+import org.squin.dataset.jenacommon.JenaIOBasedQueriedDataset;
+import org.squin.engine.LinkTraversalBasedQueryEngine;
+import org.squin.engine.LinkedDataCacheWrappingDataset;
+import org.squin.ldcache.jenaimpl.JenaIOBasedLinkedDataCache;
+
 
 public class Main {
 	public static Set<String> goodSources = new HashSet<String>();
 	public static final Set<String> setPropFilter = new HashSet<String>();
+	public static final int maxEntities = -1; // Limiting the number of entities per source(-1 means no limit)
 	
 	public static void main(String[] args) throws IOException, InterruptedException, URISyntaxException {
 		Set<String> resources = new HashSet<String>();
@@ -111,6 +120,7 @@ public class Main {
 			try {
 				Map<String, Set<String>> mapPropValue = new HashMap<String, Set<String>>();
 				mapPropValue.putAll(generatePropertiesValues(resource, useWimu));
+				filterProperties(mapPropValue, setPropFilter);
 				if (mapPropValue.size() > 0) {
 					Util.writeFile(resource, mapPropValue);
 				} else {
@@ -189,9 +199,8 @@ public class Main {
 		System.out.println("Sources/Datasets: " + lstSources.size());
 		
 		LODStatistics.generateStatistics(lstSources, "http://www.w3.org/2002/07/owl#sameAs");
-		Util.generateStatistics(lstSources, "ListDsTimeStamp.tsv");
+		Util.generateStatistics(lstSources, "statistics_ModifiedUpdate.tsv");
 		System.out.println("File with Dataset Time Stamps - Most Updated datasets - generated with success");
-		
 		for (String cSparql : lstQueries) {
 			for (String source : lstSources) {
 			//lstSources.parallelStream().forEach( source -> {
@@ -201,9 +210,9 @@ public class Main {
 						public void run() {
 							if (Util.isEndPoint(source)) {
 								//ret.addAll(execQueryEndPoint(cSparql, source));
-								ret.addAll(Util.execQueryEndPoint(cSparql, source, true));
+								ret.addAll(Util.execQueryEndPoint(cSparql, source, true, maxEntities));
 							} else {
-								ret.addAll(Util.execQueryRDFRes(cSparql, source));
+								ret.addAll(Util.execQueryRDFRes(cSparql, source, maxEntities));
 							}
 						}
 					};
@@ -263,6 +272,7 @@ public class Main {
 					public void run() {
 						try {
 							mapPropValue.putAll(parseRDF(resource));
+							//mapPropValue.putAll(parseRDFTraverse(resource));
 						} catch (Exception ex) {
 							System.err.println("Error parseRDF(" + resource + ") " + ex.getMessage());
 						}
@@ -292,6 +302,57 @@ public class Main {
 		return mapPropValue;
 	}
 
+//	private static Map<String, Set<String>> parseRDFTraverse(final String resource)
+//			throws FileNotFoundException, UnsupportedEncodingException {
+//		Map<String, Set<String>> mPropValue = new HashMap<String, Set<String>>();
+//		
+//		//String query = "Select * where {?s ?p ?o} filter langMatches(lang(?o), 'en')";
+//		LinkTraversalBasedQueryEngine.register();
+//		QueriedDataset qds = new QueriedDatasetImpl();
+//		JenaIOBasedQueriedDataset qdsWrapper = new JenaIOBasedQueriedDataset( qds );
+//		JenaIOBasedLinkedDataCache ldcache = new JenaIOBasedLinkedDataCache( qdsWrapper );
+//		Dataset dsARQ = new LinkedDataCacheWrappingDataset( ldcache );
+//		
+//		
+//		String cSparql = "select distinct ?property ?o ?s {\n" + 
+//				"  { <"+resource+"> ?property ?o }\n" + 
+//				"  union\n" + 
+//				"  { ?s ?property <"+resource+"> }\n" + 
+//				"\n" + 
+//				"  optional { \n" + 
+//				"    ?property <http://www.w3.org/2000/01/rdf-schema#label> ?label .\n" + 
+//				"    filter langMatches(lang(?label), 'en')\n" + 
+//				"  }\n" + 
+//				"}";
+//		Query query = QueryFactory.create(cSparql);
+//		//QueryExecution qe = QueryExecutionFactory.create(query, model);
+//		//ResultSet results = qe.execSelect();
+//		//List<QuerySolution> lst = ResultSetFormatter.toList(results);
+//		com.hp.hpl.jena.query.QueryExecution qe = com.hp.hpl.jena.query.QueryExecutionFactory.create(cSparql, dsARQ );
+//		com.hp.hpl.jena.query.ResultSet results = qe.execSelect();
+//		
+//		List<com.hp.hpl.jena.query.QuerySolution> lst = com.hp.hpl.jena.query.ResultSetFormatter.toList(results);
+//		for (com.hp.hpl.jena.query.QuerySolution qSolution : lst) {
+//			if(mPropValue.containsKey(qSolution.get("?property").toString().trim())) {
+//				if((qSolution.get("?o") != null) && (qSolution.get("?o").toString().trim().length() > 0)) {
+//					mPropValue.get(qSolution.get("?property").toString().trim()).add(qSolution.get("?o").toString().trim());
+//				} else {
+//					mPropValue.get(qSolution.get("?property").toString().trim()).add(qSolution.get("?s").toString().trim());
+//				}
+//			} else {
+//				Set<String> value = new HashSet<String>(); 
+//				if((qSolution.get("?o") != null) && (qSolution.get("?o").toString().trim().length() > 0)) {
+//					value.add(qSolution.get("?o").toString().trim());
+//					mPropValue.put(qSolution.get("?property").toString().trim(), value);
+//				} else {
+//					value.add(qSolution.get("?s").toString().trim());
+//					mPropValue.put(qSolution.get("?property").toString().trim(), value);
+//				}
+//			}
+//		}
+//		return mPropValue;
+//	}
+		
 	private static Map<String, String> parseRDF2(String resource) {
 		Map<String, String> mapPropValue = new HashMap<String, String>();
 
