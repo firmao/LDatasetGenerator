@@ -1,3 +1,16 @@
-http://linkedgeodata.org/ontology/is_in%3Acountry_code
-http://linkedgeodata.org/ontology/population
+#Name
+http://xmlns.com/foaf/0.1/name
+http://www.w3.org/2000/01/rdf-schema#label
+http://d-nb.info/standards/elementset/gnd#preferredNameForThePlaceOrGeographicName
+http://www.geonames.org/ontology#name
 
+#Latitute
+http://www.w3.org/2003/01/geo/wgs84_pos#lat
+http://www.w3.org/2003/01/geo/wgs84_pos#geometry
+
+#Longitute
+http://www.w3.org/2003/01/geo/wgs84_pos#long
+
+#Population
+http://linkedgeodata.org/ontology/population
+http://dbpedia.org/ontology/populationTotal
