@@ -506,6 +506,7 @@ public class Util {
 			hdt = HDTManager.mapHDT(file.getAbsolutePath(), null);
 			HDTGraph graph = new HDTGraph(hdt);
 			Model model = new ModelCom(graph);
+			//model.write(out, Lang.NTRIPLES); // convert hdt to .nt
 			Query query = QueryFactory.create(cSparql);
 			QueryExecution qe = QueryExecutionFactory.create(query, model);
 			ResultSet results = qe.execSelect();

@@ -42,8 +42,10 @@ public class App {
 //				e.printStackTrace();
 //			}
 //		});
-		String hdtFile = "dirHDT/dbpedia2015.hdt";
-		String cSparql = "PREFIX dbo: <http://dbpedia.org/ontology/> PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> PREFIX res: <http://dbpedia.org/resource/> PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> SELECT ?years WHERE { res:Ford_Model_T dbo:productionEndYear ?end ; dbo:productionStartYear ?start. BIND ( ( year(xsd:date(?end)) - year(xsd:date(?start)) ) AS ?years) }";
+		//String hdtFile = "dirHDT/dbpedia2015.hdt";
+		String hdtFile = "/media/andre/DATA/linux/linklion2/wsSquin/WimuT/dirHDT/122820ea06070b8076691f16751299e5.hdt";
+		//String cSparql = "PREFIX dbo: <http://dbpedia.org/ontology/> PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> PREFIX res: <http://dbpedia.org/resource/> PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> SELECT ?years WHERE { res:Ford_Model_T dbo:productionEndYear ?end ; dbo:productionStartYear ?start. BIND ( ( year(xsd:date(?end)) - year(xsd:date(?start)) ) AS ?years) }";
+		String cSparql = "Select * where {?s ?p ?o} limit 10";
 		execHDT(hdtFile, cSparql);
 	}
 

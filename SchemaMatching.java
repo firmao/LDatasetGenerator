@@ -3,6 +3,7 @@ package test.testid;
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -45,15 +46,16 @@ public class SchemaMatching {
 			//mapPropsDs.get(ds).putAll(getProps(mapProps, "http://dbpedia.org/sparql", ds));
 			mapPropsDs.get(ds).putAll(getProps(mapProps, ds));
 			String nSparql = replaceURIs(cSparql, mapPropsDs.get(ds));
-			execSparql(nSparql,ds);
+			Set<String> ret = execSparql(nSparql,ds);
+			System.out.println(ret);
 		}
 		
 		long total = System.currentTimeMillis() - start;
 		System.out.println("FINISHED in " + TimeUnit.MILLISECONDS.toMinutes(total) + " minutes");
 	}
 
-	private static void execSparql(String cSparql, String source) {
-		final Set<String> ret = new HashSet<String>();
+	private static Set<String> execSparql(String cSparql, String source) {
+		final Set<String> ret = new LinkedHashSet<String>();
 		try {
 			TimeOutBlock timeoutBlock = new TimeOutBlock(300000); // 3 minutes
 			Runnable block = new Runnable() {
@@ -70,7 +72,7 @@ public class SchemaMatching {
 		} catch (Throwable e) {
 			System.out.println("TIME-OUT-ERROR - dataset/source: " + source);
 		}
-		System.out.println(ret);
+		return ret;
 	}
 
 	private static String replaceURIs(String cSparql, Map<String, String> mProps) {
@@ -123,16 +125,38 @@ public class SchemaMatching {
 		return mRet;
 	}
 
-	private static String getEquivProp(String prop, String dsS, String dsT) {
-		Map<String, String> mDerefPropS = deref(prop);
+	/*
+	 * Get the equivalent property
+	 * 1. Check if @propDs exists in dsT.
+	 * 2. Compare the values from all properties of dsT.  
+	 * 3. Using string similarity(Threshold=0.8), search in a set of all properties from dsT(values).
+	 * 4. Using string similarity(Threshold=0.8), search in a set of all properties from dsT(names).
+	 */
+	private static String getEquivProp(String propDs, String dsS, String dsT) {
+		//Check if @propDs exists in dsT.
+		if(propExists(propDs, dsT)) {
+			return propDs;
+		}
+		String pValue = getValueProp(propDs,dsS);
 		
-		return executeSparql(cSparql, prop, dsS, dsT);
-	}
-
-	private static String executeSparql(String cSparql, String prop, String dsS, String dsT) {
-		String ret = null;
-		System.out.println("TODO: executeSparql()  ...IMPLEMENT !!!!");
-		return ret;
+		/*
+		 * Compare the values from all properties of dsT.
+		 */
+		String equivProp = searchValueProp(pValue,dsT); 
+		if(equivProp != null) {
+			return equivProp;
+		}
+		
+		equivProp = similatySearch(pValue, SchemaMatching.mapPropValueDsT);
+		if(equivProp != null) {
+			return equivProp;
+		}
+		
+		equivProp = similatySearch(propDs, SchemaMatching.mapPropValueDsT);
+		if(equivProp != null) {
+			return equivProp;
+		}
+		return null;
 	}
 
 	private static Map<String, String> extractURIS(String cSparql) throws UnsupportedEncodingException {

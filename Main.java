@@ -56,7 +56,13 @@ public class Main {
 		Set<String> resErrorParallel = new HashSet<String>();
 		Set<String> resErrorSerial = new HashSet<String>();
 
-		setPropFilter.addAll(getResources(new File("filterProp.txt")));
+		File fProp = new File("filterProp.txt");
+		if(fProp.exists()) {
+			setPropFilter.addAll(getResources(fProp));
+		} else {
+			setPropFilter.clear();
+			System.out.println("No file to filter the properties !");
+		}
 		boolean useWimu = false;
 		// resources.add("http://sws.geonames.org/78428/");
 		// resources.add("http://dbpedia.org/resource/Leipzig");
@@ -168,12 +174,14 @@ public class Main {
 	}
 
 	private static void filterProperties(Map<String, Set<String>> map, Set<String> setPropFilter) {
-		Map<String, Set<String>> newMapPropValue = new HashMap<String, Set<String>>();
-		for (String prop : setPropFilter) {
-			newMapPropValue.put(prop, map.get(prop));
+		if(setPropFilter.size() > 0) {
+			Map<String, Set<String>> newMapPropValue = new HashMap<String, Set<String>>();
+			for (String prop : setPropFilter) {
+				newMapPropValue.put(prop, map.get(prop));
+			}
+			map.clear();
+			map.putAll(newMapPropValue);
 		}
-		map.clear();
-		map.putAll(newMapPropValue);
 	}
 	
 	private static Set<String> getResources(File fResources) throws IOException {
