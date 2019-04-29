@@ -14,8 +14,11 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -702,5 +705,27 @@ public class Util {
 		}
 		writer.close();
 		System.out.println("File Generated: " + fileName);
+	}
+
+	public static boolean isGreaterDate(String timeStamp, String previous) {
+		boolean bRet = false;
+		SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+		try {
+			if(timeStamp == null) {
+				return false;
+			}
+			if(previous == null) {
+				return true;
+			}
+			
+			Date date = format.parse(timeStamp);
+			Date datePrevious = format.parse(previous);
+			bRet = date.after(datePrevious);
+		} catch (ParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 
+		
+		return bRet;
 	}
 }
