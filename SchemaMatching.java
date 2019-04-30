@@ -42,23 +42,32 @@ public class SchemaMatching {
 		//datasets.add("https://query.wikidata.org/");
 		//datasets.add("http://download.lodlaundromat.org/85d5a476b56fde200e770cefa0e5033c?type=hdt");
 		datasets.add("85d5a476b56fde200e770cefa0e5033c?type.hdt");
-		datasets.add("b7081efa178bc4ab3ff3a6ef5abac9b2?type.hdt");
+		//datasets.add("b7081efa178bc4ab3ff3a6ef5abac9b2?type.hdt");
+		datasets.add("b7081efa178bc4ab3ff3a6ef5abac9b2.hdt");
 		datasets.add("c66ff6bbdb8eeac9c17adbe7dfe4efd5?type.hdt");
 		
-		final String cSparql = "SELECT ?name ?area ?pop ?lat ?long WHERE {\n" + 
-				" ?s a <http://dbpedia.org/ontology/City> ;\n" + 
-				" <http://dbpedia.org/ontology/PopulatedPlace/areaTotal> ?area ;\n" + 
-				" <http://www.w3.org/2000/01/rdf-schema#label> ?name ;\n" + 
-				" <http://dbpedia.org/property/populationTotal> ?pop ;\n" + 
-				" <http://www.w3.org/2003/01/geo/wgs84_pos#lat> ?lat ;\n" + 
-				" <http://www.w3.org/2003/01/geo/wgs84_pos#long> ?long .\n" + 
-				"FILTER ( regex(str(?name), \"Leipzig\" ) && langMatches(lang(?name),\"en\"))\n" + 
-				"}";
+//		final String cSparql = "SELECT ?name ?area ?pop ?lat ?long WHERE {\n" + 
+//				" ?s a <http://dbpedia.org/ontology/City> ;\n" + 
+//				" <http://dbpedia.org/ontology/PopulatedPlace/areaTotal> ?area ;\n" + 
+//				" <http://www.w3.org/2000/01/rdf-schema#label> ?name ;\n" + 
+//				" <http://dbpedia.org/property/populationTotal> ?pop ;\n" + 
+//				" <http://www.w3.org/2003/01/geo/wgs84_pos#lat> ?lat ;\n" + 
+//				" <http://www.w3.org/2003/01/geo/wgs84_pos#long> ?long .\n" + 
+//				"FILTER ( regex(str(?name), \"Leipzig\" ) && langMatches(lang(?name),\"en\"))\n" + 
+//				"}";
+		
+		final String cSparql = "Select * where {<http://citeseer.rkbexplorer.com/id/resource-CS116606> <http://www.aktors.org/ontology/portal#has-author> ?o}";
+		
 		for (String ds : datasets) {
 			mapProps.putAll(extractURIS(cSparql));
 			mapPropsDs.put(ds, mapProps);
 			//mapPropsDs.get(ds).putAll(getProps(mapProps, "http://dbpedia.org/sparql", ds));
-			mapPropsDs.get(ds).putAll(getProps(mapProps, ds));
+			Map<String, String> props = getProps(mapProps, ds);
+			if(props == null) {
+				System.out.println("Problem ds: " + ds);
+				continue;
+			}
+			mapPropsDs.get(ds).putAll(props);
 			String nSparql = replaceURIs(cSparql, mapPropsDs.get(ds));
 			Set<String> ret = execSparql(nSparql,ds);
 			System.out.println(ret);
@@ -143,6 +152,7 @@ public class SchemaMatching {
 							}
 							previous = timeStamp;
 							mDsTimeStamp.put(sRet, previous);
+							Main.goodSources.add(source);
 						}
 						ret.clear();
 					}
@@ -164,6 +174,11 @@ public class SchemaMatching {
 	 */
 	private static Map<String, String> getProps(Map<String, String> mProps, String dsS, String dsT) throws IOException {
 		Map<String, String> mRet = new HashMap<String, String>();
+		
+		if(!Main.goodSources.contains(dsS)) {
+			return null;
+		}
+		
 		for (Entry<String, String> entry : mProps.entrySet()) {
 			String prop = entry.getKey();
 			Set<String> equivProps = getEquivProp(prop, dsS, dsT);
@@ -193,11 +208,20 @@ public class SchemaMatching {
 			return equivProps;
 		}
 		String pValue = getValueProp(propDs,dsS);
+		if(pValue == null) {
+			return null;
+		}
 		
-		String cSparql = "SELECT * WHERE {<"+propDs+"> owl:equivalentProperty ?o}";
+		String cSparql = "SELECT * WHERE {<"+propDs+"> <https://www.w3.org/2002/07/owl#equivalentProperty> ?o}";
 		equivProps.addAll(Util.execQueryHDTRes(cSparql, dsS, -1));
 		
-		cSparql = "SELECT * WHERE {?s owl:equivalentProperty <"+propDs+">}";
+		cSparql = "SELECT * WHERE {?s <https://www.w3.org/2002/07/owl#equivalentProperty> <"+propDs+">}";
+		equivProps.addAll(Util.execQueryHDTRes(cSparql, dsS, -1));
+		
+		cSparql = "SELECT * WHERE {<"+propDs+"> <https://www.w3.org/2002/07/owl#equivalentClass> ?o}";
+		equivProps.addAll(Util.execQueryHDTRes(cSparql, dsS, -1));
+		
+		cSparql = "SELECT * WHERE {?s <https://www.w3.org/2002/07/owl#equivalentClass> <"+propDs+">}";
 		equivProps.addAll(Util.execQueryHDTRes(cSparql, dsS, -1));
 		
 		if(equivProps.size() > 0) {
@@ -221,6 +245,10 @@ public class SchemaMatching {
 		if(equivProps.size() > 0) {
 			return equivProps;
 		}
+		System.out.println("THERE NO EQUIVALENT property.");
+		System.out.println("PropSource: " + propDs);
+		System.out.println("dsSource: " + dsS);
+		System.out.println("dsTarget: " + dsT);
 		return null;
 	}
 
@@ -270,14 +298,22 @@ public class SchemaMatching {
 			cSparql = "Select ?o where {?s ?p \""+pValue+"\"}";
 		}
 		Set<String> ret = Util.execQueryHDTRes(cSparql, dsT, -1);
-		return ret.toString();
+		if(ret.size() > 0) {
+			return ret.toString();
+		} else {
+			return null;
+		}
 	}
 
 	private static String getValueProp(String propDs, String dsS) throws IOException {
 		String cSparql = "Select ?o where {?s <"+propDs+"> ?o}";
 		Set<String> ret = Util.execQueryHDTRes(cSparql, dsS, -1);
 		
-		return ret.toString();
+		if(ret.size() > 0) {
+			return ret.toString();
+		} else {
+			return null;
+		}
 	}
 
 	private static boolean propExists(String propDs, String dsT) throws IOException {
@@ -299,6 +335,7 @@ public class SchemaMatching {
 			String key = fixSparql.substring(urlMatcher.start(0), urlMatcher.end(0));
 			containedUrls.put(key, null);
 		}
+		
 		return containedUrls;
 	}
 
