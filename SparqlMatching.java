@@ -1,6 +1,8 @@
 package test.testid;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.Collection;
 import java.util.HashMap;
@@ -51,6 +53,8 @@ public class SparqlMatching {
 		datasets.add("dirHDT/3_ds_tests/hdt/d1.hdt");
 		datasets.add("dirHDT/3_ds_tests/hdt/d2.hdt");
 		datasets.add("dirHDT/3_ds_tests/hdt/d3.hdt");
+		int numberOfDs = 10;
+		//datasets.addAll(getDatasets(new File("dirHDT"), numberOfDs));
 		
 //		final String cSparql = "SELECT ?name ?area ?pop ?lat ?long WHERE {\n" + 
 //				" ?s a <http://dbpedia.org/ontology/City> ;\n" + 
@@ -63,27 +67,43 @@ public class SparqlMatching {
 //				"}";
 		
 		final String cSparql = "Select * where {?s <http://creativecommons.org/ns#license> ?o}";
-		
+		PrintWriter writer = new PrintWriter("SparqlMatching_"+numberOfDs+".txt", "UTF-8");
 		for (String ds : datasets) {
 			mapProps.putAll(extractURIS(cSparql));
 			mapPropsDs.put(ds, mapProps);
-			//mapPropsDs.get(ds).putAll(getProps(mapProps, "http://dbpedia.org/sparql", ds));
-			Map<String, String> props = getProps(mapProps, ds);
-			if((props == null) || (props.size() < 1)) {
-				System.out.println("Problem ds: " + ds);
-				continue;
-			}
+			//Map<String, String> props = getPropsWimuQ(mapProps, ds);
+			Map<String, String> props = null;
+			//if((props == null) || (props.size() < 1)) {
+				//System.out.println("wimuQ could not identify a dataset for the SPARQL query: " + cSparql);
+				String dsS = "dirHDT/85d5a476b56fde200e770cefa0e5033c.hdt";
+				System.out.println("Using a predifined dataset :" + dsS);
+				try {
+					props = getPropsDsS(mapProps, ds, dsS);
+				}catch(Exception e) {
+					if(e.getMessage().contains("Adjacency list bitmap")) {
+						writer.println("Empty dataset: " + ds);
+						continue;
+					}
+				}
+				if((props == null) || (props.size() < 1)) {
+					writer.println("Problem with dataset where the SPARQL are supposed to run: " + dsS);
+					continue;
+				}
+			//}	
 			mapPropsDs.get(ds).putAll(props);
 			String nSparql = replaceURIs(cSparql, mapPropsDs.get(ds));
 			Set<String> ret = execSparql(nSparql,ds);
-			System.out.println("***************");
-			System.out.println("Result on Dataset:" + ds + ":\n" + ret);
-			System.out.println("Different ontology/property/attribute_name: YES" );
-			System.out.println("***************");
+			writer.println("***************");
+			writer.println("Dataset: " + ds);
+			writer.println("Properties matched: " + props);
+			writer.println("Number results:" + ret.size());
+			writer.println("Different ontology/property/attribute_name: YES" );
+			writer.println("***************");
 		}
 		
 		long total = System.currentTimeMillis() - start;
-		System.out.println("FINISHED in " + TimeUnit.MILLISECONDS.toMinutes(total) + " minutes");
+		writer.println("FINISHED in " + TimeUnit.MILLISECONDS.toSeconds(total) + " seconds");
+		writer.close();
 	}
 	
 	private static Set<String> execSparql(String cSparql, String source) {
@@ -122,14 +142,23 @@ public class SparqlMatching {
 
 	/*
 	 * Return a map with the equivalent URIs prop in the dataset Target.
-	 * Try to discover the Source dataset of the properties.
+	 * Try to discover the Source dataset of the properties using wimuQ.
 	 */
-	private static Map<String, String> getProps(Map<String, String> mProps, String dsT) throws IOException, InterruptedException {
+	private static Map<String, String> getPropsWimuQ(Map<String, String> mProps, String dsT) throws IOException, InterruptedException {
+		String dsS = getDataset(mProps.keySet());
+		//String dsS = "dirHDT/85d5a476b56fde200e770cefa0e5033c.hdt";
+		//Main.goodSources.add(dsS);
+		System.out.println("Datase where the SPARQL works: " + dsS);
+		return getProps(mProps, dsS, dsT);
+	}
+	
+	/*
+	 * Return a map with the equivalent URIs prop in the dataset Target.
+	 */
+	private static Map<String, String> getPropsDsS(Map<String, String> mProps, String dsT, String dsS) throws IOException {
 		//String dsS = getDataset(mProps.keySet());
-		String dsS = "dirHDT/85d5a476b56fde200e770cefa0e5033c.hdt";
 		Main.goodSources.add(dsS);
-		System.out.println("ONLY A TEST WITH DATASET: dirHDT/85d5a476b56fde200e770cefa0e5033c.hdt");
-		System.out.println("PLEASE DONT consider this results !!!");
+		System.out.println("Datase where the SPARQL works: " + dsS);
 		return getProps(mProps, dsS, dsT);
 	}
 	
@@ -381,5 +410,25 @@ public class SparqlMatching {
 	    //remove PrefixMapping so the prefixes will get replaced by the full uris
 	    q.setPrefixMapping(null);       
 	    return q.serialize();
+	}
+	
+	private static Set<String> getDatasets(File file, int limit) {
+		Set<String> ret = new LinkedHashSet<String>();
+		if (file.isDirectory()) {
+			File[] files = file.listFiles();
+			int count = 0;
+			for (File source : files) {
+				if (source.isFile()) {
+					if (count >= limit)
+						break;
+					ret.add(source.getAbsolutePath());
+					count++;
+				}
+			}
+		} else {
+			System.err.println(file.getName() + " is not a directory !");
+		}
+
+		return ret;
 	}
 }
