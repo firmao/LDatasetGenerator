@@ -49,6 +49,9 @@ import org.apache.jena.riot.system.StreamRDF;
 import org.apache.jena.sparql.core.Quad;
 import org.rdfhdt.hdt.hdt.HDT;
 import org.rdfhdt.hdt.hdt.HDTManager;
+import org.rdfhdt.hdt.header.Header;
+import org.rdfhdt.hdt.triples.IteratorTripleString;
+import org.rdfhdt.hdt.triples.TripleString;
 import org.rdfhdt.hdtjena.HDTGraph;
 import org.tukaani.xz.XZInputStream;
 
@@ -507,6 +510,17 @@ public class Util {
 			System.out.println("Time to download dataset: " + total + "ms");
 			start = System.currentTimeMillis();
 			hdt = HDTManager.mapHDT(file.getAbsolutePath(), null);
+			
+			Header header = hdt.getHeader();
+			IteratorTripleString it = header.search("", "http://rdfs.org/ns/void#triples", "");
+			String numberTriples = null;
+			while (it.hasNext()) {
+				TripleString ts = it.next();
+				numberTriples = ts.getObject().toString();
+			}
+			long numTriples = Long.parseLong(numberTriples.trim().replaceAll("\"", ""));
+			SparqlMatching.mapDsNumTriples.put(dataset,numTriples);
+			
 			HDTGraph graph = new HDTGraph(hdt);
 			Model model = new ModelCom(graph);
 			//model.write(out, Lang.NTRIPLES); // convert hdt to .nt
@@ -529,7 +543,7 @@ public class Util {
 					}
 					//sb.append(qSolution.get(varName).toString() + " ");
 				}
-				ret.add(sb.toString());
+				ret.add(sb.toString().trim());
 				count++;
 				if((maxEntities != -1) && (count >= maxEntities)) {
 					break;

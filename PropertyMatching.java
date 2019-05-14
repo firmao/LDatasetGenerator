@@ -1,62 +1,70 @@
 package test.testid;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-import org.apache.jena.query.Query;
 import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.QueryExecutionFactory;
-import org.apache.jena.query.QueryFactory;
 import org.apache.jena.query.ResultSet;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.shared.PrefixMapping;
-import org.apache.jena.sparql.core.Prologue;
 import org.apache.jena.sparql.function.FunctionRegistry;
 import org.rdfhdt.hdt.hdt.HDT;
 import org.rdfhdt.hdt.hdt.HDTManager;
 import org.rdfhdt.hdtjena.HDTGraph;
 
 public class PropertyMatching {
-	
+
 	public static final Map<String, String> mapPropValueDsT = new HashMap<String, String>();
-	
+	public static final Map<String, Long> mapDsNumTriples = new HashMap<String, Long>();
+	public static final Map<String, Long> mapDsNumResBefore = new HashMap<String, Long>();
+	public static final Map<String, Long> mapDsNumResAfter = new HashMap<String, Long>();
+
+	public static long totalNumTriples = 0;
+
 	public static void main(String[] args) throws IOException, InterruptedException {
-		propertyMatching();
+		Map<String, String> mapMatches = new LinkedHashMap<String, String>();
+		String dsS = "dirHDT/3_ds_tests/hdt/personne1_vldb.hdt";
+		String dsT = "dirHDT/3_ds_tests/hdt/personne2_vldb.hdt";
+		mapMatches = schemaMatching(dsS, dsT);
+		System.out.println(mapMatches);
 	}
 
-	private static void propertyMatching() throws IOException, InterruptedException {
-		final Map<String, String> mapProps = new HashMap<String, String>();
-		final Map<String, Map<String, String>> mapPropsDs = new HashMap<String, Map<String, String>>();
-		
-		long start = System.currentTimeMillis();	
-		Set<String> datasets = new HashSet<String>();
-		datasets.add("d1.hdt");
-		datasets.add("d2.hdt");
-		datasets.add("d3.hdt");
-		
-		for (String ds : datasets) {
-			Map<String, String> props = getProps(mapProps, ds);
-			if(props == null) {
-				System.out.println("Problem ds: " + ds);
-				continue;
+	private static Map<String, String> schemaMatching(String dsS, String dsT) throws IOException {
+		final Map<String, String> resPropDsSDsT = new LinkedHashMap<String, String>();
+
+		Set<String> setPropDsS = getProps(dsS);
+		// Set<String> setPropDsT = getProps(dsT);
+
+		for (String pDsS : setPropDsS) {
+			Set<String> sRet = getEquivProp(pDsS, dsS, dsT);
+			if(sRet == null) continue;
+			for (String propEquiv : sRet) {
+				if (propEquiv != null) {
+					resPropDsSDsT.put(pDsS, propEquiv);
+				}
 			}
 		}
-		
-		long total = System.currentTimeMillis() - start;
-		System.out.println("FINISHED in " + TimeUnit.MILLISECONDS.toMinutes(total) + " minutes");
+
+		return resPropDsSDsT;
+
+//		Map<String, Set<String>> resPropDsTDsS = new LinkedHashMap<String, Set<String>>();
+//		for (String pDsT : setPropDsT) {
+//			Set<String> sRet = getEquivProp(pDsT, dsT, dsS);
+//			resPropDsTDsS.put(pDsT, sRet);
+//		}
 	}
-	
+
+	private static Set<String> getProps(String dsS) {
+		String cSparql = "Select ?p where {?s ?p ?o}";
+		return execSparql(cSparql, dsS);
+	}
+
 	private static Set<String> execSparql(String cSparql, String source) {
 		final Set<String> ret = new LinkedHashSet<String>();
 		try {
@@ -64,7 +72,7 @@ public class PropertyMatching {
 			Runnable block = new Runnable() {
 				public void run() {
 					if (Util.isEndPoint(source)) {
-						//ret.addAll(execQueryEndPoint(cSparql, source));
+						// ret.addAll(execQueryEndPoint(cSparql, source));
 						ret.addAll(Util.execQueryEndPoint(cSparql, source));
 					} else {
 						ret.addAll(Util.execQueryRDFRes(cSparql, source, -1));
@@ -78,259 +86,161 @@ public class PropertyMatching {
 		return ret;
 	}
 
-	private static String replaceURIs(String cSparql, Map<String, String> mProps) {
-		for (Entry<String, String> entry : mProps.entrySet()) {
-			cSparql = cSparql.replaceAll(entry.getKey(), entry.getValue());
-		}
-		return cSparql;
-	}
-
 	/*
-	 * Return a map with the equivalent URIs prop in the dataset Target.
-	 * Try to discover the Source dataset of the properties.
-	 */
-	private static Map<String, String> getProps(Map<String, String> mProps, String dsT) throws IOException, InterruptedException {
-		String dsS = getDataset(mProps.keySet());
-		return getProps(mProps, dsS, dsT);
-	}
-	
-	private static String getDataset(Set<String> setURIs) throws InterruptedException, IOException {
-		Set<String> setDatasets = new HashSet<String>();
-		for (String uri : setURIs) {
-			setDatasets.addAll(WimuUtil.getDsWIMUs(uri));
-		}
-		String ret = getMostUpdatedDs(setDatasets);
-		return ret;
-	}
-	
-	public static String getMostUpdatedDs(Set<String> datasets) {
-		String cSparql = "Select ?date where{\n" + 
-				"?s <http://purl.org/dc/terms/modified> ?date\n" + 
-				"} order by DESC(?date) limit 1";
-		final Map<String, String> mDsTimeStamp = new HashMap<String, String>();
-		Set<String> ret = new HashSet<String>();
-		String sRet = null;
-		
-		for (String source : datasets) {
-		//lstSources.parallelStream().forEach( source -> {
-			try {
-				TimeOutBlock timeoutBlock = new TimeOutBlock(300000); // 3 minutes
-				Runnable block = new Runnable() {
-					public void run() {
-						
-						if (Util.isEndPoint(source)) {
-							//ret.addAll(execQueryEndPoint(cSparql, source));
-							ret.addAll(Util.execQueryEndPoint(cSparql, source, true, -1));
-						} else {
-							ret.addAll(Util.execQueryRDFRes(cSparql, source, -1));
-						}
-						String sRet = null;
-						String previous = mDsTimeStamp.get(source);
-						for (String timeStamp : ret) {
-							if(Util.isGreaterDate(timeStamp, previous)) {
-								sRet = source;
-							}
-							previous = timeStamp;
-							mDsTimeStamp.put(sRet, previous);
-							Main.goodSources.add(source);
-						}
-						ret.clear();
-					}
-				};
-				timeoutBlock.addBlock(block);// execute the runnable block
-			} catch (Throwable e) {
-				System.out.println("TIME-OUT-ERROR - dataset/source: " + source);
-			}
-		}
-		for(String sret : mDsTimeStamp.keySet()) {
-			sRet = sret;
-		}
-		
-		return sRet;
-	}
-
-	/*
-	 * Return a map with the equivalent URIs prop in the dataset Target.
-	 */
-	private static Map<String, String> getProps(Map<String, String> mProps, String dsS, String dsT) throws IOException {
-		Map<String, String> mRet = new HashMap<String, String>();
-		
-		if(!Main.goodSources.contains(dsS)) {
-			return null;
-		}
-		
-		for (Entry<String, String> entry : mProps.entrySet()) {
-			String prop = entry.getKey();
-			Set<String> equivProps = getEquivProp(prop, dsS, dsT);
-			if(equivProps != null) {
-				for (String equivProp : equivProps) {
-					mRet.put(prop, equivProp);
-				}
-			}
-		}
-		
-		return mRet;
-	}
-
-	/*
-	 * Get the equivalent property
-	 * 1. Check if @propDs exists in dsT.
-	 * 2. Do the best practice that is using the owl:equivalentProperty.
-	 * 3. Compare the values from all properties of dsT.  
-	 * 4. Using string similarity(Threshold=0.8), search in a set of all properties from dsT(values).
-	 * 5. Using string similarity(Threshold=0.8), search in a set of all properties from dsT(names).
+	 * Get the equivalent property 1. Check if @propDs exists in dsT. 2. Do the best
+	 * practice that is using the owl:equivalentProperty. 3. Compare the values from
+	 * all properties of dsT. 4. Using string similarity(Threshold=0.8), search in a
+	 * set of all properties from dsT(values). 5. Using string
+	 * similarity(Threshold=0.8), search in a set of all properties from dsT(names).
 	 */
 	private static Set<String> getEquivProp(String propDs, String dsS, String dsT) throws IOException {
 		Set<String> equivProps = new HashSet<String>();
-		//Check if @propDs exists in dsT.
-		if(propExists(propDs, dsT)) {
+		// Check if @propDs exists in dsT.
+		if (propExists(propDs, dsT)) {
 			equivProps.add(propDs);
 			return equivProps;
 		}
-		String pValue = getValueProp(propDs,dsS);
-		if(pValue == null) {
+		String pValue = getValueProp(propDs, dsS);
+		if (pValue == null) {
 			return null;
 		}
-		
-		String cSparql = "SELECT * WHERE {<"+propDs+"> <https://www.w3.org/2002/07/owl#equivalentProperty> ?o}";
+
+		String cSparql = "SELECT * WHERE {<" + propDs + "> <https://www.w3.org/2002/07/owl#equivalentProperty> ?o}";
 		equivProps.addAll(Util.execQueryHDTRes(cSparql, dsS, -1));
-		
-		cSparql = "SELECT * WHERE {?s <https://www.w3.org/2002/07/owl#equivalentProperty> <"+propDs+">}";
+
+		cSparql = "SELECT * WHERE {?s <https://www.w3.org/2002/07/owl#equivalentProperty> <" + propDs + ">}";
 		equivProps.addAll(Util.execQueryHDTRes(cSparql, dsS, -1));
-		
-		cSparql = "SELECT * WHERE {<"+propDs+"> <https://www.w3.org/2002/07/owl#equivalentClass> ?o}";
+
+		cSparql = "SELECT * WHERE {<" + propDs + "> <https://www.w3.org/2002/07/owl#equivalentClass> ?o}";
 		equivProps.addAll(Util.execQueryHDTRes(cSparql, dsS, -1));
-		
-		cSparql = "SELECT * WHERE {?s <https://www.w3.org/2002/07/owl#equivalentClass> <"+propDs+">}";
+
+		cSparql = "SELECT * WHERE {?s <https://www.w3.org/2002/07/owl#equivalentClass> <" + propDs + ">}";
 		equivProps.addAll(Util.execQueryHDTRes(cSparql, dsS, -1));
-		
-		if(equivProps.size() > 0) {
+
+		if (equivProps.size() > 0) {
 			return equivProps;
 		}
 		/*
 		 * Compare the values from all properties of dsT.
 		 */
-		String equivProp = searchValueProp(pValue,dsT); 
-		if(equivProp != null) {
+		String equivProp = searchValueProp(pValue, dsT);
+		if (equivProp != null) {
 			equivProps.add(equivProp);
 			return equivProps;
 		}
-		
+
 		equivProps.addAll(similaritySearchValue(pValue, dsT));
-		if(equivProps.size() > 0) {
+		if (equivProps.size() > 0) {
 			return equivProps;
 		}
-		
+
 		equivProps.addAll(similaritySearchProp(propDs, dsT));
-		if(equivProps.size() > 0) {
+		if (equivProps.size() > 0) {
 			return equivProps;
 		}
-		System.out.println("THERE NO EQUIVALENT property.");
-		System.out.println("PropSource: " + propDs);
-		System.out.println("dsSource: " + dsS);
-		System.out.println("dsTarget: " + dsT);
+		//System.out.println("THERE ARE NO EQUIVALENT property: " + propDs + " in " + dsT);
 		return null;
 	}
 
 	private static Set<String> similaritySearchProp(String propDs, String dsT) throws IOException {
 		Set<String> ret = new HashSet<String>();
-		HDT hdt = HDTManager.mapIndexedHDT(dsT, null);
-		HDTGraph graph = new HDTGraph(hdt);
-		Model model = ModelFactory.createModelForGraph(graph);
-		String functionUri = "http://www.valdestilhas.org/JaccardSim";
-		FunctionRegistry.get().put(functionUri, JaccardFilter.class);
-		
-		String cSparql = "Select ?p where {?s ?p ?o . "
-				+ "FILTER(<" + functionUri + ">(?p, \"" + propDs + "\") > 0.8) }";
+		HDT hdt = null;
+		try {
+			hdt = HDTManager.mapIndexedHDT(dsT, null);
+			HDTGraph graph = new HDTGraph(hdt);
+			Model model = ModelFactory.createModelForGraph(graph);
+			String functionUri = "http://www.valdestilhas.org/AndreSim";
+			FunctionRegistry.get().put(functionUri, JaccardFilter.class);
 
-		QueryExecution qexec = QueryExecutionFactory.create(cSparql, model);
-		ResultSet rs = qexec.execSelect();
-		while (rs.hasNext()) {
-			ret.add(rs.next().toString());
+			String cSparql = "Select ?p where {?s ?p ?o . " + "FILTER(<" + functionUri + ">(?p, \"" + propDs
+					+ "\") > 0.8) }";
+
+			QueryExecution qexec = QueryExecutionFactory.create(cSparql, model);
+			ResultSet rs = qexec.execSelect();
+			while (rs.hasNext()) {
+				ret.add(rs.next().toString());
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			if (hdt != null) {
+				hdt.close();
+			}
 		}
+
 		return ret;
 	}
 
 	private static Set<String> similaritySearchValue(String pValue, String dsT) throws IOException {
 		Set<String> ret = new HashSet<String>();
-		HDT hdt = HDTManager.mapIndexedHDT(dsT, null);
-		HDTGraph graph = new HDTGraph(hdt);
-		Model model = ModelFactory.createModelForGraph(graph);
-		String functionUri = "http://www.valdestilhas.org/JaccardSim";
-		FunctionRegistry.get().put(functionUri, JaccardFilter.class);
-		
-		String cSparql = "Select ?o where {?s ?p ?o . "
-				+ "FILTER(<" + functionUri + ">(?o, \"" + pValue + "\") > 0.8) }";
+		HDT hdt = null;
+		try {
+			hdt = HDTManager.mapIndexedHDT(dsT, null);
+			HDTGraph graph = new HDTGraph(hdt);
+			Model model = ModelFactory.createModelForGraph(graph);
+			String functionUri = "http://www.valdestilhas.org/JaccardSim";
+			FunctionRegistry.get().put(functionUri, JaccardFilter.class);
 
-		QueryExecution qexec = QueryExecutionFactory.create(cSparql, model);
-		ResultSet rs = qexec.execSelect();
-		while (rs.hasNext()) {
-			ret.add(rs.next().toString());
+			String cSparql = "Select ?o where {?s ?p ?o . " + "FILTER(<" + functionUri + ">(?o, \"" + pValue
+					+ "\") > 0.8) }";
+
+			QueryExecution qexec = QueryExecutionFactory.create(cSparql, model);
+			ResultSet rs = qexec.execSelect();
+			while (rs.hasNext()) {
+				ret.add(rs.next().toString());
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			if (hdt != null) {
+				hdt.close();
+			}
 		}
 		return ret;
 	}
 
 	private static String searchValueProp(String pValue, String dsT) throws IOException {
-		String cSparql = "Select ?o where {?s ?p <"+pValue+">}";
-		 
+		String sRet = null;
+		String cSparql = "Select ?p where {?s ?p <" + pValue + ">}";
+
 		// if is literal
-		if(!pValue.startsWith("http")) {
-			cSparql = "Select ?o where {?s ?p \""+pValue+"\"}";
+		if (!pValue.startsWith("http")) {
+			// String nValue = Util.formatLiteral(pValue);
+			cSparql = "Select ?p where {?s ?p ?o ." + " filter contains(str(?o),\"" + pValue + "\")} limit 1";
+			// cSparql = "Select ?p where {?s ?p \""+pValue.replaceAll("^^http",
+			// "\"^^http")+"}";
 		}
 		Set<String> ret = Util.execQueryHDTRes(cSparql, dsT, -1);
-		if(ret.size() > 0) {
-			return ret.toString();
+		if (ret.size() > 0) {
+			for (String line : ret) {
+				sRet = line;
+				break;
+			}
+			return sRet.trim();
 		} else {
 			return null;
 		}
 	}
 
 	private static String getValueProp(String propDs, String dsS) throws IOException {
-		String cSparql = "Select ?o where {?s <"+propDs+"> ?o}";
+		String sRet = null;
+		String cSparql = "Select ?o where {?s <" + propDs + "> ?o}";
 		Set<String> ret = Util.execQueryHDTRes(cSparql, dsS, -1);
-		
-		if(ret.size() > 0) {
-			return ret.toString();
+
+		if (ret.size() > 0) {
+			for (String line : ret) {
+				sRet = line;
+				break;
+			}
+			return sRet.trim();
 		} else {
 			return null;
 		}
 	}
 
 	private static boolean propExists(String propDs, String dsT) throws IOException {
-		String cSparql = "Select * where {?s <"+propDs+"> ?o}";
+		String cSparql = "Select * where {?s <" + propDs + "> ?o}";
 		Set<String> ret = Util.execQueryHDTRes(cSparql, dsT, -1);
 		return (ret.size() > 0);
-	}
-
-	private static Map<String, String> extractURIS(String cSparql) throws UnsupportedEncodingException {
-		Map<String, String> containedUrls = new HashMap<String, String>();
-		
-		String fixSparql = replacePrefixes(cSparql);
-		
-		String urlRegex = "((https?|ftp|gopher|telnet|file):((//)|(\\\\))+[\\w\\d:#@%/;$()~_?\\+-=\\\\\\.&]*)";
-		Pattern pattern = Pattern.compile(urlRegex, Pattern.CASE_INSENSITIVE);
-		Matcher urlMatcher = pattern.matcher(fixSparql);
-		
-		while (urlMatcher.find()) {
-			String key = fixSparql.substring(urlMatcher.start(0), urlMatcher.end(0));
-			containedUrls.put(key, null);
-		}
-		
-		return containedUrls;
-	}
-
-	public static String replacePrefixes(String query) throws UnsupportedEncodingException{
-		PrefixMapping pmap = PrefixMapping.Factory.create();
-//		Map<String, String> mPrefixURI = getMapPrefix(query);
-//		pmap.setNsPrefixes(mPrefixURI);
-	    pmap.setNsPrefixes(PrefixMapping.Extended);
-		Prologue prog = new Prologue();
-	    prog.setPrefixMapping(pmap);
-	    Query q = QueryFactory.parse(new Query(prog), query, null, null);
-	    //Set Prefix Mapping
-	    q.setPrefixMapping(pmap);
-	    //remove PrefixMapping so the prefixes will get replaced by the full uris
-	    q.setPrefixMapping(null);       
-	    return q.serialize();
 	}
 }

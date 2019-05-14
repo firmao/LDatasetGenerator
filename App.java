@@ -2,17 +2,27 @@ package test.testid;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
+import org.apache.jena.graph.Node;
+import org.apache.jena.graph.NodeFactory;
+import org.apache.jena.graph.Triple;
+import org.apache.jena.query.Dataset;
 import org.apache.jena.query.Query;
 import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.QueryExecutionFactory;
 import org.apache.jena.query.QueryFactory;
 import org.apache.jena.query.QuerySolution;
+import org.apache.jena.query.ReadWrite;
 import org.apache.jena.query.ResultSet;
 import org.apache.jena.query.ResultSetFormatter;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.impl.ModelCom;
+import org.apache.jena.riot.out.NodeFormatter;
+import org.apache.jena.sparql.util.NodeFactoryExtra;
+import org.apache.jena.tdb.TDBFactory;
 import org.rdfhdt.hdt.enums.RDFNotation;
 import org.rdfhdt.hdt.exceptions.NotFoundException;
 import org.rdfhdt.hdt.exceptions.ParserException;
@@ -26,59 +36,55 @@ import org.rdfhdt.hdtjena.HDTGraph;
 public class App {
 
 	public static void main(String[] args) throws IOException, NotFoundException, ParserException {
+//		Set<String> datasets = new LinkedHashSet<String>();
+//		datasets.add("dirHDT/3_ds_tests/hdt/d1.hdt");
+//		datasets.add("dirHDT/3_ds_tests/hdt/d2.hdt");
+//		datasets.add("dirHDT/3_ds_tests/hdt/d3.hdt");
+//		String cSparql = "Select * where {?s ?p ?o ."
+//				+ "Filter(?s=<http://csarven.ca/> || "
+//				+ "?s=<http://dbpedia.org/resource/Lucius_Caesar>)}";
+//		
+//		String pathEmptyHDT = "dirHDT/3_ds_tests/hdt/d1.hdt";
+//		experimentHdtFederated(datasets, cSparql, pathEmptyHDT);
 		
-//		Set<String> hdtFiles = new HashSet<String>();
-//		hdtFiles.add("dirHDT/f84568054530681185224349d6d9ce48.hdt");
-//		hdtFiles.add("dirHDT/f490676b9c0a8d6726cade30295fdbae.hdt");
-//		hdtFiles.add("dirHDT/f94731fd64e5d21ddf3d9b056c33f7b8.hdt");
-//		hdtFiles.parallelStream().forEach(hdtFile ->{ // this line distribute the process in parallel, one hdtFile per core processor.
-//			try {
-//				traverseHDT(hdtFile, "","", "birth");
-//			} catch (NotFoundException e) {
-//				// TODO Auto-generated catch block
-//				e.printStackTrace();
-//			} catch (IOException e) {
-//				// TODO Auto-generated catch block
-//				e.printStackTrace();
-//			}
-//		});
 		createHDT();
 		System.exit(0);
-		//String hdtFile = "dirHDT/dbpedia2015.hdt";
-		String hdtFile = "dirHDT/85d5a476b56fde200e770cefa0e5033c.hdt";
-		//String cSparql = "PREFIX dbo: <http://dbpedia.org/ontology/> PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> PREFIX res: <http://dbpedia.org/resource/> PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> SELECT ?years WHERE { res:Ford_Model_T dbo:productionEndYear ?end ; dbo:productionStartYear ?start. BIND ( ( year(xsd:date(?end)) - year(xsd:date(?start)) ) AS ?years) }";
-		String cSparql = "Select * where {"
-				+ "?s ?p ?o ."
-				+ "FILTER(?s=<http://csarven.ca/> "
-				+ "&& ?p=<http://creativecommons.org/ns#license> "
-				+ "&& ?o=<http://creativecommons.org/licenses/by-sa/4.0/>)} "
-				+ "limit 10";
-		execHDT(hdtFile, cSparql);
-		
+		// String hdtFile = "dirHDT/dbpedia2015.hdt";
+		String hdtFile = "dirHDT/3_ds_tests/hdt/d2.hdt";
+		// String cSparql = "PREFIX dbo: <http://dbpedia.org/ontology/> PREFIX xsd:
+		// <http://www.w3.org/2001/XMLSchema#> PREFIX res:
+		// <http://dbpedia.org/resource/> PREFIX xsd:
+		// <http://www.w3.org/2001/XMLSchema#> SELECT ?years WHERE { res:Ford_Model_T
+		// dbo:productionEndYear ?end ; dbo:productionStartYear ?start. BIND ( (
+		// year(xsd:date(?end)) - year(xsd:date(?start)) ) AS ?years) }";
+//		String cSparql = "Select * where {" + "?s ?p ?o ." + "FILTER(?s=<http://csarven.ca/> "
+//				+ "&& ?p=<http://creativecommons.org/ns#license> "
+//				+ "&& ?o=<http://creativecommons.org/licenses/by-sa/4.0/>)} " + "limit 10";
+		//execHDT(hdtFile, cSparql);
+
 	}
 
 	private static void createHDT() throws IOException, ParserException {
-		 // Configuration variables
-        String baseURI = "http://example.com/mydataset";
-        String rdfInput = "dirHDT/3_ds_tests/data/d3.nt";
-        String inputType = "ntriples";
-        String hdtOutput = "dirHDT/3_ds_tests/hdt/d3.hdt";
- 
-        // Create HDT from RDF file
-        HDT hdt = HDTManager.generateHDT(
-                            rdfInput,         // Input RDF File
-                            baseURI,          // Base URI
-                            RDFNotation.parse(inputType), // Input Type
-                            new HDTSpecification(),   // HDT Options
-                            null              // Progress Listener
-                );
- 
-        // OPTIONAL: Add additional domain-specific properties to the header:
-        //Header header = hdt.getHeader();
-        //header.insert("myResource1", "property" , "value");
- 
-        // Save generated HDT to a file
-        hdt.saveToHDT(hdtOutput, null);
+		// Configuration variables
+		String baseURI = "http://example.com/mydataset";
+		String rdfInput = "dirHDT/3_ds_tests/data/personne1_vldb.nt";
+		String inputType = "ntriples";
+		String hdtOutput = "dirHDT/3_ds_tests/hdt/personne1_vldb.hdt";
+
+		// Create HDT from RDF file
+		HDT hdt = HDTManager.generateHDT(rdfInput, // Input RDF File
+				baseURI, // Base URI
+				RDFNotation.parse(inputType), // Input Type
+				new HDTSpecification(), // HDT Options
+				null // Progress Listener
+		);
+
+		// OPTIONAL: Add additional domain-specific properties to the header:
+		// Header header = hdt.getHeader();
+		// header.insert("myResource1", "property" , "value");
+
+		// Save generated HDT to a file
+		hdt.saveToHDT(hdtOutput, null);
 	}
 
 	private static void execHDT(String ds, String cSparql) throws IOException {
@@ -107,7 +113,8 @@ public class App {
 	/*
 	 * Empty s, p, o means get everything ALLES.
 	 */
-	private static void traverseHDT(String hdtFile, String s, String p, String o) throws NotFoundException, IOException {
+	private static void traverseHDT(String hdtFile, String s, String p, String o)
+			throws NotFoundException, IOException {
 		// Load HDT file NOTE: Use loadIndexedHDT() if you are doing ?P?, ?PO, ??O
 		// queries
 		HDT hdt = HDTManager.loadHDT(hdtFile, null);
@@ -121,7 +128,7 @@ public class App {
 		System.out.println("Estimated number of results: " + it.estimatedNumResults());
 		while (it.hasNext()) {
 			TripleString ts = it.next();
-			if(ts.getObject().toString().toLowerCase().contains(o)){
+			if (ts.getObject().toString().toLowerCase().contains(o)) {
 				System.out.println(ts);
 			}
 		}
@@ -133,6 +140,51 @@ public class App {
 //			CharSequence str = itPred.next();
 //			System.out.println(str);
 //		}
+	}
+
+	private static void experimentHdtFederated(Set<String> datasets, String cSparql, String emptyHDT) {
+		HDT bigHDT = null;
+		Dataset dataset = null;
+		try {
+//			bigHDT = HDTManager.loadHDT(emptyHDT, null);
+//			HDTGraph bigHDTGraph = new HDTGraph(bigHDT);
+//			Model model = new ModelCom(bigHDTGraph);
+			
+			dataset = TDBFactory.createDataset("dirTDB");
+			dataset.begin(ReadWrite.WRITE);
+			Model model = dataset.getDefaultModel();
+			for (String ds : datasets) {
+				HDT hdt = HDTManager.loadHDT(ds, null);
+				HDTGraph hdtGraph = new HDTGraph(hdt);
+				Model modelLess = new ModelCom(hdtGraph);
+				
+				
+				model.add(modelLess);
+				//model.union(modelLess);
+				//model.intersection(modelLess);
+				//model.commit();
+				hdt.close();
+			}
+			//model.write(System.out, "RDF/XML-ABBREV");
+			Query query = QueryFactory.create(cSparql);
+			QueryExecution qe = QueryExecutionFactory.create(query, model);
+			ResultSet results = qe.execSelect();
+			System.out.println(ResultSetFormatter.asText(results));
+			qe.close();
+			dataset.commit();
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			dataset.close();
+			if (bigHDT != null) {
+				try {
+					bigHDT.close();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		}
 	}
 
 }

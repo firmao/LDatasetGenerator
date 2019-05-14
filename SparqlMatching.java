@@ -32,6 +32,11 @@ import org.rdfhdt.hdtjena.HDTGraph;
 public class SparqlMatching {
 	
 	public static final Map<String, String> mapPropValueDsT = new HashMap<String, String>();
+	public static final Map<String, Long> mapDsNumTriples = new HashMap<String, Long>();
+	public static final Map<String, Long> mapDsNumResBefore = new HashMap<String, Long>();
+	public static final Map<String, Long> mapDsNumResAfter = new HashMap<String, Long>();
+	
+	public static long totalNumTriples = 0;
 	
 	public static void main(String[] args) throws IOException, InterruptedException {
 		basedSparql();
@@ -53,8 +58,8 @@ public class SparqlMatching {
 		datasets.add("dirHDT/3_ds_tests/hdt/d1.hdt");
 		datasets.add("dirHDT/3_ds_tests/hdt/d2.hdt");
 		datasets.add("dirHDT/3_ds_tests/hdt/d3.hdt");
-		int numberOfDs = 10;
-		//datasets.addAll(getDatasets(new File("dirHDT"), numberOfDs));
+		int numberOfDs = 0;
+		datasets.addAll(getDatasets(new File("dirHDT"), numberOfDs));
 		
 //		final String cSparql = "SELECT ?name ?area ?pop ?lat ?long WHERE {\n" + 
 //				" ?s a <http://dbpedia.org/ontology/City> ;\n" + 
@@ -66,16 +71,32 @@ public class SparqlMatching {
 //				"FILTER ( regex(str(?name), \"Leipzig\" ) && langMatches(lang(?name),\"en\"))\n" + 
 //				"}";
 		
-		final String cSparql = "Select * where {?s <http://creativecommons.org/ns#license> ?o}";
-		PrintWriter writer = new PrintWriter("SparqlMatching_"+numberOfDs+".txt", "UTF-8");
+		//final String cSparql = "Select * where {?s <http://creativecommons.org/ns#license> ?o}";
+		final String cSparql = "Select * where {?s ?p ?o ."
+				+ "Filter("
+				+ "?p=<http://dbpedia.org/ontology/birth> || "
+				+ "?p=<http://dbpedia.org/ontology/death> ||"
+				+ "?p=<http://creativecommons.org/ns#license> "
+				+ ")}";
+		
+//		<http://dbpedia.org/ontology/birth>
+//		<http://dbpedia.org/ontology/death>
+//		<http://dbpedia.org/ontology/birthDate>
+//		<http://creativecommons.org/ns#license>
+//		<http://dbpedia.org/ontology/deathDate>
+		PrintWriter writer = new PrintWriter("SparqlMatching_"+datasets.size()+".txt", "UTF-8");
+		long numberTriples = 0;
+		writer.println(cSparql);
 		for (String ds : datasets) {
+			
 			mapProps.putAll(extractURIS(cSparql));
 			mapPropsDs.put(ds, mapProps);
 			//Map<String, String> props = getPropsWimuQ(mapProps, ds);
 			Map<String, String> props = null;
 			//if((props == null) || (props.size() < 1)) {
 				//System.out.println("wimuQ could not identify a dataset for the SPARQL query: " + cSparql);
-				String dsS = "dirHDT/85d5a476b56fde200e770cefa0e5033c.hdt";
+				//String dsS = "dirHDT/85d5a476b56fde200e770cefa0e5033c.hdt";
+				String dsS = "dirHDT/3_ds_tests/hdt/d2.hdt";
 				System.out.println("Using a predifined dataset :" + dsS);
 				try {
 					props = getPropsDsS(mapProps, ds, dsS);
@@ -85,27 +106,38 @@ public class SparqlMatching {
 						continue;
 					}
 				}
+				if(mapDsNumTriples.get(ds) != null) {
+					numberTriples = mapDsNumTriples.get(ds);
+					totalNumTriples += numberTriples;
+				}
 				if((props == null) || (props.size() < 1)) {
+					
 					writer.println("Problem with dataset where the SPARQL are supposed to run: " + dsS);
 					continue;
 				}
 			//}	
 			mapPropsDs.get(ds).putAll(props);
 			String nSparql = replaceURIs(cSparql, mapPropsDs.get(ds));
-			Set<String> ret = execSparql(nSparql,ds);
+			
+			Set<String> retBefore = execSparql(cSparql,ds);
+			Set<String> retAfter = execSparql(nSparql,ds);
 			writer.println("***************");
+			writer.println(nSparql);
 			writer.println("Dataset: " + ds);
 			writer.println("Properties matched: " + props);
-			writer.println("Number results:" + ret.size());
+			writer.println("Number results before:" + retBefore.size());
+			writer.println("Number results after:" + retAfter.size());
 			writer.println("Different ontology/property/attribute_name: YES" );
+			writer.println("Number of triples: " + numberTriples);
 			writer.println("***************");
 		}
 		
 		long total = System.currentTimeMillis() - start;
+		writer.println("Total number of triples: " + totalNumTriples);
 		writer.println("FINISHED in " + TimeUnit.MILLISECONDS.toSeconds(total) + " seconds");
 		writer.close();
 	}
-	
+
 	private static Set<String> execSparql(String cSparql, String source) {
 		final Set<String> ret = new LinkedHashSet<String>();
 		try {
