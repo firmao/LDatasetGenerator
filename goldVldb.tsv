@@ -1,0 +1,5 @@
+http://property/person_name	http://property/person/firstName
+http://property/person_date_of_birth	http://property/person/birthDate
+http://property/person_email	http://property/person/contact/email
+http://property/person_phone	http://property/person/contact/phone
+http://property/person_address/street	http://property/person/contact/address
