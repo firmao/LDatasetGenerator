@@ -195,7 +195,7 @@ public class PropertyMatching {
 	 * set of all properties from dsT(values). 5. Using string
 	 * similarity(Threshold=0.8), search in a set of all properties from dsT(names).
 	 */
-	private static Set<String> getEquivProp(String propDs, String dsS, String dsT) throws IOException {
+	public static Set<String> getEquivProp(String propDs, String dsS, String dsT) throws IOException {
 		Set<String> equivProps = new HashSet<String>();
 		// Check if @propDs exists in dsT.
 		if (propExists(propDs, dsT)) {

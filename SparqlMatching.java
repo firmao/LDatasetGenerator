@@ -281,55 +281,58 @@ public class SparqlMatching {
 	 * 5. Using string similarity(Threshold=0.8), search in a set of all properties from dsT(names).
 	 */
 	private static Set<String> getEquivProp(String propDs, String dsS, String dsT) throws IOException {
-		Set<String> equivProps = new HashSet<String>();
-		//Check if @propDs exists in dsT.
-		if(propExists(propDs, dsT)) {
-			equivProps.add(propDs);
-			return equivProps;
-		}
-		String pValue = getValueProp(propDs,dsS);
-		if(pValue == null) {
-			return null;
-		}
+		//This implementation is better, evaluated,etc... ;)
+		return PropertyMatching.getEquivProp(propDs, dsS, dsT);
 		
-		String cSparql = "SELECT * WHERE {<"+propDs+"> <https://www.w3.org/2002/07/owl#equivalentProperty> ?o}";
-		equivProps.addAll(Util.execQueryHDTRes(cSparql, dsS, -1));
-		
-		cSparql = "SELECT * WHERE {?s <https://www.w3.org/2002/07/owl#equivalentProperty> <"+propDs+">}";
-		equivProps.addAll(Util.execQueryHDTRes(cSparql, dsS, -1));
-		
-		cSparql = "SELECT * WHERE {<"+propDs+"> <https://www.w3.org/2002/07/owl#equivalentClass> ?o}";
-		equivProps.addAll(Util.execQueryHDTRes(cSparql, dsS, -1));
-		
-		cSparql = "SELECT * WHERE {?s <https://www.w3.org/2002/07/owl#equivalentClass> <"+propDs+">}";
-		equivProps.addAll(Util.execQueryHDTRes(cSparql, dsS, -1));
-		
-		if(equivProps.size() > 0) {
-			return equivProps;
-		}
-		/*
-		 * Compare the values from all properties of dsT.
-		 */
-		String equivProp = searchValueProp(pValue,dsT); 
-		if(equivProp != null) {
-			equivProps.add(equivProp);
-			return equivProps;
-		}
-		
-		equivProps.addAll(similaritySearchValue(pValue, dsT));
-		if(equivProps.size() > 0) {
-			return equivProps;
-		}
-		
-		equivProps.addAll(similaritySearchProp(propDs, dsT));
-		if(equivProps.size() > 0) {
-			return equivProps;
-		}
-		System.out.println("THERE NO EQUIVALENT property.");
-		System.out.println("PropSource: " + propDs);
-		System.out.println("dsSource: " + dsS);
-		System.out.println("dsTarget: " + dsT);
-		return null;
+//		Set<String> equivProps = new HashSet<String>();
+//		//Check if @propDs exists in dsT.
+//		if(propExists(propDs, dsT)) {
+//			equivProps.add(propDs);
+//			return equivProps;
+//		}
+//		String pValue = getValueProp(propDs,dsS);
+//		if(pValue == null) {
+//			return null;
+//		}
+//		
+//		String cSparql = "SELECT * WHERE {<"+propDs+"> <https://www.w3.org/2002/07/owl#equivalentProperty> ?o}";
+//		equivProps.addAll(Util.execQueryHDTRes(cSparql, dsS, -1));
+//		
+//		cSparql = "SELECT * WHERE {?s <https://www.w3.org/2002/07/owl#equivalentProperty> <"+propDs+">}";
+//		equivProps.addAll(Util.execQueryHDTRes(cSparql, dsS, -1));
+//		
+//		cSparql = "SELECT * WHERE {<"+propDs+"> <https://www.w3.org/2002/07/owl#equivalentClass> ?o}";
+//		equivProps.addAll(Util.execQueryHDTRes(cSparql, dsS, -1));
+//		
+//		cSparql = "SELECT * WHERE {?s <https://www.w3.org/2002/07/owl#equivalentClass> <"+propDs+">}";
+//		equivProps.addAll(Util.execQueryHDTRes(cSparql, dsS, -1));
+//		
+//		if(equivProps.size() > 0) {
+//			return equivProps;
+//		}
+//		/*
+//		 * Compare the values from all properties of dsT.
+//		 */
+//		String equivProp = searchValueProp(pValue,dsT); 
+//		if(equivProp != null) {
+//			equivProps.add(equivProp);
+//			return equivProps;
+//		}
+//		
+//		equivProps.addAll(similaritySearchValue(pValue, dsT));
+//		if(equivProps.size() > 0) {
+//			return equivProps;
+//		}
+//		
+//		equivProps.addAll(similaritySearchProp(propDs, dsT));
+//		if(equivProps.size() > 0) {
+//			return equivProps;
+//		}
+//		System.out.println("THERE NO EQUIVALENT property.");
+//		System.out.println("PropSource: " + propDs);
+//		System.out.println("dsSource: " + dsS);
+//		System.out.println("dsTarget: " + dsT);
+//		return null;
 	}
 
 	private static Set<String> similaritySearchProp(String propDs, String dsT) throws IOException {
