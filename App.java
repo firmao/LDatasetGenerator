@@ -67,9 +67,9 @@ public class App {
 	private static void createHDT() throws IOException, ParserException {
 		// Configuration variables
 		String baseURI = "http://example.com/mydataset";
-		String rdfInput = "dirHDT/3_ds_tests/data/personne1_vldb.nt";
+		String rdfInput = "dirHDT/3_ds_tests/data/personne2_vldb.nt";
 		String inputType = "ntriples";
-		String hdtOutput = "dirHDT/3_ds_tests/hdt/personne1_vldb.hdt";
+		String hdtOutput = "dirHDT/3_ds_tests/hdt/personne2_vldb.hdt";
 
 		// Create HDT from RDF file
 		HDT hdt = HDTManager.generateHDT(rdfInput, // Input RDF File

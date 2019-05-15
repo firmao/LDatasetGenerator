@@ -338,7 +338,7 @@ public class SparqlMatching {
 		HDTGraph graph = new HDTGraph(hdt);
 		Model model = ModelFactory.createModelForGraph(graph);
 		String functionUri = "http://www.valdestilhas.org/JaccardSim";
-		FunctionRegistry.get().put(functionUri, JaccardFilter.class);
+		FunctionRegistry.get().put(functionUri, SimilarityFilter.class);
 		
 		String cSparql = "Select ?p where {?s ?p ?o . "
 				+ "FILTER(<" + functionUri + ">(?p, \"" + propDs + "\") > 0.8) }";
@@ -357,7 +357,7 @@ public class SparqlMatching {
 		HDTGraph graph = new HDTGraph(hdt);
 		Model model = ModelFactory.createModelForGraph(graph);
 		String functionUri = "http://www.valdestilhas.org/JaccardSim";
-		FunctionRegistry.get().put(functionUri, JaccardFilter.class);
+		FunctionRegistry.get().put(functionUri, SimilarityFilter.class);
 		
 		String cSparql = "Select ?o where {?s ?p ?o . "
 				+ "FILTER(<" + functionUri + ">(?o, \"" + pValue + "\") > 0.8) }";

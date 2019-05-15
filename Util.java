@@ -506,9 +506,6 @@ public class Util {
 //				ret.addAll(Util.execQueryEndPoint(cSparql, "http://dbpedia.org/sparql", true));
 //				return ret;
 //			}
-			long total = System.currentTimeMillis() - start;
-			System.out.println("Time to download dataset: " + total + "ms");
-			start = System.currentTimeMillis();
 			hdt = HDTManager.mapHDT(file.getAbsolutePath(), null);
 			
 			Header header = hdt.getHeader();
@@ -549,9 +546,6 @@ public class Util {
 					break;
 				}
 			}
-
-			total = System.currentTimeMillis() - start;
-			System.out.println("Time to query dataset: " + total + "ms");
 			qe.close();
 		} catch (Exception e) {
 			System.out.println("FAIL: " + dataset + " Error: " + e.getMessage());
