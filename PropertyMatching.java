@@ -15,6 +15,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.time.StopWatch;
 import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.QueryExecutionFactory;
 import org.apache.jena.query.ResultSet;
@@ -35,109 +36,23 @@ public class PropertyMatching {
 	public static long totalNumTriples = 0;
 
 	public static void main(String[] args) throws IOException, InterruptedException {
-		final Map<String, String> mapMatches = new LinkedHashMap<String, String>();
-		final Map<String, String> mapGoldStandard = new LinkedHashMap<String, String>();
-		String dsS = "dirHDT/3_ds_tests/hdt/personne1_vldb.hdt";
-		String dsT = "dirHDT/3_ds_tests/hdt/personne2_vldb.hdt";
-//		String dsS = "dirHDT/3_ds_tests/hdt/d1.hdt";
-//		String dsT = "dirHDT/3_ds_tests/hdt/d2.hdt";
+		StopWatch stopWatch = new StopWatch();
+		Experiment exp = new Experiment();
 		
-		mapMatches.putAll(schemaMatching(dsS, dsT));
+		//exp.setDs("dirHDT/3_ds_tests/hdt/personne1_vldb.hdt");
+		exp.setDs("AmazonProducts.csv");
+		exp.setDt("GoogleProducts.csv");
+//		Set<String> manyDt = exp.getDatasets(new File("dirHDT"),10);
+//		exp.setManyDt(manyDt);
 		
-		String fileName = "MatchingMap.tsv";
-		writeFile(mapMatches, fileName, dsS, dsT);
-		
-		mapGoldStandard.putAll(convFileToMap("goldVldb.tsv"));
-		Evaluation ev = compare(mapMatches, mapGoldStandard);
-		System.out.println(mapMatches);
-		System.out.println("Precision: " + ev.getPrecision());
-		System.out.println("Recall: " + ev.getRecall());
-		System.out.println("F-Score: " + ev.getFscore());
+		exp.setGoldStandard("goldStandardAmazonGoogleProds.tsv");
+		stopWatch.start();
+		exp.execute();
+		stopWatch.stop();
+		System.out.println("Stopwatch time: " + stopWatch);
 	}
 
-	private static void writeFile(Map<String, String> mapMatches, String fileName, String dsS, String dsT) throws FileNotFoundException, UnsupportedEncodingException {
-		PrintWriter writer = new PrintWriter(fileName, "UTF-8");
-		writer.println("#Dataset Source:" + dsS + "\t" + "#Dataset Target:" + dsT);
-		for (Entry<String, String> entry : mapMatches.entrySet()) {
-			writer.println(entry.getKey() + "\t" + entry.getValue());
-		}
-		writer.close();
-	}
-
-	private static Map<String, String> convFileToMap(String fMap) throws IOException {
-		final Map<String, String> mapGoldStandard = new LinkedHashMap<String, String>();
-		List<String> lstLines = FileUtils.readLines(new File(fMap), "UTF-8");
-		for (String line : lstLines) {
-			String s[] = line.split("\t");
-			if (s.length < 2)
-				continue;
-			
-			mapGoldStandard.put(s[0], s[1]);
-		}
-		
-		return mapGoldStandard;
-	}
-
-	private static Evaluation compare(Map<String, String> mapMatches, Map<String, String> mapGoldStandard) {
-		
-//		if(mapMatches.size() != mapGoldStandard.size()) {
-//			System.err.println("No possible to evaluate, because the maps should have the same size");
-//		}
-		
-		Evaluation ev = new Evaluation();
-		int tp = 0;
-		int tf = 0;
-		int fp = 0;
-		int total = 0;
-		double fScore = 0.0;
-		double recall = 0.0;
-		double precision = 0.0;
-		for (Entry<String, String> entry : mapGoldStandard.entrySet()) {
-			String key = entry.getKey();
-			String value = entry.getValue();
-			if(mapMatches.containsKey(key)) {
-				total++;
-				if(mapMatches.get(key).equalsIgnoreCase(value)) {
-					System.out.println("equal: " + key + ", " + value);
-					tp++;
-				} else {
-					fp++;
-				}
-			} else {
-				tf++;
-			}
-		}
-		
-		if(tp == mapGoldStandard.size()) {
-			recall = 1.0;
-			precision = 1.0;
-			fScore = 1.0;
-			ev.setFscore(fScore);
-			ev.setPrecision(precision);
-			ev.setRecall(recall);
-			
-			return ev;
-		}
-		
-		precision = Double.valueOf(tp) / Double.valueOf(total);
-		recall = Double.valueOf(tp) / Double.valueOf(mapGoldStandard.size());
-		
-//		int relevantDocuments = mapMatches.size();
-//		int retrievedDocuments = tp;
-//		precision = retrievedDocuments/(relevantDocuments + retrievedDocuments);
-//		recall = relevantDocuments/(relevantDocuments + retrievedDocuments);
-		if((precision > 0.0) && (recall > 0.0)) {
-			fScore = 2.0*((precision * recall)/(precision + recall));
-		}
-		
-		ev.setFscore(fScore);
-		ev.setPrecision(precision);
-		ev.setRecall(recall);
-		
-		return ev;
-	}
-
-	private static Map<String, String> schemaMatching(String dsS, String dsT) throws IOException {
+	public static Map<String, String> schemaMatching(String dsS, String dsT) throws IOException {
 		final Map<String, String> resPropDsSDsT = new LinkedHashMap<String, String>();
 
 		Set<String> setPropDsS = getProps(dsS);

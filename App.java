@@ -2,6 +2,7 @@ package test.testid;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -47,10 +48,10 @@ public class App {
 //		String pathEmptyHDT = "dirHDT/3_ds_tests/hdt/d1.hdt";
 //		experimentHdtFederated(datasets, cSparql, pathEmptyHDT);
 		
-		createHDT();
-		System.exit(0);
+		//createHDT();
+		//System.exit(0);
 		// String hdtFile = "dirHDT/dbpedia2015.hdt";
-		String hdtFile = "dirHDT/3_ds_tests/hdt/d2.hdt";
+		//String hdtFile = "dirHDT/3_ds_tests/hdt/d2.hdt";
 		// String cSparql = "PREFIX dbo: <http://dbpedia.org/ontology/> PREFIX xsd:
 		// <http://www.w3.org/2001/XMLSchema#> PREFIX res:
 		// <http://dbpedia.org/resource/> PREFIX xsd:
@@ -60,10 +61,41 @@ public class App {
 //		String cSparql = "Select * where {" + "?s ?p ?o ." + "FILTER(?s=<http://csarven.ca/> "
 //				+ "&& ?p=<http://creativecommons.org/ns#license> "
 //				+ "&& ?o=<http://creativecommons.org/licenses/by-sa/4.0/>)} " + "limit 10";
-		//execHDT(hdtFile, cSparql);
-
+		
+		Set<String> datasets = new LinkedHashSet<String>();
+		int numberOfDs = 10000;
+		//datasets.add("UnionResultsSchemaMatching.hdt");
+		datasets.addAll(getDatasets(new File("dirHDT"), numberOfDs));
+		String cSparql = "Select ?s where {?s ?p ?o} limit 1";
+		PrintWriter writer = new PrintWriter("sparqlOut.txt", "UTF-8");
+		for (String ds : datasets) {
+			String ret = execHDTString(ds, cSparql);
+			writer.println(ret);
+		}
+		writer.close();
 	}
 
+	private static Set<String> getDatasets(File file, int limit) {
+		Set<String> ret = new LinkedHashSet<String>();
+		if (file.isDirectory()) {
+			File[] files = file.listFiles();
+			int count = 0;
+			for (File source : files) {
+				if (source.isFile()) {
+					if (count >= limit)
+						break;
+					if(source.getName().endsWith(".hdt")) {
+						ret.add(source.getAbsolutePath());
+						count++;
+					}
+				}
+			}
+		} else {
+			System.err.println(file.getName() + " is not a directory !");
+		}
+
+		return ret;
+	}
 	private static void createHDT() throws IOException, ParserException {
 		// Configuration variables
 		String baseURI = "http://example.com/mydataset";
@@ -108,6 +140,31 @@ public class App {
 				hdt.close();
 			}
 		}
+	}
+	
+	private static String execHDTString(String ds, String cSparql) throws IOException {
+		String ret = null;
+		File file = null;
+		HDT hdt = null;
+		try {
+			file = new File(ds);
+			hdt = HDTManager.mapHDT(file.getAbsolutePath(), null);
+			HDTGraph graph = new HDTGraph(hdt);
+			Model model = new ModelCom(graph);
+			Query query = QueryFactory.create(cSparql);
+			QueryExecution qe = QueryExecutionFactory.create(query, model);
+			ResultSet results = qe.execSelect();
+			ret = ResultSetFormatter.asText(results);
+			qe.close();
+		} catch (Exception e) {
+			System.out.println("FAIL: " + ds + " Error: " + e.getMessage());
+		} finally {
+			// file.delete();
+			if (hdt != null) {
+				hdt.close();
+			}
+		}
+		return ret;
 	}
 
 	/*
