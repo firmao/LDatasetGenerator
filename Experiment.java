@@ -47,6 +47,7 @@ public class Experiment {
 		if (!pDs.endsWith(".hdt")) {
 			try {
 				this.ds = convertHDT(pDs);
+				return;
 			}catch(Exception e) {
 				System.err.println("Problem converting file to HDT: " + pDs);
 			}
@@ -62,6 +63,7 @@ public class Experiment {
 		if (!pDt.endsWith(".hdt")) {
 			try {
 				this.dt = convertHDT(pDt);
+				return;
 			}catch(Exception e) {
 				System.err.println("Problem converting file to HDT: " + pDt);
 			}
@@ -132,7 +134,7 @@ public class Experiment {
 		}else {
 			mapMatches.putAll(PropertyMatching.schemaMatching(getDs(), getDt()));
 			String fileName = "MatchingMap.tsv";
-			writeFile(mapMatches, fileName, getDs(), getDs());
+			writeFile(mapMatches, fileName, getDs(), getDt());
 
 			evaluate(mapMatches);
 		}
