@@ -16,6 +16,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang3.time.StopWatch;
 import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.query.Query;
@@ -48,7 +49,46 @@ public class SparqlMatching {
 	public static long totalNumTriples = 0;
 
 	public static void main(String[] args) throws IOException, InterruptedException, IllegalArgumentException, ParserException {
-		basedSparql();
+		StopWatch stopWatch = new StopWatch();
+		ExperimentSparql exp = new ExperimentSparql();
+//		final String cSparql = "Select * where {?s ?p ?o ." + "Filter(" + "?p=<http://dbpedia.org/ontology/birth> || "
+//				+ "?p=<http://dbpedia.org/ontology/death> ||" + "?p=<http://creativecommons.org/ns#license> " + ")}";		
+//		exp.setSparqlQuery(cSparql);
+//		exp.setDs("dirHDT/3_ds_tests/hdt/d2.hdt");
+		
+//		final String cSparql = "SELECT ?name ?area ?pop ?lat ?long WHERE {\n" + 
+//		" ?s a <http://dbpedia.org/ontology/City> ;\n" + 
+//		" <http://dbpedia.org/ontology/PopulatedPlace/areaTotal> ?area ;\n" + 
+//		" <http://www.w3.org/2000/01/rdf-schema#label> ?name ;\n" + 
+//		" <http://dbpedia.org/property/populationTotal> ?pop ;\n" + 
+//		" <http://www.w3.org/2003/01/geo/wgs84_pos#lat> ?lat ;\n" + 
+//		" <http://www.w3.org/2003/01/geo/wgs84_pos#long> ?long .\n" + 
+//		"FILTER ( regex(str(?name), \"Leipzig\" ) && langMatches(lang(?name),\"en\"))\n" + 
+//		"}";
+//		exp.setSparqlQuery(cSparql);
+//		exp.setDs("http://dbpedia.org/sparql");
+		
+//		final String cSparql = "SELECT DISTINCT * WHERE { <http://dbpedia.org/ontology/areaCode> ?p ?o }";		
+//		exp.setSparqlQuery(cSparql);
+//		exp.setDs("dirHDT/DBPedia-3.9-en.hdt");
+//		Set<String> manyDt = exp.getDatasets(new File("dirHDT"), 10);
+//		exp.setManyDt(manyDt);
+		
+		final String cSparql = "SELECT DISTINCT * WHERE { ?s ?p ?o . "
+				+ "Filter ("
+				+ "?p=<file:///media/andre/DATA/Dropbox/ws1/LDatasetGenerator/AmazonProducts.csv#price> || "
+				+ "?p=<file:///media/andre/DATA/Dropbox/ws1/LDatasetGenerator/AmazonProducts.csv#title>)"
+				+ "}";		
+		exp.setSparqlQuery(cSparql);
+		exp.setDs("AmazonProducts.hdt");
+		Set<String> manyDt = exp.getDatasets(new File("manyDt"), 10);
+		exp.setManyDt(manyDt);
+		
+		stopWatch.start();
+		exp.execute();
+		stopWatch.stop();
+		System.out.println("Stopwatch time: " + stopWatch);
+		//basedSparql();
 	}
 
 	private static void basedSparql() throws IOException, InterruptedException, IllegalArgumentException, ParserException {
@@ -70,16 +110,6 @@ public class SparqlMatching {
 		datasets.add("dirHDT/3_ds_tests/hdt/d3.hdt");
 		int numberOfDs = 100;
 		datasets.addAll(getDatasets(new File("dirHDT"), numberOfDs));
-
-//		final String cSparql = "SELECT ?name ?area ?pop ?lat ?long WHERE {\n" + 
-//				" ?s a <http://dbpedia.org/ontology/City> ;\n" + 
-//				" <http://dbpedia.org/ontology/PopulatedPlace/areaTotal> ?area ;\n" + 
-//				" <http://www.w3.org/2000/01/rdf-schema#label> ?name ;\n" + 
-//				" <http://dbpedia.org/property/populationTotal> ?pop ;\n" + 
-//				" <http://www.w3.org/2003/01/geo/wgs84_pos#lat> ?lat ;\n" + 
-//				" <http://www.w3.org/2003/01/geo/wgs84_pos#long> ?long .\n" + 
-//				"#FILTER ( regex(str(?name), \"Leipzig\" ) && langMatches(lang(?name),\"en\"))\n" + 
-//				"}";
 
 		final String cSparql = "Select * where {?s ?p ?o ." + "Filter(" + "?p=<http://dbpedia.org/ontology/birth> || "
 				+ "?p=<http://dbpedia.org/ontology/death> ||" + "?p=<http://creativecommons.org/ns#license> " + ")}";
@@ -217,7 +247,7 @@ public class SparqlMatching {
 		writer.close();
 	}
 
-	private static Set<String> execSparql(String cSparql, String source) {
+	public static Set<String> execSparql(String cSparql, String source) {
 		final Set<String> ret = new LinkedHashSet<String>();
 		try {
 			TimeOutBlock timeoutBlock = new TimeOutBlock(300000); // 3 minutes
@@ -238,7 +268,7 @@ public class SparqlMatching {
 		return ret;
 	}
 
-	private static String replaceURIs(String cSparql, Map<String, String> mProps) {
+	public static String replaceURIs(String cSparql, Map<String, String> mProps) {
 		for (Entry<String, String> entry : mProps.entrySet()) {
 			String orig = entry.getKey();
 			String replace = entry.getValue();

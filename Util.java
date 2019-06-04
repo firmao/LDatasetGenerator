@@ -14,6 +14,8 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -25,10 +27,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.concurrent.TimeUnit;
 import java.util.Scanner;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.compress.archivers.ArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
@@ -47,6 +51,8 @@ import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFParserBuilder;
 import org.apache.jena.riot.system.StreamRDF;
 import org.apache.jena.sparql.core.Quad;
+import org.rauschig.jarchivelib.Archiver;
+import org.rauschig.jarchivelib.ArchiverFactory;
 import org.rdfhdt.hdt.hdt.HDT;
 import org.rdfhdt.hdt.hdt.HDTManager;
 import org.rdfhdt.hdt.header.Header;
@@ -80,10 +86,10 @@ public class Util {
 		for (Entry<String, Set<String>> entry : mapPropValue.entrySet()) {
 			String prop = entry.getKey();
 			Set<String> values = entry.getValue();
-			if(values != null) {
+			if (values != null) {
 				for (String value : values) {
-					if(value.contains("@")){ 
-						if(value.contains("@en")) {
+					if (value.contains("@")) {
+						if (value.contains("@en")) {
 							writer.println(prop + "\t" + value);
 						}
 					} else {
@@ -112,23 +118,32 @@ public class Util {
 		try {
 			File fUnzip = null;
 			if (file.getName().endsWith(".bz2"))
-				fUnzip = new File(file.getName().replaceAll(".bz2", ""));
+				fUnzip = new File(file.getAbsolutePath().replaceAll(".bz2", ""));
 			else if (file.getName().endsWith(".xz"))
-				fUnzip = new File(file.getName().replaceAll(".xz", ""));
+				fUnzip = new File(file.getAbsolutePath().replaceAll(".xz", ""));
 			else if (file.getName().endsWith(".zip"))
-				fUnzip = new File(file.getName().replaceAll(".zip", ""));
-			else if (file.getName().endsWith(".tar.gz"))
-				fUnzip = new File(file.getName().replaceAll(".tar.gz", ""));
-			else if (file.getName().endsWith(".gz"))
-				fUnzip = new File(file.getName().replaceAll(".gz", ""));
+				fUnzip = new File(file.getAbsolutePath().replaceAll(".zip", ""));
+			else if (file.getName().endsWith(".tar.gz")) {
+				fUnzip = new File(file.getAbsolutePath().replaceAll(".tar.gz", ""));
+				fUnzip.mkdirs();
+			} else if (file.getName().endsWith(".tar")) {
+				fUnzip = new File(file.getAbsolutePath().replaceAll(".tar", ""));
+				fUnzip.mkdirs();
+			} else if (file.getName().endsWith(".gz"))
+				fUnzip = new File(file.getAbsolutePath().replaceAll(".gz", ""));
 			else
 				return file;
 
 			if (fUnzip.exists()) {
-				return fUnzip;
+				if (!fUnzip.isDirectory())
+					return fUnzip;
 			}
-			BufferedInputStream in = new BufferedInputStream(new FileInputStream(file));
-			FileOutputStream out = new FileOutputStream(fUnzip);
+			BufferedInputStream in = null;
+			FileOutputStream out = null;
+			if (!fUnzip.isDirectory()) {
+				in = new BufferedInputStream(new FileInputStream(file));
+				out = new FileOutputStream(fUnzip);
+			}
 
 			if (file.getName().endsWith(".bz2")) {
 				BZip2CompressorInputStream bz2In = new BZip2CompressorInputStream(in);
@@ -163,16 +178,27 @@ public class Util {
 					out.close();
 					zipIn.close();
 				}
-			} else if (file.getName().endsWith(".tar.gz") || file.getName().endsWith(".gz")) {
-				GzipCompressorInputStream gzIn = new GzipCompressorInputStream(in);
-				synchronized (gzIn) {
-					final byte[] buffer = new byte[8192];
-					int n = 0;
-					while (-1 != (n = gzIn.read(buffer))) {
-						out.write(buffer, 0, n);
+			} else if (file.getName().endsWith(".tar.gz") || file.getName().endsWith(".gz")
+					|| file.getName().endsWith(".tar")) {
+//				Archiver archiver = ArchiverFactory.createArchiver("tar", "gz");
+//				archiver.extract(file, fUnzip);
+				if (file.getName().endsWith(".tar")) {
+					in = new BufferedInputStream(new FileInputStream(file));
+					out = new FileOutputStream(new File(file.getAbsolutePath().replaceAll(".tar", ".test")));
+					ZipArchiveInputStream zipIn = new ZipArchiveInputStream(in);
+					synchronized (zipIn) {
+						final byte[] buffer = new byte[8192];
+						int n = 0;
+						while (-1 != (n = zipIn.read(buffer))) {
+							out.write(buffer, 0, n);
+						}
+						out.close();
+						zipIn.close();
 					}
-					out.close();
-					gzIn.close();
+				} else {
+					Path pIn = file.toPath();
+					Path pOut = fUnzip.toPath();
+					unTarGz(pIn, pOut);
 				}
 			}
 
@@ -184,6 +210,23 @@ public class Util {
 			ret = file;
 		}
 		return ret;
+	}
+
+	public static void unTarGz(Path pathInput, Path pathOutput) throws IOException {
+		TarArchiveInputStream tararchiveinputstream = new TarArchiveInputStream(
+				new GzipCompressorInputStream(new BufferedInputStream(Files.newInputStream(pathInput))));
+
+		ArchiveEntry archiveentry = null;
+		while ((archiveentry = tararchiveinputstream.getNextEntry()) != null) {
+			Path pathEntryOutput = pathOutput.resolve(archiveentry.getName());
+			if (archiveentry.isDirectory()) {
+				if (!Files.exists(pathEntryOutput))
+					Files.createDirectory(pathEntryOutput);
+			} else
+				Files.copy(tararchiveinputstream, pathEntryOutput);
+		}
+
+		tararchiveinputstream.close();
 	}
 
 	/**
@@ -453,18 +496,18 @@ public class Util {
 					final StringBuffer sb = new StringBuffer();
 					for (final Iterator<String> varNames = qSolution.varNames(); varNames.hasNext();) {
 						final String varName = varNames.next();
-						
-						if(qSolution.get(varName).isLiteral()) {
+
+						if (qSolution.get(varName).isLiteral()) {
 							String s = qSolution.get(varName).asLiteral().getString();
 							sb.append(s);
 						} else {
 							sb.append(qSolution.get(varName).toString() + " ");
 						}
-						//sb.append(qSolution.get(varName).toString() + " ");
+						// sb.append(qSolution.get(varName).toString() + " ");
 					}
 					ret.add(sb.toString());
 					count++;
-					if((maxEntities != -1) && (count >= maxEntities)) {
+					if ((maxEntities != -1) && (count >= maxEntities)) {
 						break;
 					}
 				}
@@ -475,11 +518,11 @@ public class Util {
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
-		
+
 		if (ret.size() > 0) {
 			Main.goodSources.add(dataset);
 		}
-		
+
 		return ret;
 	}
 
@@ -488,8 +531,6 @@ public class Util {
 		File file = null;
 		HDT hdt = null;
 		try {
-			System.out.println("Dataset: " + dataset);
-			long start = System.currentTimeMillis();
 			if (dataset.startsWith("http")) {
 				URL url = new URL(dataset);
 				file = new File(Util.getURLFileName(url));
@@ -507,20 +548,22 @@ public class Util {
 //				return ret;
 //			}
 			hdt = HDTManager.mapHDT(file.getAbsolutePath(), null);
-			
-			Header header = hdt.getHeader();
-			IteratorTripleString it = header.search("", "http://rdfs.org/ns/void#triples", "");
-			String numberTriples = null;
-			while (it.hasNext()) {
-				TripleString ts = it.next();
-				numberTriples = ts.getObject().toString();
+			if (SparqlMatching.mapDsNumTriples.get(dataset) == null) {
+				Header header = hdt.getHeader();
+				IteratorTripleString it = header.search("", "http://rdfs.org/ns/void#triples", "");
+				String numberTriples = null;
+				while (it.hasNext()) {
+					TripleString ts = it.next();
+					numberTriples = ts.getObject().toString();
+				}
+				long numTriples = Long.parseLong(numberTriples.trim().replaceAll("\"", ""));
+				SparqlMatching.mapDsNumTriples.put(dataset, numTriples);
+				System.out.println("Dataset: " + dataset + "\nTriples: " + numberTriples);
 			}
-			long numTriples = Long.parseLong(numberTriples.trim().replaceAll("\"", ""));
-			SparqlMatching.mapDsNumTriples.put(dataset,numTriples);
-			
+
 			HDTGraph graph = new HDTGraph(hdt);
 			Model model = new ModelCom(graph);
-			//model.write(out, Lang.NTRIPLES); // convert hdt to .nt
+			// model.write(out, Lang.NTRIPLES); // convert hdt to .nt
 			Query query = QueryFactory.create(cSparql);
 			QueryExecution qe = QueryExecutionFactory.create(query, model);
 			ResultSet results = qe.execSelect();
@@ -531,18 +574,17 @@ public class Util {
 				final StringBuffer sb = new StringBuffer();
 				for (final Iterator<String> varNames = qSolution.varNames(); varNames.hasNext();) {
 					final String varName = varNames.next();
-					
-					if(qSolution.get(varName).isLiteral()) {
+
+					if (qSolution.get(varName).isLiteral()) {
 						String s = qSolution.get(varName).asLiteral().getString();
 						sb.append(s);
 					} else {
 						sb.append(qSolution.get(varName).toString() + " ");
 					}
-					//sb.append(qSolution.get(varName).toString() + " ");
 				}
 				ret.add(sb.toString().trim());
 				count++;
-				if((maxEntities != -1) && (count >= maxEntities)) {
+				if ((maxEntities != -1) && (count >= maxEntities)) {
 					break;
 				}
 			}
@@ -555,14 +597,14 @@ public class Util {
 				hdt.close();
 			}
 		}
-		
+
 		if (ret.size() > 0) {
 			Main.goodSources.add(dataset);
 		}
 
 		return ret;
 	}
-	
+
 	public static Set<String> execQueryEndPoint(String cSparql, String endPoint) {
 		System.out.println("Query endPoint: " + endPoint);
 		final Set<String> ret = new HashSet<String>();
@@ -628,14 +670,14 @@ public class Util {
 
 			ResultSet results = qexec.execSelect();
 			List<QuerySolution> lst = ResultSetFormatter.toList(results);
-			int count =0;
+			int count = 0;
 			for (QuerySolution qSolution : lst) {
 				final StringBuffer sb = new StringBuffer();
 				for (final Iterator<String> varNames = qSolution.varNames(); varNames.hasNext();) {
 					final String varName = varNames.next();
 					String res = qSolution.get(varName).toString();
 					if (res.contains("http")) {
-						if(qSolution.get(varName).isLiteral()) {
+						if (qSolution.get(varName).isLiteral()) {
 							String s = qSolution.get(varName).asLiteral().getString();
 							ret.add(s);
 						} else {
@@ -644,7 +686,7 @@ public class Util {
 					}
 				}
 				count++;
-				if((maxEntities != -1) && (count >= maxEntities)) {
+				if ((maxEntities != -1) && (count >= maxEntities)) {
 					break;
 				}
 			}
@@ -669,7 +711,7 @@ public class Util {
 		String ds = null;
 		for (Entry<String, Integer> entry : mBestDs.entrySet()) {
 			int n = entry.getValue();
-			if(n > max) {
+			if (n > max) {
 				max = n;
 				ds = entry.getKey();
 			}
@@ -677,24 +719,24 @@ public class Util {
 		return ds;
 	}
 
-	public static void generateStatistics(List<String> lstDs, String fileName) throws FileNotFoundException, UnsupportedEncodingException {
+	public static void generateStatistics(List<String> lstDs, String fileName)
+			throws FileNotFoundException, UnsupportedEncodingException {
 		Set<String> datasets = new HashSet<String>(lstDs);
-		String cSparql = "Select ?date where{\n" + 
-				"?s <http://purl.org/dc/terms/modified> ?date\n" + 
-				"} order by DESC(?date) limit 1";
+		String cSparql = "Select ?date where{\n" + "?s <http://purl.org/dc/terms/modified> ?date\n"
+				+ "} order by DESC(?date) limit 1";
 		Map<String, String> mDsTimeStamp = new HashMap<String, String>();
 		Set<String> ret = new HashSet<String>();
 		PrintWriter writer = new PrintWriter(fileName, "UTF-8");
-		
+
 		for (String source : datasets) {
-		//lstSources.parallelStream().forEach( source -> {
+			// lstSources.parallelStream().forEach( source -> {
 			try {
 				TimeOutBlock timeoutBlock = new TimeOutBlock(300000); // 3 minutes
 				Runnable block = new Runnable() {
 					public void run() {
-						
+
 						if (Util.isEndPoint(source)) {
-							//ret.addAll(execQueryEndPoint(cSparql, source));
+							// ret.addAll(execQueryEndPoint(cSparql, source));
 							ret.addAll(Util.execQueryEndPoint(cSparql, source, true, -1));
 						} else {
 							ret.addAll(Util.execQueryRDFRes(cSparql, source, -1));
@@ -719,21 +761,71 @@ public class Util {
 		boolean bRet = false;
 		SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
 		try {
-			if(timeStamp == null) {
+			if (timeStamp == null) {
 				return false;
 			}
-			if(previous == null) {
+			if (previous == null) {
 				return true;
 			}
-			
+
 			Date date = format.parse(timeStamp);
 			Date datePrevious = format.parse(previous);
 			bRet = date.after(datePrevious);
 		} catch (ParseException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		} 
-		
+		}
+
 		return bRet;
+	}
+
+	public static Model obtainModelEndPoint(String dsT) {
+		System.err.println("Need to implement: obtainModelEndPoint(String dsT)");
+		return null;
+	}
+
+	public static Model ObtainModelRDF(String dataset) throws IOException {
+		File file = null;
+		if (dataset.startsWith("http")) {
+			URL url = new URL(dataset);
+			file = new File(Util.getURLFileName(url));
+			if (!file.exists()) {
+				FileUtils.copyURLToFile(url, file);
+			}
+		} else {
+			file = new File(dataset);
+		}
+
+		file = unconpress(file);
+		org.apache.jena.rdf.model.Model model = org.apache.jena.rdf.model.ModelFactory.createDefaultModel();
+		if (file.getName().toLowerCase().endsWith(".ntriples") || file.getName().toLowerCase().endsWith(".nt")) {
+			System.out.println("# Reading a N-Triples file...");
+			model.read(file.getAbsolutePath(), "N-TRIPLE");
+		} else if (file.getName().toLowerCase().endsWith(".n3")) {
+			System.out.println("# Reading a Notation3 (N3) file...");
+			model.read(file.getAbsolutePath());
+		} else if (file.getName().toLowerCase().endsWith(".json") || file.getName().toLowerCase().endsWith(".jsod")
+				|| file.getName().toLowerCase().endsWith(".jsonld")) {
+			System.out.println("# Trying to read a 'json-ld' file...");
+			model.read(file.getAbsolutePath(), "JSON-LD");
+		} else {
+			String contentType = getContentType(dataset); // get the IRI
+															// content type
+			System.out.println("# IRI Content Type: " + contentType);
+			if (contentType.contains("application/ld+json") || contentType.contains("application/json")
+					|| contentType.contains("application/json+ld")) {
+				System.out.println("# Trying to read a 'json-ld' file...");
+				model.read(file.getAbsolutePath(), "JSON-LD");
+			} else if (contentType.contains("application/n-triples")) {
+				System.out.println("# Reading a N-Triples file...");
+				model.read(file.getAbsolutePath(), "N-TRIPLE");
+			} else if (contentType.contains("text/n3")) {
+				System.out.println("# Reading a Notation3 (N3) file...");
+				model.read(file.getAbsolutePath());
+			} else {
+				model.read(file.getAbsolutePath());
+			}
+		}
+		return model;
 	}
 }

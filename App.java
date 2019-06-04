@@ -62,16 +62,28 @@ public class App {
 //				+ "&& ?p=<http://creativecommons.org/ns#license> "
 //				+ "&& ?o=<http://creativecommons.org/licenses/by-sa/4.0/>)} " + "limit 10";
 		
+//		String ds = "dirHDT/0b02ffc7e6f645ad5e91b330bf4e0431.hdt";
+//		String cSparql = "SELECT DISTINCT * WHERE { <http://dbpedia.org/ontology/areaCode> ?p ?o } limit 10";
+//		System.out.println(execHDTString(ds, cSparql));
+//		System.exit(0);
+		
 		Set<String> datasets = new LinkedHashSet<String>();
 		int numberOfDs = 10000;
 		//datasets.add("UnionResultsSchemaMatching.hdt");
-		datasets.addAll(getDatasets(new File("dirHDT"), numberOfDs));
-		String cSparql = "Select ?s where {?s ?p ?o} limit 1";
+		//datasets.addAll(getDatasets(new File("dirHDT"), numberOfDs));
+		datasets.add("dirHDT/69e7c7ccdc8f0b373325d5acf3c27b26.hdt");
+		String cSparql = "SELECT * WHERE {?s ?p ?o}";
 		PrintWriter writer = new PrintWriter("sparqlOut.txt", "UTF-8");
+		int count = 0;
 		for (String ds : datasets) {
 			String ret = execHDTString(ds, cSparql);
 			writer.println(ret);
+			if((ret != null) && !ret.contains("http")) {
+				count++;
+			}
 		}
+		writer.println("Datasets without owl:equivalentProperty: " + count);
+		writer.println("Total datasets analised: " + datasets.size());
 		writer.close();
 	}
 
