@@ -94,7 +94,7 @@ public class Experiment {
 		this.goldStandard = goldStandard;
 	}
 
-	private String convertHDT(String pD) throws Exception {
+	public String convertHDT(String pD) throws Exception {
 		// Configuration variables
 		String baseURI = "http://example.com/mydataset";
 		String hdtOutput = pD.replaceAll(pD.substring(pD.lastIndexOf(".")), ".hdt");
@@ -216,7 +216,7 @@ public class Experiment {
 		}
 	}
 
-	private void writeDsPropsMatched(Map<String, Map<String, String>> mapPropsDs)
+	public void writeDsPropsMatched(Map<String, Map<String, String>> mapPropsDs)
 			throws FileNotFoundException, UnsupportedEncodingException {
 		PrintWriter writer = new PrintWriter("RelationDsPropsMatched2.tsv", "UTF-8");
 		writer.println("DatasetSource\tDatasetTarget\t#Matches\tPairs");
@@ -234,7 +234,7 @@ public class Experiment {
 		writer.close();
 	}
 
-	private void writeFile(Map<String, String> mapMatches, String fileName, String dsS, String dsT)
+	public void writeFile(Map<String, String> mapMatches, String fileName, String dsS, String dsT)
 			throws FileNotFoundException, UnsupportedEncodingException {
 		PrintWriter writer = new PrintWriter(fileName, "UTF-8");
 		writer.println("#Dataset Source:" + dsS + "\t" + "#Dataset Target:" + dsT);
@@ -244,7 +244,7 @@ public class Experiment {
 		writer.close();
 	}
 
-	private void evaluate(Map<String, String> mapMatches) throws IOException {
+	public void evaluate(Map<String, String> mapMatches) throws IOException {
 		final Map<String, String> mapGoldStandard = new LinkedHashMap<String, String>();
 		mapGoldStandard.putAll(convFileToMap(getGoldStandard()));
 		Evaluation ev = compare(mapMatches, mapGoldStandard);
@@ -256,11 +256,11 @@ public class Experiment {
 		writer.close();
 	}
 	
-	private void evaluateGoldDir(Map<String, Map<String, String>> mapMatches) throws IOException {
+	public void evaluateGoldDir(Map<String, Map<String, String>> mapMatches) throws IOException {
 		final Map<String, String> mapGoldStandard = new LinkedHashMap<String, String>();
 		mapGoldStandard.putAll(convFileToMap(getGoldStandard()));
 		Evaluation ev = compare1ToMany(mapMatches, mapGoldStandard);
-		PrintWriter writer = new PrintWriter(getGoldStandard().replaceAll(".tsv", "_eval.txt"), "UTF-8");
+		PrintWriter writer = new PrintWriter(getGoldStandard() + "_eval.txt", "UTF-8");
 		writer.println(mapMatches);
 		writer.println("Precision: " + ev.getPrecision());
 		writer.println("Recall: " + ev.getRecall());
@@ -447,6 +447,10 @@ public class Experiment {
 						count++;
 					}
 					if(source.getName().endsWith(".json")) {
+						ret.add(convertHDT(source.getAbsolutePath()));
+						count++;
+					}
+					if(source.getName().endsWith(".csv")) {
 						ret.add(convertHDT(source.getAbsolutePath()));
 						count++;
 					}

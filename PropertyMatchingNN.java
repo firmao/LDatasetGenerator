@@ -21,7 +21,7 @@ import org.rdfhdt.hdt.hdt.HDT;
 import org.rdfhdt.hdt.hdt.HDTManager;
 import org.rdfhdt.hdtjena.HDTGraph;
 
-public class PropertyMatching {
+public class PropertyMatchingNN {
 
 	public static final Map<String, String> mapPropValueDsT = new HashMap<String, String>();
 	public static final Map<String, Long> mapDsNumTriples = new HashMap<String, Long>();
@@ -32,7 +32,7 @@ public class PropertyMatching {
 
 	public static void main(String[] args) throws Exception {
 		StopWatch stopWatch = new StopWatch();
-		Experiment exp = new Experiment();
+		ExperimentNN exp = new ExperimentNN();
 
 //		exp.setDs("dirHDT/3_ds_tests/hdt/d1.hdt");
 //		exp.setDt("dirHDT/3_ds_tests/hdt/d2.hdt");
@@ -54,10 +54,10 @@ public class PropertyMatching {
 //		exp.setDt("DBLP.csv");
 //		exp.setGoldStandard("goldStandardACMDBLP.tsv");
 
-		exp.setDs("DBLP1.csv");
-		exp.setDt("Scholar.csv");
-		exp.setGoldStandard("goldStandardDBLPScholar.tsv");
-		
+//		exp.setDs("DBLP.csv");
+//		exp.setDt("Scholar.csv");
+//		exp.setGoldStandard("goldStandardDBLPScholar.tsv");
+
 //		exp.setDs("dirHDT/3_ds_tests/hdt/d1.hdt");
 //		Set<String> manyDt = exp.getDatasets(new File("dirHDT"), 10);
 //		exp.setManyDt(manyDt);
@@ -65,14 +65,15 @@ public class PropertyMatching {
 //		exp.setDs("AmazonProducts.hdt");
 //		Set<String> manyDt = exp.getDatasets(new File("manyDt"), 10);
 //		exp.setManyDt(manyDt);
-		
-//		exp.setDs("dirHDT/DBPedia-3.9-en.hdt");
-//		Set<String> manyDt = exp.getDatasets(new File("webTables_1"), 99999999);
-//		exp.setManyDt(manyDt);
-//		exp.setGoldStandard("dirGoldStandard");
+
+		Set<String> manyDs = exp.getDatasets(new File("dirDBpediaSubsetCSV"), 99999999);
+		exp.setManyDs(manyDs);
+		Set<String> manyDt = exp.getDatasets(new File("webTables_1"), 99999999);
+		exp.setManyDt(manyDt);
+		exp.setGoldStandard("dirGoldStandard");
 
 		stopWatch.start();
-		exp.execute();
+		exp.compareNN();
 		stopWatch.stop();
 		System.out.println("Stopwatch time: " + stopWatch);
 	}
@@ -84,7 +85,7 @@ public class PropertyMatching {
 		System.out.println("Properties from " + dsS + ": " + setPropDsS.size());
 		System.out.println("Starting Matching...");
 		resPropDsSDsT = matching(setPropDsS, dsS, dsT);
-		//resPropDsSDsT = matchingJoinSim(setPropDsS, dsS, dsT);
+		// resPropDsSDsT = matchingJoinSim(setPropDsS, dsS, dsT);
 
 		return resPropDsSDsT;
 
@@ -99,7 +100,7 @@ public class PropertyMatching {
 		final Map<String, String> resPropDsSDsT = new LinkedHashMap<String, String>();
 
 		for (String pDsS : setPropDsS) {
-		//setPropDsS.parallelStream().forEach(pDsS -> {
+			// setPropDsS.parallelStream().forEach(pDsS -> {
 			Map<String, Integer> mRet = null;
 			try {
 				mRet = getEquivPropJoinSim(pDsS, dsS, dsT);
@@ -109,7 +110,7 @@ public class PropertyMatching {
 				e.printStackTrace();
 			}
 			if (mRet == null) {
-				//return;
+				// return;
 				continue;
 			}
 			for (String propEquiv : mRet.keySet()) {
@@ -117,7 +118,7 @@ public class PropertyMatching {
 					resPropDsSDsT.put(pDsS, propEquiv);
 				}
 			}
-		//});
+			// });
 
 		}
 		return resPropDsSDsT;
@@ -127,32 +128,52 @@ public class PropertyMatching {
 		final Map<String, String> resPropDsSDsT = new LinkedHashMap<String, String>();
 
 		for (String pDsS : setPropDsS) {
-		//setPropDsS.parallelStream().forEach(pDsS -> {
+			// setPropDsS.parallelStream().forEach(pDsS -> {
 			Set<String> mRet = null;
 			// Map<String, Integer> mRet = null;
 			try {
-				mRet = getEquivProp(pDsS, dsS, dsT);
-				// mRet = getEquivPropJoinSim(pDsS, dsS, dsT);
-				System.out.println("Props Matched: " + mRet);
+				if (!pDsS.equals("http://w3c/future-csv-vocab/row")) {
+					mRet = getEquivProp(pDsS, dsS, dsT);
+					// mRet = getEquivPropJoinSim(pDsS, dsS, dsT);
+					if (mRet != null) {
+						mRet.remove("http://w3c/future-csv-vocab/row");
+					}
+				}
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			if (mRet == null) {
-				//return;
+				// return;
 				continue;
 			}
-			for (String propEquiv : mRet) {
-				// for (String propEquiv : mRet.keySet()) {
-				if (propEquiv != null) {
-					resPropDsSDsT.put(pDsS, propEquiv);
+			System.out.println("Candidates Props Matched: " + mRet);
+			String bestMatch = getBestMatch(pDsS, mRet);
+			resPropDsSDsT.put(pDsS, bestMatch);
+			System.out.println("Matched pair: " + pDsS + "," + bestMatch);
+//			for (String propEquiv : mRet) {
+//				if (propEquiv != null) {
+//					resPropDsSDsT.put(pDsS, propEquiv);
+//				}
+//			}
+		}
+		return resPropDsSDsT;
+	}
+
+	private static String getBestMatch(String pDsS, Set<String> mRet) {
+		String ret = null;
+		double sim = 0.0;
+		JaccardSimilarity jacSim = new JaccardSimilarity();
+		for (String propEquiv : mRet) {
+			if (propEquiv != null) {
+				double newSim = jacSim.apply(pDsS, propEquiv);
+				if(newSim > sim) {
+					sim = newSim;
+					ret = propEquiv;
 				}
 			}
-		//});
 		}
-		
-		System.out.println("Map: " + resPropDsSDsT);
-		return resPropDsSDsT;
+		return ret;
 	}
 
 	private static Set<String> getProps(String dsS) {
@@ -301,14 +322,19 @@ public class PropertyMatching {
 		/*
 		 * Compare the values from all properties of dsT.
 		 */
-		String equivProp = searchValueProp(pValue, dsT);
-		if (equivProp != null) {
-			equivProps.add(equivProp);
-			return equivProps;
-		}
+//		String equivProp = searchValueProp(pValue, dsT);
+//		if (equivProp != null) {
+//			equivProps.add(equivProp);
+//			return equivProps;
+//		}
 
 		equivProps.addAll(similaritySearchValue(pValue, dsT));
 		if (equivProps.size() > 0) {
+			int equivSizeBefore = equivProps.size();
+			equivProps.addAll(similaritySearchProp(propDs, dsT));
+			if (equivProps.size() > equivSizeBefore) {
+				return equivProps;
+			}
 			return equivProps;
 		}
 
