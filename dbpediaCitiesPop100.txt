@@ -1,0 +1,8 @@
+SELECT Distinct ?city
+WHERE
+  {
+    ?city <http://dbpedia.org/property/populationTotal> ?pop .
+filter (?pop > 0)
+  }
+limit 100
+#----------------------

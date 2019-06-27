@@ -1,0 +1,39 @@
+SELECT DISTINCT * WHERE { ?s ?p ?o . Filter (?p=<file:///media/andre/DATA/Dropbox/ws1/LDatasetGenerator/AmazonProducts.csv#price> || ?p=<file:///media/andre/DATA/Dropbox/ws1/LDatasetGenerator/AmazonProducts.csv#title>)}
+No matches with dataset target: /media/andre/DATA/Dropbox/ws1/LDatasetGenerator/manyDt/Abt.hdt
+***************
+Dataset Source: AmazonProducts.hdt
+Properties matched: {}
+Number results before:2726
+Number results after:0
+Different ontology/property/attribute_name: YES
+Number of triples: 0
+***************
+No matches with dataset target: /media/andre/DATA/Dropbox/ws1/LDatasetGenerator/manyDt/AmazonProducts.hdt
+***************
+Dataset Source: AmazonProducts.hdt
+Properties matched: {}
+Number results before:2726
+Number results after:0
+Different ontology/property/attribute_name: YES
+Number of triples: 0
+***************
+No matches with dataset target: /media/andre/DATA/Dropbox/ws1/LDatasetGenerator/manyDt/Buy.hdt
+***************
+Dataset Source: AmazonProducts.hdt
+Properties matched: {}
+Number results before:2726
+Number results after:0
+Different ontology/property/attribute_name: YES
+Number of triples: 0
+***************
+No matches with dataset target: /media/andre/DATA/Dropbox/ws1/LDatasetGenerator/manyDt/GoogleProducts.hdt
+***************
+Dataset Source: AmazonProducts.hdt
+Properties matched: {}
+Number results before:2726
+Number results after:0
+Different ontology/property/attribute_name: YES
+Number of triples: 0
+***************
+Total number of triples: 0
+Number of results Total after the schema aligment: 2726

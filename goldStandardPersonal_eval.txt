@@ -1,0 +1,4 @@
+{http://dbpedia.org/ontology/deathDate=http://dbpedia.org/ontology/death, http://dbpedia.org/ontology/birthDate=http://dbpedia.org/ontology/birth}
+Precision: 1.0
+Recall: 1.0
+F-Score: 1.0

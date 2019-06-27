@@ -1,0 +1,4 @@
+{http://w3c/future-csv-vocab/row=http://w3c/future-csv-vocab/row, file:///media/andre/DATA/Dropbox/ws1/LDatasetGenerator/Abt.csv#price=file:///media/andre/DATA/Dropbox/ws1/LDatasetGenerator/Buy.csv#price, file:///media/andre/DATA/Dropbox/ws1/LDatasetGenerator/Abt.csv#id=file:///media/andre/DATA/Dropbox/ws1/LDatasetGenerator/Buy.csv#price, file:///media/andre/DATA/Dropbox/ws1/LDatasetGenerator/Abt.csv#name=file:///media/andre/DATA/Dropbox/ws1/LDatasetGenerator/Buy.csv#name, file:///media/andre/DATA/Dropbox/ws1/LDatasetGenerator/Abt.csv#description=file:///media/andre/DATA/Dropbox/ws1/LDatasetGenerator/Buy.csv#description}
+Precision: 1.0
+Recall: 0.8333333333333334
+F-Score: 0.9090909090909091
