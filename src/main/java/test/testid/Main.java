@@ -206,9 +206,9 @@ public class Main {
 		lstSources.addAll(getSources(new File(dirHDT)));
 		System.out.println("Sources/Datasets: " + lstSources.size());
 		
-		LODStatistics.generateStatistics(lstSources, "http://www.w3.org/2002/07/owl#sameAs");
-		Util.generateStatistics(lstSources, "statistics_ModifiedUpdate.tsv");
-		System.out.println("File with Dataset Time Stamps - Most Updated datasets - generated with success");
+		//LODStatistics.generateStatistics(lstSources, "http://www.w3.org/2002/07/owl#sameAs");
+		//Util.generateStatistics(lstSources, "statistics_ModifiedUpdate.tsv");
+		//System.out.println("File with Dataset Time Stamps - Most Updated datasets - generated with success");
 		for (String cSparql : lstQueries) {
 			for (String source : lstSources) {
 			//lstSources.parallelStream().forEach( source -> {

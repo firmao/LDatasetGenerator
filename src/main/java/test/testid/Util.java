@@ -422,6 +422,15 @@ public class Util {
 	}
 
 	public static boolean isEndPoint(String source) {
+		if (source.toLowerCase().startsWith("http")) {
+			try {
+				if (getURLFileName(new URL(source)) == null) {
+					return true;
+				}
+			} catch (Exception e) {
+				return false;
+			}
+		}
 		return source.toLowerCase().contains("sparql");
 	}
 
