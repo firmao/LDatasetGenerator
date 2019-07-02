@@ -620,6 +620,11 @@ public class Util {
 		final long offsetSize = 9999;
 		long offset = 0;
 		String sSparql = null;
+		
+		if(endPoint.toLowerCase().contains("wikidata")) {
+			return WikidataQuery.getResult(cSparql);
+		}
+		
 		long start = System.currentTimeMillis();
 		do {
 			sSparql = cSparql;
