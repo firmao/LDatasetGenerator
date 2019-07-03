@@ -23,9 +23,10 @@ public class SimilarityFilter extends FunctionBase2
     	 LevenshteinDetailedDistance leve = new LevenshteinDetailedDistance();
     	 HammingDistance ham = new HammingDistance();
     	 
-    	 String s1 = "The dayt of my birth";
-    	 String s2 = "The date of my birth";
-    	 
+    	 String s1 = "http://eagle-i.org/ont/app/1.0/feeforservice";
+    	 String s2 = "http://lexvo.org/ontology#iso639P3PCode";
+    	 System.out.println("s1: " + s1);
+    	 System.out.println("s2: " + s2);
     	 Long start = System.currentTimeMillis();
     	 double dSim = jacSim.apply(s1, s2);
     	 Long total = System.currentTimeMillis() - start;
