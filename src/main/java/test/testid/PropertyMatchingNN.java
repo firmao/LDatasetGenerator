@@ -160,16 +160,21 @@ public class PropertyMatchingNN {
 //				}
 //			}
 		}
+		if(resPropDsSDsT.size() > 0) {
+			System.out.println(resPropDsSDsT);
+		}
 		return resPropDsSDsT;
 	}
 
 	private static String getBestMatch(String pDsS, Set<String> mRet) {
 		String ret = null;
 		double sim = 0.0;
+		String onlyName = Util.getURLName(pDsS);
 		JaccardSimilarity jacSim = new JaccardSimilarity();
 		for (String propEquiv : mRet) {
 			if (propEquiv != null) {
-				double newSim = jacSim.apply(pDsS, propEquiv);
+				String nameProp = Util.getURLName(propEquiv);
+				double newSim = jacSim.apply(onlyName, nameProp);
 				if(newSim > sim) {
 					sim = newSim;
 					ret = propEquiv;
@@ -298,6 +303,7 @@ public class PropertyMatchingNN {
 	public static Set<String> getEquivProp(String propDs, String dsS, String dsT) throws IOException {
 		Set<String> equivProps = new HashSet<String>();
 		// Check if @propDs exists in dsT.
+		//String onlyPropName = Util.getURLName(propDs)
 		if (propExists(propDs, dsT)) {
 			equivProps.add(propDs);
 			return equivProps;
@@ -331,15 +337,15 @@ public class PropertyMatchingNN {
 //			return equivProps;
 //		}
 
-		equivProps.addAll(similaritySearchValue(pValue, dsT));
-		if (equivProps.size() > 0) {
-			int equivSizeBefore = equivProps.size();
-			equivProps.addAll(similaritySearchProp(propDs, dsT));
-			if (equivProps.size() > equivSizeBefore) {
-				return equivProps;
-			}
-			return equivProps;
-		}
+//		equivProps.addAll(similaritySearchValue(pValue, dsT));
+//		if (equivProps.size() > 0) {
+//			int equivSizeBefore = equivProps.size();
+//			equivProps.addAll(similaritySearchProp(propDs, dsT));
+//			if (equivProps.size() > equivSizeBefore) {
+//				return equivProps;
+//			}
+//			return equivProps;
+//		}
 
 		equivProps.addAll(similaritySearchProp(propDs, dsT));
 		if (equivProps.size() > 0) {
@@ -365,8 +371,10 @@ public class PropertyMatchingNN {
 			String functionUri = "http://www.valdestilhas.org/AndreSim";
 			FunctionRegistry.get().put(functionUri, SimilarityFilter.class);
 
-			String cSparql = "Select ?p where {?s ?p ?o . " + "FILTER(<" + functionUri + ">(?p, \"" + propDs
-					+ "\") < 7) }";
+//			String cSparql = "Select ?p where {?s ?p ?o . " + "FILTER(<" + functionUri + ">(?p, \"" + propDs
+//					+ "\") < 7) }";
+			String cSparql = "Select ?p where {?s ?p ?o . " + "FILTER(<" + functionUri + ">(STRAFTER(str(?p),\"#\"), \"" + Util.getURLName(propDs)
+			+ "\") >= 0.9) }";
 
 			QueryExecution qexec = QueryExecutionFactory.create(cSparql, model);
 			ResultSet rs = qexec.execSelect();
@@ -400,9 +408,11 @@ public class PropertyMatchingNN {
 			}
 			String functionUri = "http://www.valdestilhas.org/AndreSim";
 			FunctionRegistry.get().put(functionUri, SimilarityFilter.class);
-
-			String cSparql = "Select ?p where {?s ?p ?o . " + "FILTER(<" + functionUri + ">(?o, \"" + pValue
-					+ "\") < 7) }";
+			
+//			String cSparql = "Select ?p where {?s ?p ?o . " + "FILTER(<" + functionUri + ">(?o, \"" + pValue
+//					+ "\") < 7) }";
+			String cSparql = "Select ?p where {?s ?p ?o . " + "FILTER(<" + functionUri + ">(STRAFTER(str(?o),\"#\"), \"" + Util.getURLName(pValue)
+					+ "\") >= 0.9) }";
 
 			QueryExecution qexec = QueryExecutionFactory.create(cSparql, model);
 			ResultSet rs = qexec.execSelect();

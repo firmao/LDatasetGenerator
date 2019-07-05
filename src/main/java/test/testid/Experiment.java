@@ -268,7 +268,7 @@ public class Experiment {
 		writer.close();
 	}
 
-	private Evaluation compare1ToMany(Map<String, Map<String, String>> pMapMatches, Map<String, String> mapGoldStandard){
+	private Evaluation compare1ToMany(Map<String, Map<String, String>> pMapMatches, Map<String, String> pMapGoldStandard){
 		
 //		if(mapMatches.size() != mapGoldStandard.size()) {
 //			System.err.println("No possible to evaluate, because the maps should have the same size");
@@ -283,15 +283,20 @@ public class Experiment {
 		double recall = 0.0;
 		double precision = 0.0;
 		
+		Map<String, String> mapGoldStandard = onlyPropNames(pMapGoldStandard);		
+		
 		//TODO: Try to relate each webTable result with a web table 
 		//goldStandard, because they have the same structure
 		for (String dt : pMapMatches.keySet()) {
-			Map<String, String> mapMatches = pMapMatches.get(dt); 
+			Map<String, String> mapMatches = onlyPropNames(pMapMatches.get(dt)); 
 			for (Entry<String, String> entry : mapGoldStandard.entrySet()) {
 				String key = entry.getKey();
 				String value = entry.getValue();
-				//if (mapMatches.containsKey(key)) {
-				if (mapMatches.containsKey(getMostSimilar(mapMatches, key, value))) {
+				if(key.toLowerCase().contains("year") || value.toLowerCase().contains("year")) {
+					System.out.println("AOOOOOOO !!!!");
+				}
+				if (mapMatches.containsKey(key)) {
+				//if (mapMatches.containsKey(getMostSimilar(mapMatches, Util.getURLName(key), Util.getURLName(value)))) {
 					p++;
 					if (mapMatches.get(key).equalsIgnoreCase(value)) {
 						System.out.println("equal: " + key + ", " + value);
@@ -332,28 +337,40 @@ public class Experiment {
 		return ev;
 	}
 
+	private Map<String, String> onlyPropNames(Map<String, String> pMapGoldStandard) {
+		Map<String, String> mapProps = new LinkedHashMap<String, String>();
+		for (Entry<String, String> entry : pMapGoldStandard.entrySet()) {
+			String key = Util.getURLName(entry.getKey());
+			String value = Util.getURLName(entry.getValue());
+			mapProps.put(key, value);
+		}
+		return mapProps;
+	}
+
 	private String getMostSimilar(Map<String, String> mapMatches, String pKey, String pValue) {
+		String keyCompare = pKey.replaceAll("\"", "");
+		String valueCompare = pValue.replaceAll("\"", "");
 		for (Entry<String, String> entry : mapMatches.entrySet()) {
 			String key = entry.getKey();
 			String value = entry.getValue();
 			
-			if(key == null || value == null) return pKey;
+			if(key == null || value == null) return keyCompare;
 			
-			if(key.contains(pKey)) {
+			if(key.toLowerCase().contains(keyCompare.toLowerCase())) {
 				return key;
 			}
-			if(value.contains(pKey)) {
+			if(value.toLowerCase().contains(keyCompare.toLowerCase())) {
 				return value;
 			}
 			
-			if(key.contains(pValue)) {
+			if(key.toLowerCase().contains(valueCompare.toLowerCase())) {
 				return key;
 			}
-			if(value.contains(pValue)) {
+			if(value.toLowerCase().contains(valueCompare.toLowerCase())) {
 				return value;
 			}
 		}
-		return pKey;
+		return keyCompare;
 	}
 
 	private static Map<String, String> convFileToMap(String fMap) throws IOException {

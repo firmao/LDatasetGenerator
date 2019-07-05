@@ -11,10 +11,9 @@ import org.apache.jena.sparql.function.FunctionBase2;
 public class SimilarityFilter extends FunctionBase2 
 {  
      public NodeValue exec(NodeValue value1, NodeValue value2){
-    	 LevenshteinDetailedDistance leve = new LevenshteinDetailedDistance();
-    	 LevenshteinResults distLeve = leve.apply(value1.asString(), value2.asString());
-    	 int iSim = distLeve.getDistance();
-    	 return NodeValue.makeInteger(iSim);
+    	 JaroWinklerDistance sim = new JaroWinklerDistance();
+    	 double dSim = sim.apply(value1.asString(), value2.asString());
+    	 return NodeValue.makeDouble(dSim);
      }
      
      public static void main(String args[]) {
@@ -23,8 +22,8 @@ public class SimilarityFilter extends FunctionBase2
     	 LevenshteinDetailedDistance leve = new LevenshteinDetailedDistance();
     	 HammingDistance ham = new HammingDistance();
     	 
-    	 String s1 = "http://eagle-i.org/ont/app/1.0/feeforservice";
-    	 String s2 = "http://lexvo.org/ontology#iso639P3PCode";
+    	 String s1 = "training";
+    	 String s2 = "rating";
     	 System.out.println("s1: " + s1);
     	 System.out.println("s2: " + s2);
     	 Long start = System.currentTimeMillis();

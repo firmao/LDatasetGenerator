@@ -40,7 +40,10 @@ public class ExperimentNN extends Experiment {
 		for (String ds : mDs) {
 			for (String dt : mDt) {
 				try {
-					mapPropsDs.put(dt, PropertyMatchingNN.schemaMatching(ds, dt));
+					mapMatches.putAll(PropertyMatchingNN.schemaMatching(ds, dt));
+					if(mapMatches.size() > 0) {
+						mapPropsDs.put(dt, mapMatches);
+					}	
 				} catch (IOException e) {
 					e.printStackTrace();
 				}

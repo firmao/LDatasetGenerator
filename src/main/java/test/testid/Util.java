@@ -842,4 +842,21 @@ public class Util {
 		}
 		return model;
 	}
+
+	public static String getURLName(String property) {
+		String name = null;
+		try {
+			if(property.indexOf("#") > 0) {
+				String[] str = property.split("#");
+				name = str[str.length - 1];
+				return name.replaceAll("\"", "");
+			} else {
+				String[] str = property.split("/");
+				name = str[str.length - 1];
+			}
+		} catch (Exception e) {
+			System.err.println("Problem with URI: " + property);
+		}
+		return name.replaceAll("\"", "");
+	}
 }
