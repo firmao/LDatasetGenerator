@@ -2,7 +2,7 @@ http://ja.dbpedia.org/sparql
 http://nl.dbpedia.org/sparql
 http://data.nobelprize.org/sparql
 http://pt.dbpedia.org/sparql
+http://linkeddata.uriburner.com/sparql
+http://vocabulary.semantic-web.at/PoolParty/sparql/semweb
 http://lod.openlinksw.com/sparql
 http://dbpedia.org/sparql
-http://serendipity.utpl.edu.ec/lod/sparql
-http://data.utpl.edu.ec/ecuadorresearch/lod/sparql

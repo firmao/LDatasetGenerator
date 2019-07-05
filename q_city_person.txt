@@ -1,0 +1,24 @@
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX dbo: <http://dbpedia.org/ontology/>
+
+SELECT DISTINCT ?so2  
+WHERE
+  {
+    ?city  a                          dbo:City ; 
+           (owl:sameAs|^owl:sameAs)*  ?so2 .
+#    FILTER ( !regex(str(?so2), "dbpedia" ) )
+  } 
+ORDER BY ?city
+#----------------------
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX dbo: <http://dbpedia.org/ontology/>
+
+SELECT DISTINCT ?so2  
+WHERE
+  {
+    ?person  a                          dbo:Person ; 
+           (owl:sameAs|^owl:sameAs)*  ?so2 .
+#    FILTER ( !regex(str(?so2), "dbpedia" ) )
+  } 
+ORDER BY ?person
+#----------------------

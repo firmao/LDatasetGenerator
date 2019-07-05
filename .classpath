@@ -8,16 +8,27 @@
 	</classpathentry>
 	<classpathentry kind="src" output="target/test-classes" path="src/test/java">
 		<attributes>
+			<attribute name="test" value="true"/>
 			<attribute name="optional" value="true"/>
 			<attribute name="maven.pomderived" value="true"/>
-			<attribute name="test" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8">
+		<attributes>
+			<attribute name="module" value="true"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry kind="con" path="org.eclipse.m2e.MAVEN2_CLASSPATH_CONTAINER">
 		<attributes>
 			<attribute name="maven.pomderived" value="true"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="lib" path="/media/andre/DATA/Dropbox/ws1/LDatasetGenerator/lib/squin-0.1.5-SNAPSHOT.jar"/>
+	<classpathentry kind="lib" path="/media/andre/DATA/Dropbox/ws1/LDatasetGenerator/lib/SPARQL-JAVA.jar"/>
+	<classpathentry kind="lib" path="/media/andre/DATA/Dropbox/ws1/LDatasetGenerator/lib/hdtjava-jena.jar"/>
+	<classpathentry kind="lib" path="/media/andre/DATA/Dropbox/ws1/LDatasetGenerator/lib/hdtjava-core.jar"/>
+	<classpathentry kind="lib" path="/media/andre/DATA/Dropbox/ws1/LDatasetGenerator/lib/hdtjava-package.jar"/>
+	<classpathentry kind="lib" path="/media/andre/DATA/Dropbox/ws1/LDatasetGenerator/lib/hdtjava-cli.jar"/>
+	<classpathentry kind="lib" path="/media/andre/DATA/Dropbox/ws1/LDatasetGenerator/lib/hdtjava.jar"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>

@@ -1,0 +1,82 @@
+SELECT ?name ?area ?pop ?lat ?long WHERE {
+ ?s a <http://dbpedia.org/ontology/City> ;
+ <http://dbpedia.org/ontology/PopulatedPlace/areaTotal> ?area ;
+ <http://www.w3.org/2000/01/rdf-schema#label> ?name ;
+ <http://dbpedia.org/property/populationTotal> ?pop ;
+ <http://www.w3.org/2003/01/geo/wgs84_pos#lat> ?lat ;
+ <http://www.w3.org/2003/01/geo/wgs84_pos#long> ?long .
+}
+#-http://dbpedia.org/sparql
+SELECT DISTINCT ?city ?cityLabel (SAMPLE(?location) AS ?location) (MAX(?population) AS ?population)
+WHERE
+{
+  ?city wdt:P31/wdt:P279* wd:Q515;
+        wdt:P625 ?location;
+        wdt:P1082 ?population.
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }
+}
+GROUP BY ?city ?cityLabel
+#-https://query.wikidata.org/sparql
+SELECT ?name ?area ?pop ?lat ?long WHERE {
+ ?s a <http://dbpedia.org/ontology/City> ;
+ <http://dbpedia.org/ontology/PopulatedPlace/areaTotal> ?area ;
+ <http://www.w3.org/2000/01/rdf-schema#label> ?name ;
+ <http://dbpedia.org/property/populationTotal> ?pop ;
+ <http://www.w3.org/2003/01/geo/wgs84_pos#lat> ?lat ;
+ <http://www.w3.org/2003/01/geo/wgs84_pos#long> ?long .
+}
+#-http://lod2.openlinksw.com/sparql
+PREFIX lgd:<http://linkedgeodata.org/> 
+PREFIX lgdo:<http://linkedgeodata.org/ontology/> 
+PREFIX lgdp:<http://linkedgeodata.org/property/> 
+PREFIX lgdoogdb: <http://linkedgeodata.org/ontology/openGeoDB> 
+PREFIX lgdpogdb: <http://linkedgeodata.org/property/openGeoDB> 
+
+SELECT * 
+FROM <http://linkedgeodata.org> 
+WHERE 
+{
+   ?place a lgdo:Place .  
+   OPTIONAL { ?place lgdpogdb:name ?name . }
+   OPTIONAL { ?place lgdoogdb:lat ?lat . } 
+   OPTIONAL { ?place lgdoogdb:lon ?lon . } 
+   OPTIONAL { ?place lgdpogdb:postal_codes ?postal . }
+   OPTIONAL { ?place lgdoogdb:telephone_area_code ?tel . }
+   OPTIONAL { ?place lgdo:population ?population . }
+   OPTIONAL { ?place lgdoogdb:is_in_loc_id ?inLocId . }
+   OPTIONAL { ?place lgdp:is_in ?in . }
+}
+#-http://linkedgeodata.org/sparql
+SELECT ?name ?area ?pop ?lat ?long WHERE {
+ ?s a <http://dbpedia.org/ontology/City> ;
+ <http://dbpedia.org/ontology/PopulatedPlace/areaTotal> ?area ;
+ <http://www.w3.org/2000/01/rdf-schema#label> ?name ;
+ <http://dbpedia.org/property/populationTotal> ?pop ;
+ <http://www.w3.org/2003/01/geo/wgs84_pos#lat> ?lat ;
+ <http://www.w3.org/2003/01/geo/wgs84_pos#long> ?long .
+}
+#-http://www4.wiwiss.fu-berlin.de/diseasome/sparql
+SELECT ?s WHERE {
+ ?s a <http://dbpedia.org/ontology/City> 
+}
+#-http://data.nobelprize.org/snorql
+PREFIX  dbpedia-owl:  <http://dbpedia.org/ontology/>
+PREFIX dbpedia: <http://dbpedia.org/resource>
+PREFIX dbpprop: <http://dbpedia.org/property>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+SELECT DISTINCT ?city ?url
+WHERE {
+   ?url rdf:type dbpedia-owl:City .
+   ?url skos:prefLabel ?city .
+   FILTER (lang(?city) ="en")
+}
+#-http://vocabulary.semantic-web.at/PoolParty/sparql/semweb
+SELECT ?name ?area ?pop ?lat ?long WHERE {
+ ?s a <http://dbpedia.org/ontology/City> ;
+ <http://dbpedia.org/ontology/PopulatedPlace/areaTotal> ?area ;
+ <http://www.w3.org/2000/01/rdf-schema#label> ?name ;
+ <http://dbpedia.org/property/populationTotal> ?pop ;
+ <http://www.w3.org/2003/01/geo/wgs84_pos#lat> ?lat ;
+ <http://www.w3.org/2003/01/geo/wgs84_pos#long> ?long .
+}
+#-http://lod.openlinksw.com/sparql
