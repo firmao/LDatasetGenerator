@@ -22,8 +22,8 @@ public class SimilarityFilter extends FunctionBase2
     	 LevenshteinDetailedDistance leve = new LevenshteinDetailedDistance();
     	 HammingDistance ham = new HammingDistance();
     	 
-    	 String s1 = "training";
-    	 String s2 = "rating";
+    	 String s1 = "years";
+    	 String s2 = "year first released[10][11][14][15]";
     	 System.out.println("s1: " + s1);
     	 System.out.println("s2: " + s2);
     	 Long start = System.currentTimeMillis();

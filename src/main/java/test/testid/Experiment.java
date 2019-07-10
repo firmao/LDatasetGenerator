@@ -16,6 +16,8 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.text.similarity.JaccardSimilarity;
+import org.apache.commons.text.similarity.JaroWinklerDistance;
 import org.apache.jena.lang.csv.CSV2RDF;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.riot.RDFDataMgr;
@@ -46,11 +48,11 @@ public class Experiment {
 				} catch (Exception e) {
 					System.err.println("Problem converting file to HDT: " + d);
 				}
-			}else {
+			} else {
 				nManyDt.add(d);
 			}
 		}
-		
+
 		this.manyDt = nManyDt;
 	}
 
@@ -109,8 +111,8 @@ public class Experiment {
 		if (pD.endsWith(".csv")) {
 			sFileNT = convertCSV2NT(pD);
 		}
-		
-		if(pD.endsWith(".json")) {
+
+		if (pD.endsWith(".json")) {
 			sFileCSV = convertJson2CSV(pD);
 			sFileNT = convertCSV2NT(sFileCSV);
 		}
@@ -129,16 +131,17 @@ public class Experiment {
 
 		// Save generated HDT to a file
 		hdt.saveToHDT(hdtOutput, null);
-		
+
 //		File fCSV = new File(sFileCSV);
 //		fCSV.delete();
 //		File fNT = new File(sFileNT);
 //		fNT.delete();
-		
+
 		return hdtOutput;
 	}
 
-	/*mainly for web tables
+	/*
+	 * mainly for web tables
 	 * 
 	 */
 	private String convertJson2CSV(String file) throws FileNotFoundException, UnsupportedEncodingException {
@@ -159,7 +162,7 @@ public class Experiment {
 		// (with a maximum column width of 20 characters):
 		for (TableRow r : t.getRows()) {
 			lines.append(r.getValueArray()[0]);
-			for (int i=1; i < r.getValueArray().length; i++) {
+			for (int i = 1; i < r.getValueArray().length; i++) {
 				lines.append("," + r.getValueArray()[i]);
 			}
 			lines.append("\n");
@@ -197,13 +200,13 @@ public class Experiment {
 		if (getManyDt() != null) {
 			Set<String> dts = getManyDt();
 			for (String dt : dts) {
-			//dts.parallelStream().forEach(dt -> {
+				// dts.parallelStream().forEach(dt -> {
 				try {
 					mapPropsDs.put(dt, PropertyMatching.schemaMatching(getDs(), dt));
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
-			//});
+				// });
 			}
 			writeDsPropsMatched(mapPropsDs);
 			evaluateGoldDir(mapPropsDs);
@@ -255,7 +258,7 @@ public class Experiment {
 		writer.println("F-Score: " + ev.getFscore());
 		writer.close();
 	}
-	
+
 	public void evaluateGoldDir(Map<String, Map<String, String>> mapMatches) throws IOException {
 		final Map<String, String> mapGoldStandard = new LinkedHashMap<String, String>();
 		mapGoldStandard.putAll(convFileToMap(getGoldStandard()));
@@ -268,8 +271,9 @@ public class Experiment {
 		writer.close();
 	}
 
-	private Evaluation compare1ToMany(Map<String, Map<String, String>> pMapMatches, Map<String, String> pMapGoldStandard){
-		
+	private Evaluation compare1ToMany(Map<String, Map<String, String>> pMapMatches,
+			Map<String, String> pMapGoldStandard) {
+
 //		if(mapMatches.size() != mapGoldStandard.size()) {
 //			System.err.println("No possible to evaluate, because the maps should have the same size");
 //		}
@@ -282,24 +286,30 @@ public class Experiment {
 		double fScore = 0.0;
 		double recall = 0.0;
 		double precision = 0.0;
-		
-		Map<String, String> mapGoldStandard = onlyPropNames(pMapGoldStandard);		
-		
-		//TODO: Try to relate each webTable result with a web table 
-		//goldStandard, because they have the same structure
+
+		Map<String, String> mapGoldStandard = onlyPropNames(pMapGoldStandard);
+
+		// TODO: Try to relate each webTable result with a web table
+		// goldStandard, because they have the same structure
 		for (String dt : pMapMatches.keySet()) {
-			Map<String, String> mapMatches = onlyPropNames(pMapMatches.get(dt)); 
+			Map<String, String> mapMatches = onlyPropNames(pMapMatches.get(dt));
 			for (Entry<String, String> entry : mapGoldStandard.entrySet()) {
-				String key = entry.getKey();
-				String value = entry.getValue();
-				if(key.toLowerCase().contains("year") || value.toLowerCase().contains("year")) {
+				String keyGoldSource = entry.getKey();
+				String valueGoldTarget = entry.getValue();
+				if (keyGoldSource.toLowerCase().contains("year") || valueGoldTarget.toLowerCase().contains("year")) {
 					System.out.println("AOOOOOOO !!!!");
 				}
-				if (mapMatches.containsKey(key)) {
-				//if (mapMatches.containsKey(getMostSimilar(mapMatches, Util.getURLName(key), Util.getURLName(value)))) {
+				if (mapMatches.containsKey(keyGoldSource)) {
+					// if (mapMatches.containsKey(getMostSimilar(mapMatches, Util.getURLName(key),
+					// Util.getURLName(value)))) {
 					p++;
-					if (mapMatches.get(key).equalsIgnoreCase(value)) {
-						System.out.println("equal: " + key + ", " + value);
+					// if (mapMatches.get(keyGoldSource).equalsIgnoreCase(valueGoldTarget)) {
+					String s1 = mapMatches.get(keyGoldSource);
+					String s2 = valueGoldTarget;
+					JaroWinklerDistance sim = new JaroWinklerDistance();
+					double dSim = sim.apply(s1, s2);
+					if (dSim > 0.8) {
+						System.out.println("match: " + keyGoldSource + ", " + valueGoldTarget);
 						tp++;
 					} else {
 						fp++;
@@ -353,20 +363,21 @@ public class Experiment {
 		for (Entry<String, String> entry : mapMatches.entrySet()) {
 			String key = entry.getKey();
 			String value = entry.getValue();
-			
-			if(key == null || value == null) return keyCompare;
-			
-			if(key.toLowerCase().contains(keyCompare.toLowerCase())) {
+
+			if (key == null || value == null)
+				return keyCompare;
+
+			if (key.toLowerCase().contains(keyCompare.toLowerCase())) {
 				return key;
 			}
-			if(value.toLowerCase().contains(keyCompare.toLowerCase())) {
+			if (value.toLowerCase().contains(keyCompare.toLowerCase())) {
 				return value;
 			}
-			
-			if(key.toLowerCase().contains(valueCompare.toLowerCase())) {
+
+			if (key.toLowerCase().contains(valueCompare.toLowerCase())) {
 				return key;
 			}
-			if(value.toLowerCase().contains(valueCompare.toLowerCase())) {
+			if (value.toLowerCase().contains(valueCompare.toLowerCase())) {
 				return value;
 			}
 		}
@@ -376,8 +387,8 @@ public class Experiment {
 	private static Map<String, String> convFileToMap(String fMap) throws IOException {
 		final Map<String, String> mapGoldStandard = new LinkedHashMap<String, String>();
 		File fileMap = new File(fMap);
-		
-		if(fileMap.isDirectory()) {
+
+		if (fileMap.isDirectory()) {
 			mapGoldStandard.putAll(obtainGoldWebTablesCSV(fileMap));
 		} else {
 			List<String> lstLines = FileUtils.readLines(fileMap, "UTF-8");
@@ -385,7 +396,7 @@ public class Experiment {
 				String s[] = line.split("\t");
 				if (s.length < 2)
 					continue;
-	
+
 				mapGoldStandard.put(s[0], s[1]);
 			}
 		}
@@ -394,7 +405,7 @@ public class Experiment {
 
 	private static Map<String, String> obtainGoldWebTablesCSV(File pFileMap) throws IOException {
 		final Map<String, String> mapGoldStandard = new LinkedHashMap<String, String>();
-		String sExt[] = {"csv"};
+		String sExt[] = { "csv" };
 		Collection<File> files = FileUtils.listFiles(pFileMap, sExt, true);
 		for (File file : files) {
 			List<String> lstLines = FileUtils.readLines(file, "UTF-8");
@@ -402,11 +413,11 @@ public class Experiment {
 				String s[] = line.split(",");
 				if (s.length < 2)
 					continue;
-	
+
 				mapGoldStandard.put(s[0].trim(), s[1].trim());
 			}
 		}
-		
+
 		return mapGoldStandard;
 	}
 
@@ -470,33 +481,37 @@ public class Experiment {
 	public Set<String> getDatasets(File file, int limit) throws Exception {
 		Set<String> ret = new LinkedHashSet<String>();
 		if (file.isDirectory()) {
-			String sExt[] = {"json","csv","tar","tar.gz","hdt"};
+			String sExt[] = { "json", "csv", "tar", "tar.gz", "hdt" };
 			Collection<File> files = FileUtils.listFiles(file, sExt, true);
-			//File[] files = file.listFiles();
+			// File[] files = file.listFiles();
 			int count = 0;
 			for (File source : files) {
 				if (source.isFile()) {
-					if (count >= limit)
-						break;
-					if (source.getName().endsWith(".hdt")) {
-						ret.add(source.getAbsolutePath());
-						count++;
-					}
-					if(source.getName().endsWith(".tar.gz")) {
-						ret.addAll(convertZip2HDT(source));
-						count++;
-					}
-					if(source.getName().endsWith(".tar")) {
-						ret.addAll(convertZip2HDT(source));
-						count++;
-					}
-					if(source.getName().endsWith(".json")) {
-						ret.add(convertHDT(source.getAbsolutePath()));
-						count++;
-					}
-					if(source.getName().endsWith(".csv")) {
-						ret.add(convertHDT(source.getAbsolutePath()));
-						count++;
+					try {
+						if (count >= limit)
+							break;
+						if (source.getName().endsWith(".hdt")) {
+							ret.add(source.getAbsolutePath());
+							count++;
+						}
+						if (source.getName().endsWith(".tar.gz")) {
+							ret.addAll(convertZip2HDT(source));
+							count++;
+						}
+						if (source.getName().endsWith(".tar")) {
+							ret.addAll(convertZip2HDT(source));
+							count++;
+						}
+						if (source.getName().endsWith(".json")) {
+							ret.add(convertHDT(source.getAbsolutePath()));
+							count++;
+						}
+						if (source.getName().endsWith(".csv")) {
+							ret.add(convertHDT(source.getAbsolutePath()));
+							count++;
+						}
+					} catch (Exception e) {
+						continue;
 					}
 				}
 			}
@@ -510,14 +525,14 @@ public class Experiment {
 		Set<String> ret = new LinkedHashSet<String>();
 		File fUncompressed = Util.unconpress(source);
 		if (fUncompressed.isDirectory()) {
-			ret.addAll(getDatasets(fUncompressed, 9999999));	
-		}else {
-			if(fUncompressed.getName().endsWith(".hdt")) {
+			ret.addAll(getDatasets(fUncompressed, 9999999));
+		} else {
+			if (fUncompressed.getName().endsWith(".hdt")) {
 				ret.add(fUncompressed.getAbsolutePath());
-			}else {
-				if(fUncompressed.getName().endsWith(".tar")) {
+			} else {
+				if (fUncompressed.getName().endsWith(".tar")) {
 					ret.addAll(convertZip2HDT(fUncompressed));
-				}else {
+				} else {
 					ret.add(convertHDT(fUncompressed.getAbsolutePath()));
 				}
 			}

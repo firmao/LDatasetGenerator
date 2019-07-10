@@ -35,6 +35,14 @@ public class ExperimentNN extends Experiment {
 		final Map<String, String> mapMatches = new LinkedHashMap<String, String>();
 		final Map<String, Map<String, String>> mapPropsDs = new HashMap<String, Map<String, String>>();
 
+		if((getManyDs() == null) || (getManyDt() == null)) {
+			mapMatches.putAll(PropertyMatchingNN.schemaMatching(getDs(), getDt()));
+			String fileName = "MatchingMap.tsv";
+			writeFile(mapMatches, fileName, getDs(), getDt());
+			evaluate(mapMatches);
+			return;
+		}
+		
 		Set<String> mDs = getManyDs();
 		Set<String> mDt = getManyDt();
 		for (String ds : mDs) {

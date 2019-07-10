@@ -42,9 +42,9 @@ public class PropertyMatchingNN {
 //		exp.setDt("dirHDT/3_ds_tests/hdt/personne2_vldb.hdt");
 //		exp.setGoldStandard("goldPersonVldb.tsv");
 
-//		exp.setDs("AmazonProducts.csv");
-//		exp.setDt("GoogleProducts.csv");
-//		exp.setGoldStandard("goldStandardAmazonGoogleProds.tsv");
+		exp.setDs("AmazonProducts.csv");
+		exp.setDt("GoogleProducts.csv");
+		exp.setGoldStandard("goldStandardAmazonGoogleProds.tsv");
 
 //		exp.setDs("Abt.csv");
 //		exp.setDt("Buy.csv");
@@ -66,12 +66,12 @@ public class PropertyMatchingNN {
 //		Set<String> manyDt = exp.getDatasets(new File("manyDt"), 10);
 //		exp.setManyDt(manyDt);
 
-		Set<String> manyDs = exp.getDatasets(new File("dirDBpediaSubsetCSV"), 99999999);
-		exp.setManyDs(manyDs);
-		//exp.setDs("dirHDT/mappingbased_properties_en.hdt");
-		Set<String> manyDt = exp.getDatasets(new File("webTables_1"), 99999999);
-		exp.setManyDt(manyDt);
-		exp.setGoldStandard("dirGoldStandard");
+//		Set<String> manyDs = exp.getDatasets(new File("dirDBpediaSubsetCSV"), 99999999);
+//		exp.setManyDs(manyDs);
+//
+//		Set<String> manyDt = exp.getDatasets(new File("/home/andre/Downloads/WDC_GoldStandard/webTables"), 99999999);
+//		exp.setManyDt(manyDt);
+//		exp.setGoldStandard("dirGoldStandard");
 
 		stopWatch.start();
 		//exp.execute();
