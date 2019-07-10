@@ -21,7 +21,7 @@ public class DsRelationStatistics {
 	public static final Map<String, String> mAlreadyCompared = new LinkedHashMap<String, String>();
 	public static final Map<String, Set<String>> mapDatasetProperties = new LinkedHashMap<String, Set<String>>();
 	public static final boolean IN_MEMORY = true;
-	public static final String OUTPUT_DIR = "out_tests";
+	public static final String OUTPUT_DIR = "out_tests2";
 	public static Map<String, String> mapDsError = new LinkedHashMap<String, String>();
 	public static void main(String[] args) throws Exception {
 		StopWatch stopWatch = new StopWatch();
@@ -33,8 +33,8 @@ public class DsRelationStatistics {
 		System.out.println("IN_MEMORY: " + IN_MEMORY);
 		Map<String, String> mapQuerySource = getSampleQueries(new File("queryDsInfo.txt"));
 		ExperimentNN exp = new ExperimentNN();
-		Set<String> ds = exp.getDatasets(new File("dirHDT"), 1000);
-		//ds.addAll(getEndpoints(new File("endpoints.txt")));
+		Set<String> ds = exp.getDatasets(new File("dirHDT"), 10000);
+		ds.addAll(getEndpoints(new File("endpoints.txt")));
 		//ds.addAll(mapQuerySource.keySet());
 		Set<String> dt = new LinkedHashSet<String>();
 		//dt.addAll(mapQuerySource.keySet());
@@ -146,21 +146,37 @@ public class DsRelationStatistics {
 
 	private static void printMap(Map<String, Set<String>> mapExactMatch, Map<String, Map<String, String>> mapSim, String fileName) throws FileNotFoundException, UnsupportedEncodingException {
 			PrintWriter writer = new PrintWriter(fileName, "UTF-8");
+			PrintWriter writerExact = new PrintWriter(fileName.replaceAll(".tsv", "_Exact.tsv"), "UTF-8");
+			PrintWriter writerSim = new PrintWriter(fileName.replaceAll(".tsv", "_Sim.tsv"), "UTF-8");
 			writer.println("FileName\t#ExactMatch\t#sim>0.9\t#PropDs\t#PropDt");
+			writerExact.println("Property\tSource\tTarget");
+			writerSim.println("PropertyS\tPropertyT\tSource\tTarget");
 			for (Entry<String, Set<String>> entry : mapExactMatch.entrySet()) {
 				String fNameExact = entry.getKey();
 				String fNameSim = fNameExact.replaceAll("_Exact.txt", "_Sim.tsv");
-				Set<String> props = entry.getValue();
+				Set<String> propExact = entry.getValue();
 				String [] str = fNameExact.replaceAll("_Exact.txt", "").split("---");
 				String source = str[0].replaceAll(OUTPUT_DIR + "/", "");
 				String target = str[1].replaceAll("_Exact.txt", "");
+				String s = source.replaceAll("andre_", "");
+				String t = target.replaceAll("andre_", "");
 				if((mapSim.size() > 0) && (mapSim.get(fNameSim) != null)) {
-					writer.println(fNameExact + "\t" + props.size() + "\t" + mapSim.get(fNameSim).size()+ "\t" + mapDatasetProperties.get(source).size() + "\t" + mapDatasetProperties.get(target).size());
+					writer.println(fNameExact + "\t" + propExact.size() + "\t" + mapSim.get(fNameSim).size()+ "\t" + mapDatasetProperties.get(source).size() + "\t" + mapDatasetProperties.get(target).size());
+					for (Entry<String, String> p : mapSim.get(fNameSim).entrySet()) {
+						String pS = p.getKey();
+						String pT = p.getValue();
+						writerSim.println(pS + "\t" + pT + "\t" + s + "\t" + t);
+					}
 				} else {
-					writer.println(fNameExact + "\t" + props.size() + "\t" + 0 + "\t" + mapDatasetProperties.get(source).size() + "\t" + mapDatasetProperties.get(target).size());
+					writer.println(fNameExact + "\t" + propExact.size() + "\t" + 0 + "\t" + mapDatasetProperties.get(source).size() + "\t" + mapDatasetProperties.get(target).size());
+					for (String pExact : propExact) {
+						writerExact.println(pExact + "\t" + s + "\t" + t);
+					}
 				}
 			}
 			writer.close();
+			writerExact.close();
+			writerSim.close();
 	}
 
 	private static boolean alreadyCompared(String source, String target) {

@@ -24,12 +24,15 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
@@ -50,6 +53,8 @@ import org.apache.jena.rdf.model.impl.ModelCom;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFParserBuilder;
 import org.apache.jena.riot.system.StreamRDF;
+import org.apache.jena.shared.PrefixMapping;
+import org.apache.jena.sparql.core.Prologue;
 import org.apache.jena.sparql.core.Quad;
 import org.rauschig.jarchivelib.Archiver;
 import org.rauschig.jarchivelib.ArchiverFactory;
@@ -858,5 +863,40 @@ public class Util {
 			System.err.println("Problem with URI: " + property);
 		}
 		return name.replaceAll("\"", "");
+	}
+
+	public static Set<String> extractProperties(String cSparql) throws UnsupportedEncodingException {
+		Set<String> ret = new LinkedHashSet<String>();
+		String fixSparql = replacePrefixes(cSparql);
+
+		String urlRegex = "((https?|ftp|gopher|telnet|file):((//)|(\\\\))+[\\w\\d:#@%/;$()~_?\\+-=\\\\\\.&]*)";
+		Pattern pattern = Pattern.compile(urlRegex, Pattern.CASE_INSENSITIVE);
+		Matcher urlMatcher = pattern.matcher(fixSparql);
+
+		while (urlMatcher.find()) {
+			String key = fixSparql.substring(urlMatcher.start(0), urlMatcher.end(0));
+			ret.add(key);
+		}
+
+		return ret;
+	}
+	
+	public static String replacePrefixes(String query) throws UnsupportedEncodingException {
+		PrefixMapping pmap = PrefixMapping.Factory.create();
+//		Map<String, String> mPrefixURI = getMapPrefix(query);
+//		pmap.setNsPrefixes(mPrefixURI);
+		pmap.setNsPrefixes(PrefixMapping.Extended);
+		Prologue prog = new Prologue();
+		prog.setPrefixMapping(pmap);
+		Query q = QueryFactory.parse(new Query(prog), query, null, null);
+		// Set Prefix Mapping
+		q.setPrefixMapping(pmap);
+		// remove PrefixMapping so the prefixes will get replaced by the full uris
+		q.setPrefixMapping(null);
+		return q.serialize();
+	}
+
+	public static boolean isSparql(String cSparql) {
+		return cSparql.toLowerCase().contains("select");
 	}
 }

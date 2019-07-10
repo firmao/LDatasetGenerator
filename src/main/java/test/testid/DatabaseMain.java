@@ -13,10 +13,19 @@ import java.util.stream.Stream;
 public class DatabaseMain {
 
 	public static void main(String[] args) throws IOException {
-		String dataset = "6e9e97fa4f1c9ba28ae0dd3786c2de41.hdt";
-		Set<String> ret = searchDB(dataset);
-		System.out.println("Dataset: " + dataset);
-		ret.forEach(System.out::println);
+//		String dataset = "6e9e97fa4f1c9ba28ae0dd3786c2de41.hdt";
+//		Set<String> ret = searchDB(dataset);
+//		System.out.println("Dataset: " + dataset);
+//		ret.forEach(System.out::println);
+
+		// String dataset = "SELECT ?s WHERE { ?s a <http://dbpedia.org/ontology/City>
+		// }";
+		Set<String> properties = new LinkedHashSet<String>();
+		properties.add("http://purl.org/dc/terms/date");
+		properties.add("http://crime.rkbexplorer.com/id/location");
+		properties.add("http://purl.org/dc/terms/subject");
+		Set<String> retProp = searchDB(properties);
+		retProp.forEach(System.out::println);
 	}
 
 	public static void add(Map<String, Set<String>> mapExactMatch, Map<String, Map<String, String>> mapSim) {
@@ -55,6 +64,10 @@ public class DatabaseMain {
 	}
 
 	private static Set<String> searchDB(String dataset) throws IOException {
+		if (Util.isSparql(dataset)) {
+			Set<String> properties = Util.extractProperties(dataset);
+			return searchDB(properties);
+		}
 		Set<String> ret1 = new LinkedHashSet<String>();
 		try (Stream<String> lines = Files.lines(Paths.get(DsRelationStatistics.OUTPUT_DIR + "/tableMatches.tsv"))) {
 			ret1 = lines.filter(line -> line.contains(dataset)).map(String::toUpperCase).collect(Collectors.toSet());
@@ -82,19 +95,46 @@ public class DatabaseMain {
 		return ret;
 	}
 
-	public static Set<String> getResults(Set<String> properties) {
-		Set<String> results = searchDB(properties);
-		if (results == null) {
-			results = new LinkedHashSet<String>();
-			results.add(
-					"Properties not found in our index, please add a dataset with thosse properties to the index queue");
-		}
-		return results;
-	}
+//	public static Set<String> getResults(Set<String> properties) {
+//		Set<String> results = searchDB(properties);
+//		if (results == null) {
+//			results = new LinkedHashSet<String>();
+//			results.add(
+//					"Properties not found in our index, please add a dataset with thosse properties to the index queue");
+//		}
+//		return results;
+//	}
 
-	private static Set<String> searchDB(Set<String> properties) {
-		// TODO Auto-generated method stub
-		return null;
+	private static Set<String> searchDB(Set<String> properties) throws IOException {
+		Set<String> ret = new LinkedHashSet<String>();
+
+		Set<String> propExact = new LinkedHashSet<String>();
+		for (String prop : properties) {
+			try (Stream<String> lines = Files
+					.lines(Paths.get(DsRelationStatistics.OUTPUT_DIR + "/tableMatches_Exact.tsv"))) {
+
+				propExact.addAll(
+						lines.filter(line -> line.contains(prop)).map(String::toUpperCase).collect(Collectors.toSet()));
+			}
+		}
+		Set<String> propSim = new LinkedHashSet<String>();
+		for (String prop : properties) {
+			try (Stream<String> lines = Files
+					.lines(Paths.get(DsRelationStatistics.OUTPUT_DIR + "/tableMatches_Sim.tsv"))) {
+				propSim.addAll(
+						lines.filter(line -> line.contains(prop)).map(String::toUpperCase).collect(Collectors.toSet()));
+			}
+		}
+
+//		for (String pExact : propExact) {
+//			String 
+//		}
+//		for (String pSim : propSim) {
+//			
+//		}
+		ret.addAll(propExact);
+		ret.addAll(propSim);
+		return ret;
 	}
 
 }
