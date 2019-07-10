@@ -3,6 +3,7 @@ package test.testid;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -126,13 +127,26 @@ public class DatabaseMain {
 			}
 		}
 
-//		for (String pExact : propExact) {
-//			String 
-//		}
+		Set<String> datasetsExact = new LinkedHashSet<String>();
+		Map<String, Set<String>> mExact = new LinkedHashMap<String, Set<String>>();
+		for (String pExact : propExact) {
+			String s [] = pExact.split("\t");
+			datasetsExact.add(s[1].replaceAll("ANDRE_", ""));
+			datasetsExact.add(s[2].replaceAll("ANDRE_", ""));
+			if(mExact.containsKey(s[0].trim())) {
+				mExact.get(s[0]).addAll(datasetsExact);
+			} else {
+				mExact.put(s[0], datasetsExact);
+			}
+		}
+		
+//		Set<String> datasetsSim = new LinkedHashSet<String>();
+//		Map<Map<String, String>, Map<String, String>> mExact = new LinkedHashMapMap<Map<String, String>, Map<String, String>>();
 //		for (String pSim : propSim) {
-//			
+//			String s [] = pSim.split("\t");
+//			mExact.p
 //		}
-		ret.addAll(propExact);
+		ret.add(mExact.toString());
 		ret.addAll(propSim);
 		return ret;
 	}
