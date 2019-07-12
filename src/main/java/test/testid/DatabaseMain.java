@@ -1,18 +1,29 @@
 package test.testid;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class DatabaseMain {
+import org.apache.jena.query.Query;
+import org.apache.jena.query.QueryFactory;
+import org.apache.jena.shared.PrefixMapping;
+import org.apache.jena.sparql.core.Prologue;
 
+public class DatabaseMain {
+	public static String TABLEMATCHING_PATH = "/media/andre/DATA/Dropbox/ws1/LDatasetGenerator/out_tests2/tableMatches.tsv";
+	public static String TABLEMATCHES_EXACT = "/media/andre/DATA/Dropbox/ws1/LDatasetGenerator/out_tests2/tableMatches_Exact.tsv";
+	public static String TABLEMATCHES_SIM = "/media/andre/DATA/Dropbox/ws1/LDatasetGenerator/out_tests2/tableMatches_Sim.tsv";
+	
 	public static void main(String[] args) throws IOException {
 //		String dataset = "6e9e97fa4f1c9ba28ae0dd3786c2de41.hdt";
 //		Set<String> ret = searchDB(dataset);
@@ -64,13 +75,48 @@ public class DatabaseMain {
 		return results;
 	}
 
-	private static Set<String> searchDB(String dataset) throws IOException {
-		if (Util.isSparql(dataset)) {
-			Set<String> properties = Util.extractProperties(dataset);
+	public static boolean isSparql(String cSparql) {
+		return cSparql.toLowerCase().contains("select");
+	}
+	
+	public static Set<String> extractProperties(String cSparql) throws UnsupportedEncodingException {
+		Set<String> ret = new LinkedHashSet<String>();
+		String fixSparql = replacePrefixes(cSparql);
+
+		String urlRegex = "((https?|ftp|gopher|telnet|file):((//)|(\\\\))+[\\w\\d:#@%/;$()~_?\\+-=\\\\\\.&]*)";
+		Pattern pattern = Pattern.compile(urlRegex, Pattern.CASE_INSENSITIVE);
+		Matcher urlMatcher = pattern.matcher(fixSparql);
+
+		while (urlMatcher.find()) {
+			String key = fixSparql.substring(urlMatcher.start(0), urlMatcher.end(0));
+			ret.add(key);
+		}
+
+		return ret;
+	}
+	
+	public static String replacePrefixes(String query) throws UnsupportedEncodingException {
+		PrefixMapping pmap = PrefixMapping.Factory.create();
+//		Map<String, String> mPrefixURI = getMapPrefix(query);
+//		pmap.setNsPrefixes(mPrefixURI);
+		pmap.setNsPrefixes(PrefixMapping.Extended);
+		Prologue prog = new Prologue();
+		prog.setPrefixMapping(pmap);
+		Query q = QueryFactory.parse(new Query(prog), query, null, null);
+		// Set Prefix Mapping
+		q.setPrefixMapping(pmap);
+		// remove PrefixMapping so the prefixes will get replaced by the full uris
+		q.setPrefixMapping(null);
+		return q.serialize();
+	}
+	
+	public static Set<String> searchDB(String dataset) throws IOException {
+		if (isSparql(dataset)) {
+			Set<String> properties = extractProperties(dataset);
 			return searchDB(properties);
 		}
 		Set<String> ret1 = new LinkedHashSet<String>();
-		try (Stream<String> lines = Files.lines(Paths.get(DsRelationStatistics.OUTPUT_DIR + "/tableMatches.tsv"))) {
+		try (Stream<String> lines = Files.lines(Paths.get(TABLEMATCHING_PATH))) {
 			ret1 = lines.filter(line -> line.contains(dataset)).map(String::toUpperCase).collect(Collectors.toSet());
 		}
 		Set<String> ret = new LinkedHashSet<String>();
@@ -106,13 +152,13 @@ public class DatabaseMain {
 //		return results;
 //	}
 
-	private static Set<String> searchDB(Set<String> properties) throws IOException {
+	public static Set<String> searchDB(Set<String> properties) throws IOException {
 		Set<String> ret = new LinkedHashSet<String>();
 
 		Set<String> propExact = new LinkedHashSet<String>();
 		for (String prop : properties) {
 			try (Stream<String> lines = Files
-					.lines(Paths.get(DsRelationStatistics.OUTPUT_DIR + "/tableMatches_Exact.tsv"))) {
+					.lines(Paths.get(TABLEMATCHES_EXACT))) {
 
 				propExact.addAll(
 						lines.filter(line -> line.contains(prop)).map(String::toUpperCase).collect(Collectors.toSet()));
@@ -121,7 +167,7 @@ public class DatabaseMain {
 		Set<String> propSim = new LinkedHashSet<String>();
 		for (String prop : properties) {
 			try (Stream<String> lines = Files
-					.lines(Paths.get(DsRelationStatistics.OUTPUT_DIR + "/tableMatches_Sim.tsv"))) {
+					.lines(Paths.get(TABLEMATCHES_SIM))) {
 				propSim.addAll(
 						lines.filter(line -> line.contains(prop)).map(String::toUpperCase).collect(Collectors.toSet()));
 			}
