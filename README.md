@@ -11,6 +11,10 @@ Automatic identification of datasets.
 ## Setup:
 Clone the repository and don't forget to put on the classpath all jar files from lib directory.
 
+## Datasets already included on the index:
+- All 539 from LOD cloud: https://github.com/firmao/wimuT/blob/master/Endpoints_numtriples_lodcloud.csv
+- 915 datasets (HDT files) randomly selected from (LOD Laundromat)[http://lodlaundromat.org/].
+
 ## Classes
 - Property matching using gold Standard from webTables(http://www.webdatacommons.org/webtables/)
 - https://github.com/firmao/LDatasetGenerator/blob/master/src/main/java/test/testid/PropertyMatchingNN.java
