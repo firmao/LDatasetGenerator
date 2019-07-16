@@ -25,19 +25,19 @@ public class DatabaseMain {
 	public static String TABLEMATCHES_SIM = "/media/andre/DATA/Dropbox/ws1/LDatasetGenerator/out_tests2/tableMatches_Sim.tsv";
 	
 	public static void main(String[] args) throws IOException {
-//		String dataset = "6e9e97fa4f1c9ba28ae0dd3786c2de41.hdt";
-//		Set<String> ret = searchDB(dataset);
-//		System.out.println("Dataset: " + dataset);
-//		ret.forEach(System.out::println);
+		String dataset = "684434e8ddfd4590cd188a3178f0b9ae.hdt";
+		Set<String> ret = searchDB(dataset);
+		System.out.println("Dataset: " + dataset);
+		ret.forEach(System.out::println);
 
 		// String dataset = "SELECT ?s WHERE { ?s a <http://dbpedia.org/ontology/City>
 		// }";
-		Set<String> properties = new LinkedHashSet<String>();
-		properties.add("http://purl.org/dc/terms/date");
-		properties.add("http://crime.rkbexplorer.com/id/location");
-		properties.add("http://purl.org/dc/terms/subject");
-		Set<String> retProp = searchDB(properties);
-		retProp.forEach(System.out::println);
+//		Set<String> properties = new LinkedHashSet<String>();
+//		properties.add("http://purl.org/dc/terms/date");
+//		properties.add("http://crime.rkbexplorer.com/id/location");
+//		properties.add("http://purl.org/dc/terms/subject");
+//		Set<String> retProp = searchDB(properties);
+//		retProp.forEach(System.out::println);
 	}
 
 	public static void add(Map<String, Set<String>> mapExactMatch, Map<String, Map<String, String>> mapSim) {
@@ -46,7 +46,7 @@ public class DatabaseMain {
 			Set<String> props = entry.getValue();
 			String fNameSim = fNameExact.replaceAll("_Exact.txt", "_Sim.tsv");
 			String[] str = fNameExact.replaceAll("_Exact.txt", "").split("---");
-			String source = str[0].replaceAll(DsRelationStatistics.OUTPUT_DIR + "/", "");
+			String source = str[0].replaceAll(IndexCreator.OUTPUT_DIR + "/", "");
 			String target = str[1].replaceAll("_Exact.txt", "");
 			if (!addDB(source, target, props.size(), mapSim.get(fNameSim).size())) {
 				System.err.println("Problem source: " + source + " target: " + target);
