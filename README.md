@@ -31,3 +31,6 @@ Clone the repository and don't forget to put on the classpath all jar files from
 - Extract property and value from a given collection of datasets.
 - https://github.com/firmao/LDatasetGenerator/blob/master/src/main/java/test/testid/Main.java
 - https://github.com/firmao/LDatasetGenerator/blob/master/src/main/java/test/testid/DsGenerator.java
+
+- Class reponsible for creating the LOD datasets relation index:
+- https://github.com/firmao/LDatasetGenerator/blob/master/src/main/java/test/testid/IndexCreator.java
