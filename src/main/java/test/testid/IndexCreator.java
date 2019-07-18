@@ -21,7 +21,7 @@ public class IndexCreator {
 	public static final Map<String, String> mAlreadyCompared = new LinkedHashMap<String, String>();
 	public static final Map<String, Set<String>> mapDatasetProperties = new LinkedHashMap<String, Set<String>>();
 	public static final boolean IN_MEMORY = true;
-	public static final String OUTPUT_DIR = "out_tests2";
+	public static final String OUTPUT_DIR = "out_endpoint";
 	public static Map<String, String> mapDsError = new LinkedHashMap<String, String>();
 	public static void main(String[] args) throws Exception {
 		StopWatch stopWatch = new StopWatch();
@@ -31,11 +31,17 @@ public class IndexCreator {
 			fDir.mkdir();
 		}
 		System.out.println("IN_MEMORY: " + IN_MEMORY);
-		Map<String, String> mapQuerySource = getSampleQueries(new File("queryDsInfo.txt"));
+		
 		ExperimentNN exp = new ExperimentNN();
-		Set<String> ds = exp.getDatasets(new File("dirHDT"), 10000);
-		ds.addAll(getEndpoints(new File("endpoints.txt")));
-		//ds.addAll(mapQuerySource.keySet());
+		Set<String> ds = new LinkedHashSet<String>();
+		//ds.addAll(exp.getDatasets(new File("dirHDT"), 10000));
+		//ds.addAll(getEndpoints(new File("endpoints.txt")));
+		Map<String, String> mapQuerySource = getSampleQueries(new File("queryDsInfo.txt"));
+		ds.addAll(mapQuerySource.keySet());
+		
+		//ds.add("http://dbpedia.org/sparql");
+		//ds.add("http://linkedgeodata.org/sparql");
+		
 		Set<String> dt = new LinkedHashSet<String>();
 		//dt.addAll(mapQuerySource.keySet());
 		dt.addAll(ds);

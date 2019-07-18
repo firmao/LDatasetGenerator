@@ -637,7 +637,7 @@ public class Util {
 			// int indLimit = cSparql.toLowerCase().indexOf("limit");
 			// if((indLimit < 0) && (indOffset < 0)) {
 			// sSparql = cSparql + " offset " + offset + " limit " + offsetSize;
-			sSparql = cSparql + " offset " + offset;
+			sSparql = cSparql + " offset " + offset + " Limit 9999";
 			// }
 			// System.out.println(sSparql);
 			Query query = QueryFactory.create(sSparql);
