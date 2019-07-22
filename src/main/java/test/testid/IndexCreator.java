@@ -21,7 +21,7 @@ public class IndexCreator {
 	public static final Map<String, String> mAlreadyCompared = new LinkedHashMap<String, String>();
 	public static final Map<String, Set<String>> mapDatasetProperties = new LinkedHashMap<String, Set<String>>();
 	public static final boolean IN_MEMORY = true;
-	public static final String OUTPUT_DIR = "out_endpoint";
+	public static final String OUTPUT_DIR = "out_propsConcept";
 	public static Map<String, String> mapDsError = new LinkedHashMap<String, String>();
 	public static void main(String[] args) throws Exception {
 		StopWatch stopWatch = new StopWatch();
@@ -34,13 +34,17 @@ public class IndexCreator {
 		
 		ExperimentNN exp = new ExperimentNN();
 		Set<String> ds = new LinkedHashSet<String>();
-		//ds.addAll(exp.getDatasets(new File("dirHDT"), 10000));
-		//ds.addAll(getEndpoints(new File("endpoints.txt")));
+		//ds.addAll(exp.getDatasets(new File("/media/andre/DATA/Dropbox/ws1/DatasetMatchingWeb/deploy/hdtTests/"), 1000000));
+		ds.addAll(exp.getDatasets(new File("/media/andre/Seagate/personalDatasets/"), 1000000));
+		ds.addAll(exp.getDatasets(new File("dirHDT"), 100000));
+		ds.addAll(getEndpoints(new File("endpoints.txt")));
 		Map<String, String> mapQuerySource = getSampleQueries(new File("queryDsInfo.txt"));
 		ds.addAll(mapQuerySource.keySet());
 		
 		//ds.add("http://dbpedia.org/sparql");
 		//ds.add("http://linkedgeodata.org/sparql");
+		//ds.add("dirHDT/mappingbased_properties_en.hdt");
+		//ds.add("dirHDT/DBPedia-3.9-en.hdt");
 		
 		Set<String> dt = new LinkedHashSet<String>();
 		//dt.addAll(mapQuerySource.keySet());
@@ -53,7 +57,7 @@ public class IndexCreator {
 		int count = 0;
 		for (String source : ds) {
 			for (String target : dt) {
-				System.out.println("Starting comparison: " + count + " from " + totalComparisons);
+				System.out.println("Starting comparison: " + count + " from " + totalComparisons + " datasets");
 				count++;
 				if (source.equals(target))
 					continue;
@@ -114,11 +118,21 @@ public class IndexCreator {
 		final Map<String, Map<String, String>> mapSim = new LinkedHashMap<String, Map<String, String>>();
 		
 		String s[] = source.split("/");
-		String fSource = s[2] + "_" + s[s.length - 1];
+		String fSource = null;
+		String fTarget = null;
+		if(s.length > 2) {
+			fSource = s[2] + "_" + s[s.length - 1];
+		} else {
+			fSource = s[s.length - 1];
+		}
 		String t[] = target.split("/");
-		String fTarget = t[2] + "_" + t[t.length - 1];
-		final String fileName = OUTPUT_DIR + "/" + fSource + "---" + fTarget + "_Sim.tsv";
-		
+		if(t.length > 2) {
+			fTarget = t[2] + "_" + t[t.length - 1];
+		} else {
+			fTarget = t[t.length - 1];
+		}
+		//final String fileName = OUTPUT_DIR + "/" + fSource + "---" + fTarget + "_Sim.tsv";
+		final String fileName = fSource + "---" + fTarget + "_Sim.tsv";
 		propsSource.addAll(getProps(source, fSource));
 		propsTarget.addAll(getProps(target, fTarget));
 		
@@ -166,7 +180,7 @@ public class IndexCreator {
 				String target = str[1].replaceAll("_Exact.txt", "");
 				String s = source.replaceAll("andre_", "");
 				String t = target.replaceAll("andre_", "");
-				if((mapSim.size() > 0) && (mapSim.get(fNameSim) != null)) {
+				if((mapSim.size() > 0) && (mapSim.get(fNameSim) != null) && (mapSim.get(fNameSim).size() > 0)) {
 					writer.println(fNameExact + "\t" + propExact.size() + "\t" + mapSim.get(fNameSim).size()+ "\t" + mapDatasetProperties.get(source).size() + "\t" + mapDatasetProperties.get(target).size());
 					for (Entry<String, String> p : mapSim.get(fNameSim).entrySet()) {
 						String pS = p.getKey();
@@ -225,10 +239,21 @@ public class IndexCreator {
 		final Set<String> propsMatched = new LinkedHashSet<String>();
 		final Map<String, Set<String>> mapExactMatch = new LinkedHashMap<String, Set<String>>();
 		String s[] = source.split("/");
-		String fSource = s[2] + "_" + s[s.length - 1];
+		String fSource = null;
+		String fTarget = null;
+		if(s.length > 2) {
+			fSource = s[2] + "_" + s[s.length - 1];
+		} else {
+			fSource = s[s.length - 1];
+		}
 		String t[] = target.split("/");
-		String fTarget = t[2] + "_" + t[t.length - 1];
-		final String fileName = OUTPUT_DIR + "/" + fSource + "---" + fTarget + "_Exact.txt";
+		if(t.length > 2) {
+			fTarget = t[2] + "_" + t[t.length - 1];
+		} else {
+			fTarget = t[t.length - 1];
+		}
+		//final String fileName = OUTPUT_DIR + "/" + fSource + "---" + fTarget + "_Exact.txt";
+		final String fileName = fSource + "---" + fTarget + "_Exact.txt";
 		propsSource.addAll(getProps(source, fSource));
 		propsTarget.addAll(getProps(target, fTarget));
 		if ((propsSource.size() < 1) || (propsTarget.size() < 1)) {
@@ -250,16 +275,21 @@ public class IndexCreator {
 	}
 
 	private static Set<String> getProps(String source, String fName) {
+		String cSparqlP = "Select DISTINCT ?p where {?s ?p ?o}";
+		String cSparqlC = "select distinct ?p where {[] a ?p}";
+		Set<String> ret = new LinkedHashSet<String>();
 		if(!IN_MEMORY) {
-			String cSparql = "Select DISTINCT ?p where {?s ?p ?o}";
-			return execSparql(cSparql, source);
+			ret.addAll(execSparql(cSparqlP, source));
+			ret.addAll(execSparql(cSparqlC, source));
+			return ret;
 		}
 		
 		if(mapDatasetProperties.containsKey(fName)) {
 			return mapDatasetProperties.get(fName);
 		}
-		String cSparql = "Select DISTINCT ?p where {?s ?p ?o}";
-		mapDatasetProperties.put(fName, execSparql(cSparql, source));
+		ret.addAll(execSparql(cSparqlP, source));
+		ret.addAll(execSparql(cSparqlC, source));
+		mapDatasetProperties.put(fName, ret);
 		return mapDatasetProperties.get(fName);
 	}
 
