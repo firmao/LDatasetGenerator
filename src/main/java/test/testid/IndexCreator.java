@@ -21,7 +21,7 @@ public class IndexCreator {
 	public static final Map<String, String> mAlreadyCompared = new LinkedHashMap<String, String>();
 	public static final Map<String, Set<String>> mapDatasetProperties = new LinkedHashMap<String, Set<String>>();
 	public static final boolean IN_MEMORY = true;
-	public static final String OUTPUT_DIR = "out_propsConcept";
+	public static final String OUTPUT_DIR = "out_HDTtests";
 	public static Map<String, String> mapDsError = new LinkedHashMap<String, String>();
 	public static void main(String[] args) throws Exception {
 		StopWatch stopWatch = new StopWatch();
@@ -34,12 +34,13 @@ public class IndexCreator {
 		
 		ExperimentNN exp = new ExperimentNN();
 		Set<String> ds = new LinkedHashSet<String>();
-		//ds.addAll(exp.getDatasets(new File("/media/andre/DATA/Dropbox/ws1/DatasetMatchingWeb/deploy/hdtTests/"), 1000000));
-		ds.addAll(exp.getDatasets(new File("/media/andre/Seagate/personalDatasets/"), 1000000));
-		ds.addAll(exp.getDatasets(new File("dirHDT"), 100000));
-		ds.addAll(getEndpoints(new File("endpoints.txt")));
-		Map<String, String> mapQuerySource = getSampleQueries(new File("queryDsInfo.txt"));
-		ds.addAll(mapQuerySource.keySet());
+//		ds.addAll(exp.getDatasets(new File("/media/andre/Seagate/personalDatasets/"), 1000000));
+//		ds.addAll(exp.getDatasets(new File("dirHDT"), 100000));
+//		ds.addAll(exp.getDatasets(new File("dirHDTFamous"), 1000000));
+		ds.addAll(exp.getDatasets(new File("dirHDTtests"), 9999));
+//		ds.addAll(getEndpoints(new File("endpoints.txt")));
+//		Map<String, String> mapQuerySource = getSampleQueries(new File("queryDsInfo.txt"));
+//		ds.addAll(mapQuerySource.keySet());
 		
 		//ds.add("http://dbpedia.org/sparql");
 		//ds.add("http://linkedgeodata.org/sparql");
@@ -54,18 +55,22 @@ public class IndexCreator {
 		
 		//for (String source : mapQuerySource.keySet()) {
 		int totalComparisons = ds.size() * dt.size();
+		System.out.println("Total datasets: " + ds.size());
 		int count = 0;
 		for (String source : ds) {
 			for (String target : dt) {
-				System.out.println("Starting comparison: " + count + " from " + totalComparisons + " datasets");
-				count++;
+				
+				
 				if (source.equals(target))
 					continue;
 				if (alreadyCompared(source, target))
 					continue;
+				
+				System.out.println("Starting dataset comparison: " + count + " from " + totalComparisons);
+				System.out.println(source + "---" + target);
+				count++;
 				mapExactMatch.putAll(getExactMatches(source, target));
-				mapSim.putAll(getSimMatches(source, target, 0.9, mapExactMatch));
-				//printMap(mapExactMatch, mapSim, OUTPUT_DIR + "/tableMatches.tsv");
+				mapSim.putAll(getSimMatches(source, target, 0.8, mapExactMatch));
 				mAlreadyCompared.put(source, target);
 				mAlreadyCompared.put(target, source);
 			}
@@ -168,9 +173,10 @@ public class IndexCreator {
 			PrintWriter writer = new PrintWriter(fileName, "UTF-8");
 			PrintWriter writerExact = new PrintWriter(fileName.replaceAll(".tsv", "_Exact.tsv"), "UTF-8");
 			PrintWriter writerSim = new PrintWriter(fileName.replaceAll(".tsv", "_Sim.tsv"), "UTF-8");
-			writer.println("FileName\t#ExactMatch\t#sim>0.9\t#PropDs\t#PropDt");
+			writer.println("DatasetPair(S---T)\t#ExactMatch\t#sim>0.9\t#PropDs\t#PropDt");
 			writerExact.println("Property\tSource\tTarget");
 			writerSim.println("PropertyS\tPropertyT\tSource\tTarget");
+//			Set<String> setAlreadyIncluded = new LinkedHashSet<String>();
 			for (Entry<String, Set<String>> entry : mapExactMatch.entrySet()) {
 				String fNameExact = entry.getKey();
 				String fNameSim = fNameExact.replaceAll("_Exact.txt", "_Sim.tsv");
@@ -180,15 +186,21 @@ public class IndexCreator {
 				String target = str[1].replaceAll("_Exact.txt", "");
 				String s = source.replaceAll("andre_", "");
 				String t = target.replaceAll("andre_", "");
+				String pair = s + "---" + t;
+//				if(setAlreadyIncluded.contains(s) && setAlreadyIncluded.contains(t)) {
+//					continue;
+//				}
+//				setAlreadyIncluded.add(s);
+//				setAlreadyIncluded.add(t);
 				if((mapSim.size() > 0) && (mapSim.get(fNameSim) != null) && (mapSim.get(fNameSim).size() > 0)) {
-					writer.println(fNameExact + "\t" + propExact.size() + "\t" + mapSim.get(fNameSim).size()+ "\t" + mapDatasetProperties.get(source).size() + "\t" + mapDatasetProperties.get(target).size());
+					writer.println(pair + "\t" + propExact.size() + "\t" + mapSim.get(fNameSim).size()+ "\t" + mapDatasetProperties.get(source).size() + "\t" + mapDatasetProperties.get(target).size());
 					for (Entry<String, String> p : mapSim.get(fNameSim).entrySet()) {
 						String pS = p.getKey();
 						String pT = p.getValue();
 						writerSim.println(pS + "\t" + pT + "\t" + s + "\t" + t);
 					}
 				} else {
-					writer.println(fNameExact + "\t" + propExact.size() + "\t" + 0 + "\t" + mapDatasetProperties.get(source).size() + "\t" + mapDatasetProperties.get(target).size());
+					writer.println(pair + "\t" + propExact.size() + "\t" + 0 + "\t" + mapDatasetProperties.get(source).size() + "\t" + mapDatasetProperties.get(target).size());
 					for (String pExact : propExact) {
 						writerExact.println(pExact + "\t" + s + "\t" + t);
 					}
@@ -297,7 +309,7 @@ public class IndexCreator {
 		final Set<String> ret = new LinkedHashSet<String>();
 
 		try {
-			TimeOutBlock timeoutBlock = new TimeOutBlock(600000); // 10 minutes
+			TimeOutBlock timeoutBlock = new TimeOutBlock(900000); // 15 minutes
 			Runnable block = new Runnable() {
 				public void run() {
 			//		ret.addAll(Util.execQueryEndPoint(cSparql, source));

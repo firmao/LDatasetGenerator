@@ -21,7 +21,7 @@ public class DsRelationStatistics {
 	public static final Map<String, String> mAlreadyCompared = new LinkedHashMap<String, String>();
 	public static final Map<String, Set<String>> mapDatasetProperties = new LinkedHashMap<String, Set<String>>();
 	public static final boolean IN_MEMORY = true;
-	public static final String OUTPUT_DIR = "out_tests2";
+	public static final String OUTPUT_DIR = "out_endpoint";
 	public static Map<String, String> mapDsError = new LinkedHashMap<String, String>();
 	public static void main(String[] args) throws Exception {
 		StopWatch stopWatch = new StopWatch();
@@ -33,7 +33,7 @@ public class DsRelationStatistics {
 		System.out.println("IN_MEMORY: " + IN_MEMORY);
 		Map<String, String> mapQuerySource = getSampleQueries(new File("queryDsInfo.txt"));
 		ExperimentNN exp = new ExperimentNN();
-		Set<String> ds = exp.getDatasets(new File("dirHDT"), 10000);
+		Set<String> ds = exp.getDatasets(new File("dirHDT"), 1);
 		ds.addAll(getEndpoints(new File("endpoints.txt")));
 		//ds.addAll(mapQuerySource.keySet());
 		Set<String> dt = new LinkedHashSet<String>();
@@ -43,12 +43,8 @@ public class DsRelationStatistics {
 		final Map<String, Map<String, String>> mapSim = new LinkedHashMap<String, Map<String, String>>();
 		
 		//for (String source : mapQuerySource.keySet()) {
-		int totalComparisons = ds.size() * dt.size();
-		int count = 0;
 		for (String source : ds) {
 			for (String target : dt) {
-				System.out.println("Starting comparison: " + count + " from " + totalComparisons);
-				count++;
 				if (source.equals(target))
 					continue;
 				if (alreadyCompared(source, target))
@@ -60,10 +56,7 @@ public class DsRelationStatistics {
 				mAlreadyCompared.put(target, source);
 			}
 		}
-		String sFile = OUTPUT_DIR + "/tableMatches.tsv"; 
-		System.out.println("Printing file: " + sFile);
-		printMap(mapExactMatch, mapSim, sFile);
-		System.out.println("Printing errors...");
+		printMap(mapExactMatch, mapSim, OUTPUT_DIR + "/tableMatches.tsv");
 		printErrors(mapDsError);
 		stopWatch.stop();
 		System.out.println("Stopwatch time: " + stopWatch);
@@ -125,7 +118,7 @@ public class DsRelationStatistics {
 			return mapSim;
 		}
 		
-		//PrintWriter writer = new PrintWriter(fileName, "UTF-8");
+		PrintWriter writer = new PrintWriter(fileName, "UTF-8");
 		JaccardSimilarity sim = new JaccardSimilarity();
 		for (String pSource : propsSource) {
 			for (String pTarget : propsTarget) {
@@ -135,48 +128,32 @@ public class DsRelationStatistics {
 				double dSim = sim.apply(p1, p2);
 				if (dSim >= threshold) {
 					propsMatched.put(pSource, pTarget);
-					//writer.println(pSource + "\t" + pTarget);
+					writer.println(pSource + "\t" + pTarget);
 				}
 			}
 		}
 		mapSim.put(fileName, propsMatched);
-		//writer.close();
+		writer.close();
 		return mapSim;
 	}
 
 	private static void printMap(Map<String, Set<String>> mapExactMatch, Map<String, Map<String, String>> mapSim, String fileName) throws FileNotFoundException, UnsupportedEncodingException {
-			PrintWriter writer = new PrintWriter(fileName, "UTF-8");
-			PrintWriter writerExact = new PrintWriter(fileName.replaceAll(".tsv", "_Exact.tsv"), "UTF-8");
-			PrintWriter writerSim = new PrintWriter(fileName.replaceAll(".tsv", "_Sim.tsv"), "UTF-8");
-			writer.println("FileName\t#ExactMatch\t#sim>0.9\t#PropDs\t#PropDt");
-			writerExact.println("Property\tSource\tTarget");
-			writerSim.println("PropertyS\tPropertyT\tSource\tTarget");
-			for (Entry<String, Set<String>> entry : mapExactMatch.entrySet()) {
-				String fNameExact = entry.getKey();
-				String fNameSim = fNameExact.replaceAll("_Exact.txt", "_Sim.tsv");
-				Set<String> propExact = entry.getValue();
-				String [] str = fNameExact.replaceAll("_Exact.txt", "").split("---");
-				String source = str[0].replaceAll(OUTPUT_DIR + "/", "");
-				String target = str[1].replaceAll("_Exact.txt", "");
-				String s = source.replaceAll("andre_", "");
-				String t = target.replaceAll("andre_", "");
-				if((mapSim.size() > 0) && (mapSim.get(fNameSim) != null)) {
-					writer.println(fNameExact + "\t" + propExact.size() + "\t" + mapSim.get(fNameSim).size()+ "\t" + mapDatasetProperties.get(source).size() + "\t" + mapDatasetProperties.get(target).size());
-					for (Entry<String, String> p : mapSim.get(fNameSim).entrySet()) {
-						String pS = p.getKey();
-						String pT = p.getValue();
-						writerSim.println(pS + "\t" + pT + "\t" + s + "\t" + t);
-					}
-				} else {
-					writer.println(fNameExact + "\t" + propExact.size() + "\t" + 0 + "\t" + mapDatasetProperties.get(source).size() + "\t" + mapDatasetProperties.get(target).size());
-					for (String pExact : propExact) {
-						writerExact.println(pExact + "\t" + s + "\t" + t);
-					}
-				}
+		PrintWriter writer = new PrintWriter(fileName, "UTF-8");
+		writer.println("FileName\t#ExactMatch\t#sim>0.9\t#PropDs\t#PropDt");
+		for (Entry<String, Set<String>> entry : mapExactMatch.entrySet()) {
+			String fNameExact = entry.getKey();
+			String fNameSim = fNameExact.replaceAll("_Exact.txt", "_Sim.tsv");
+			Set<String> props = entry.getValue();
+			String [] str = fNameExact.replaceAll("_Exact.txt", "").split("---");
+			String source = str[0].replaceAll(OUTPUT_DIR + "/", "");
+			String target = str[1].replaceAll("_Exact.txt", "");
+			if((mapSim.size() > 0) && (mapSim.get(fNameSim) != null)) {
+				writer.println(fNameExact + "\t" + props.size() + "\t" + mapSim.get(fNameSim).size()+ "\t" + mapDatasetProperties.get(source).size() + "\t" + mapDatasetProperties.get(target).size());
+			} else {
+				writer.println(fNameExact + "\t" + props.size() + "\t" + 0 + "\t" + mapDatasetProperties.get(source).size() + "\t" + mapDatasetProperties.get(target).size());
 			}
-			writer.close();
-			writerExact.close();
-			writerSim.close();
+		}
+		writer.close();
 	}
 
 	private static boolean alreadyCompared(String source, String target) {
@@ -229,17 +206,17 @@ public class DsRelationStatistics {
 			return mapExactMatch;
 		}
 		
-		//PrintWriter writer = new PrintWriter(fileName, "UTF-8");
+		PrintWriter writer = new PrintWriter(fileName, "UTF-8");
 		for (String pSource : propsSource) {
 			for (String pTarget : propsTarget) {
 				if (pSource.equalsIgnoreCase(pTarget)) {
 					propsMatched.add(pSource);
-					//writer.println(pSource);
+					writer.println(pSource);
 				}
 			}
 		}
 		mapExactMatch.put(fileName, propsMatched);
-		//writer.close();
+		writer.close();
 		return mapExactMatch;
 	}
 
