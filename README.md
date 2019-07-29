@@ -3,8 +3,10 @@ Extract all properties and values from entities from the whole LOD cloud.
 
 DOCUMENTATION AND THE CODE ARE NOT COMPLETE YET, STILL REFACTORING AND FINISHING EXPERIMENTS. NOT GARANTEE THAT WILL WORK, IF YOU NEED A STABLE VERSION, PLEASE ASK Andre Valdestilhas (firmao@gmail.com).
 
-## Web Interface (Proof of concept)
+## Web Interface to query the index (Proof of concept)
 https://github.com/firmao/LODDatasetRelationsWeb
+
+<img src="http://139.18.13.76:8082/queryIndex.png">
 
 ## Including: 
 An approach for automatic dataset matching.
