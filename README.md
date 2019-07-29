@@ -38,3 +38,5 @@ Clone the repository and don't forget to put on the classpath all jar files from
 
 - Class reponsible for creating the LOD datasets relation index:
 - https://github.com/firmao/LDatasetGenerator/blob/master/src/main/java/test/testid/IndexCreator.java
+
+<img src="http://139.18.13.76:8082/createIndex.png">
