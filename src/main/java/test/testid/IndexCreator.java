@@ -21,7 +21,7 @@ public class IndexCreator {
 	public static final Map<String, String> mAlreadyCompared = new LinkedHashMap<String, String>();
 	public static final Map<String, Set<String>> mapDatasetProperties = new LinkedHashMap<String, Set<String>>();
 	public static final boolean IN_MEMORY = true;
-	public static final String OUTPUT_DIR = "out_HDTtests";
+	public static final String OUTPUT_DIR = "out_HDTFamous2";
 	public static Map<String, String> mapDsError = new LinkedHashMap<String, String>();
 	public static void main(String[] args) throws Exception {
 		StopWatch stopWatch = new StopWatch();
@@ -36,8 +36,8 @@ public class IndexCreator {
 		Set<String> ds = new LinkedHashSet<String>();
 //		ds.addAll(exp.getDatasets(new File("/media/andre/Seagate/personalDatasets/"), 1000000));
 //		ds.addAll(exp.getDatasets(new File("dirHDT"), 100000));
-//		ds.addAll(exp.getDatasets(new File("dirHDTFamous"), 1000000));
-		ds.addAll(exp.getDatasets(new File("dirHDTtests"), 9999));
+		ds.addAll(exp.getDatasets(new File("dirHDTFamous"), 1000000));
+//		ds.addAll(exp.getDatasets(new File("dirHDTtests"), 9999));
 //		ds.addAll(getEndpoints(new File("endpoints.txt")));
 //		Map<String, String> mapQuerySource = getSampleQueries(new File("queryDsInfo.txt"));
 //		ds.addAll(mapQuerySource.keySet());
@@ -173,7 +173,7 @@ public class IndexCreator {
 			PrintWriter writer = new PrintWriter(fileName, "UTF-8");
 			PrintWriter writerExact = new PrintWriter(fileName.replaceAll(".tsv", "_Exact.tsv"), "UTF-8");
 			PrintWriter writerSim = new PrintWriter(fileName.replaceAll(".tsv", "_Sim.tsv"), "UTF-8");
-			writer.println("DatasetPair(S---T)\t#ExactMatch\t#sim>0.9\t#PropDs\t#PropDt");
+			writer.println("Dataset_Source\tDataset_Target\t#ExactMatch\t#sim>0.9\t#PropDs\t#PropDt");
 			writerExact.println("Property\tSource\tTarget");
 			writerSim.println("PropertyS\tPropertyT\tSource\tTarget");
 //			Set<String> setAlreadyIncluded = new LinkedHashSet<String>();
@@ -193,11 +193,14 @@ public class IndexCreator {
 //				setAlreadyIncluded.add(s);
 //				setAlreadyIncluded.add(t);
 				if((mapSim.size() > 0) && (mapSim.get(fNameSim) != null) && (mapSim.get(fNameSim).size() > 0)) {
-					writer.println(pair + "\t" + propExact.size() + "\t" + mapSim.get(fNameSim).size()+ "\t" + mapDatasetProperties.get(source).size() + "\t" + mapDatasetProperties.get(target).size());
+					writer.println(s + "\t" + t + "\t" + propExact.size() + "\t" + mapSim.get(fNameSim).size()+ "\t" + mapDatasetProperties.get(source).size() + "\t" + mapDatasetProperties.get(target).size());
 					for (Entry<String, String> p : mapSim.get(fNameSim).entrySet()) {
 						String pS = p.getKey();
 						String pT = p.getValue();
 						writerSim.println(pS + "\t" + pT + "\t" + s + "\t" + t);
+					}
+					for (String pExact : propExact) {
+						writerExact.println(pExact + "\t" + s + "\t" + t);
 					}
 				} else {
 					writer.println(pair + "\t" + propExact.size() + "\t" + 0 + "\t" + mapDatasetProperties.get(source).size() + "\t" + mapDatasetProperties.get(target).size());
