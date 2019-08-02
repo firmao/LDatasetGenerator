@@ -38,6 +38,9 @@ Clone the repository and don't forget to put on the classpath all jar files from
 - https://github.com/firmao/LDatasetGenerator/blob/master/src/main/java/test/testid/Main.java
 - https://github.com/firmao/LDatasetGenerator/blob/master/src/main/java/test/testid/DsGenerator.java
 
+- Utility to convert csv to json-FAMER standard:
+- https://github.com/firmao/LDatasetGenerator/blob/master/src/main/java/test/testid/CSV2JSONEntities.java
+
 - Class reponsible for creating the LOD datasets relation index:
 - https://github.com/firmao/LDatasetGenerator/blob/master/src/main/java/test/testid/IndexCreator.java
 
