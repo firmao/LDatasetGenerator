@@ -14,16 +14,8 @@ public class LODDataset {
 	 * (Concepts)
 	 */
 	String datasetName;
-	int numDuplicatedInstances, numSameAs, numLoops, avgInOutDegree, maxInOutDegree, numSubjects, numPredicates,
+	long numDuplicatedInstances, numSameAs, numLoops, avgInOutDegree, maxInOutDegree, numSubjects, numPredicates,
 			numObjects, numTriples, numClasses, numProperties;
-
-	public int getNumObjects() {
-		return numObjects;
-	}
-
-	public void setNumObjects(int numObjects) {
-		this.numObjects = numObjects;
-	}
 
 	Map<String, Integer> datasetsSimilar;
 
@@ -35,83 +27,91 @@ public class LODDataset {
 		this.datasetName = datasetName;
 	}
 
-	public int getNumDuplicatedInstances() {
+	public long getNumDuplicatedInstances() {
 		return numDuplicatedInstances;
 	}
 
-	public void setNumDuplicatedInstances(int numDuplicatedInstances) {
+	public void setNumDuplicatedInstances(long numDuplicatedInstances) {
 		this.numDuplicatedInstances = numDuplicatedInstances;
 	}
 
-	public int getNumSameAs() {
+	public long getNumSameAs() {
 		return numSameAs;
 	}
 
-	public void setNumSameAs(int numSameAs) {
+	public void setNumSameAs(long numSameAs) {
 		this.numSameAs = numSameAs;
 	}
 
-	public int getNumLoops() {
+	public long getNumLoops() {
 		return numLoops;
 	}
 
-	public void setNumLoops(int numLoops) {
+	public void setNumLoops(long numLoops) {
 		this.numLoops = numLoops;
 	}
 
-	public int getAvgInOutDegree() {
+	public long getAvgInOutDegree() {
 		return avgInOutDegree;
 	}
 
-	public void setAvgInOutDegree(int avgInOutDegree) {
+	public void setAvgInOutDegree(long avgInOutDegree) {
 		this.avgInOutDegree = avgInOutDegree;
 	}
 
-	public int getMaxInOutDegree() {
+	public long getMaxInOutDegree() {
 		return maxInOutDegree;
 	}
 
-	public void setMaxInOutDegree(int maxInOutDegree) {
+	public void setMaxInOutDegree(long maxInOutDegree) {
 		this.maxInOutDegree = maxInOutDegree;
 	}
 
-	public int getNumSubjects() {
+	public long getNumSubjects() {
 		return numSubjects;
 	}
 
-	public void setNumSubjects(int numSubjects) {
+	public void setNumSubjects(long numSubjects) {
 		this.numSubjects = numSubjects;
 	}
 
-	public int getNumPredicates() {
+	public long getNumPredicates() {
 		return numPredicates;
 	}
 
-	public void setNumPredicates(int numPredicates) {
+	public void setNumPredicates(long numPredicates) {
 		this.numPredicates = numPredicates;
 	}
 
-	public int getNumTriples() {
+	public long getNumObjects() {
+		return numObjects;
+	}
+
+	public void setNumObjects(long numObjects) {
+		this.numObjects = numObjects;
+	}
+
+	public long getNumTriples() {
 		return numTriples;
 	}
 
-	public void setNumTriples(int numTriples) {
+	public void setNumTriples(long numTriples) {
 		this.numTriples = numTriples;
 	}
 
-	public int getNumClasses() {
+	public long getNumClasses() {
 		return numClasses;
 	}
 
-	public void setNumClasses(int numClasses) {
+	public void setNumClasses(long numClasses) {
 		this.numClasses = numClasses;
 	}
 
-	public int getNumProperties() {
+	public long getNumProperties() {
 		return numProperties;
 	}
 
-	public void setNumProperties(int numProperties) {
+	public void setNumProperties(long numProperties) {
 		this.numProperties = numProperties;
 	}
 

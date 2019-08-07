@@ -625,11 +625,11 @@ public class Util {
 		final long offsetSize = 9999;
 		long offset = 0;
 		String sSparql = null;
-		
-		if(endPoint.toLowerCase().contains("wikidata")) {
+
+		if (endPoint.toLowerCase().contains("wikidata")) {
 			return WikidataQuery.getResult(cSparql);
 		}
-		
+
 		long start = System.currentTimeMillis();
 		do {
 			sSparql = cSparql;
@@ -851,7 +851,7 @@ public class Util {
 	public static String getURLName(String property) {
 		String name = null;
 		try {
-			if(property.indexOf("#") > 0) {
+			if (property.indexOf("#") > 0) {
 				String[] str = property.split("#");
 				name = str[str.length - 1];
 				return name.replaceAll("\"", "");
@@ -880,7 +880,7 @@ public class Util {
 
 		return ret;
 	}
-	
+
 	public static String replacePrefixes(String query) throws UnsupportedEncodingException {
 		PrefixMapping pmap = PrefixMapping.Factory.create();
 //		Map<String, String> mPrefixURI = getMapPrefix(query);
@@ -898,5 +898,22 @@ public class Util {
 
 	public static boolean isSparql(String cSparql) {
 		return cSparql.toLowerCase().contains("select");
+	}
+
+	public static boolean isNumeric(final String str) {
+
+		// null or empty
+		if (str == null || str.length() == 0) {
+			return false;
+		}
+
+		for (char c : str.toCharArray()) {
+			if (!Character.isDigit(c)) {
+				return false;
+			}
+		}
+
+		return true;
+
 	}
 }
