@@ -17,10 +17,10 @@ public class CSV2JSONEntities {
 
 	static int countSkiped = 0;
 	public static void main(String[] args) throws IOException {
-		final String DIR_CSV = "cities_csv";
+		final String DIR_CSV = "cities_csv_en";
 		File files [] = (new File(DIR_CSV)).listFiles();
 		for (File file : files) {
-			File fDir = new File("outJsonFAMER/" + file.getName().replaceAll(".csv", "") + "/");
+			File fDir = new File("outJsonFAMER7/" + file.getName().replaceAll(".csv", "") + "/");
 			fDir.mkdirs();
 			
 			//Map<String, Map<String, String>> mEntities = parseCSV(file);
@@ -69,11 +69,11 @@ public class CSV2JSONEntities {
         try
         {
             //Get the CSVReader instance with specifying the delimiter to be used
-            if(file.getName().contains("geo")) {
-            	reader = new CSVReader(new FileReader(file.getAbsolutePath()),';');
-            } else {	
+//            if(file.getName().contains("geo")) {
+//            	reader = new CSVReader(new FileReader(file.getAbsolutePath()),';');
+//            } else {	
             	reader = new CSVReader(new FileReader(file.getAbsolutePath()),',');
-            }
+//            }
             String [] sValues;
             String [] sNames = null;
     		int count = 0;

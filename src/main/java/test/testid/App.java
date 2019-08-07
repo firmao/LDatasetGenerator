@@ -48,8 +48,8 @@ public class App {
 //		String pathEmptyHDT = "dirHDT/3_ds_tests/hdt/d1.hdt";
 //		experimentHdtFederated(datasets, cSparql, pathEmptyHDT);
 		
-		//createHDT();
-		//System.exit(0);
+//		createHDT();
+//		System.exit(0);
 		// String hdtFile = "dirHDT/dbpedia2015.hdt";
 		//String hdtFile = "dirHDT/3_ds_tests/hdt/d2.hdt";
 		// String cSparql = "PREFIX dbo: <http://dbpedia.org/ontology/> PREFIX xsd:
@@ -70,14 +70,33 @@ public class App {
 		Set<String> datasets = new LinkedHashSet<String>();
 		int numberOfDs = 10000;
 		//datasets.add("UnionResultsSchemaMatching.hdt");
-		//datasets.addAll(getDatasets(new File("dirHDT"), numberOfDs));
-		datasets.add("dirHDT/69e7c7ccdc8f0b373325d5acf3c27b26.hdt");
-		String cSparql = "SELECT * WHERE {?s ?p ?o}";
+		datasets.addAll(getDatasets(new File("dirHDTFamous"), numberOfDs));
+		//datasets.add("dirHDTFamous/DBPedia-3.9-en.hdt");
+		String cSparql = "PREFIX dbo: <http://dbpedia.org/ontology/>\n" + 
+				"PREFIX geo: <http://www.w3.org/2003/01/geo/wgs84_pos#>\n" + 
+				"\n" + 
+				"\n" + 
+				"SELECT distinct * WHERE {\n" + 
+				" ?s a <http://schema.org/City> .\n" + 
+				" Optional {?s <http://www.w3.org/2000/01/rdf-schema#label> ?name}\n" + 
+				" Optional {?s <http://dbpedia.org/property/populationTotal> ?pop}\n" + 
+				" Optional {?s <http://dbpedia.org/ontology/populationTotal> ?popDBpedia}\n" + 
+				" Optional {?s <http://dbpedia.org/property/populationAsOf> ?popAsOf}\n" + 
+				" Optional {?s <http://dbpedia.org/ontology/populationDensity> ?pop5}\n" + 
+				" OPTIONAL {?city geo:long ?long.}\n" + 
+				" OPTIONAL {?city geo:lat ?lat.}\n" + 
+				"# Optional {?s <http://dbpedia.org/property/populationAsOf> ?popAsOf}\n" + 
+				"# Optional {?s <http://dbpedia.org/property/populationAsOf> ?popAsOf}\n" + 
+				"\n" + 
+				"} limit 10";
+		System.out.println(cSparql);
 		PrintWriter writer = new PrintWriter("sparqlOut.txt", "UTF-8");
 		int count = 0;
 		for (String ds : datasets) {
 			String ret = execHDTString(ds, cSparql);
+			writer.println("#### DATASET: " + ds);
 			writer.println(ret);
+			//System.out.println(ret);
 			if((ret != null) && !ret.contains("http")) {
 				count++;
 			}
@@ -111,9 +130,9 @@ public class App {
 	private static void createHDT() throws IOException, ParserException {
 		// Configuration variables
 		String baseURI = "http://example.com/mydataset";
-		String rdfInput = "dirHDT/3_ds_tests/data/personne2_vldb.nt";
-		String inputType = "ntriples";
-		String hdtOutput = "dirHDT/3_ds_tests/hdt/personne2_vldb.hdt";
+		String rdfInput = "cities_csv_en/485357567b5b9155d398a28819b9930a.nt";
+		String inputType = "ntriples"; //rdfxml, ntriples, nt, else if(str.equals("tar")||str.equals("tgz")||str.equals("tbz")||str.equals("tbz2")) { 
+		String hdtOutput = "cities_csv_en/485357567b5b9155d398a28819b9930a.hdt";
 
 		// Create HDT from RDF file
 		HDT hdt = HDTManager.generateHDT(rdfInput, // Input RDF File
