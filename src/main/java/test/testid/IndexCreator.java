@@ -21,7 +21,7 @@ public class IndexCreator {
 	public static final Map<String, String> mAlreadyCompared = new LinkedHashMap<String, String>();
 	public static final Map<String, Set<String>> mapDatasetProperties = new LinkedHashMap<String, Set<String>>();
 	public static final boolean IN_MEMORY = true;
-	public static final String OUTPUT_DIR = "out_HDTFamous2";
+	public static final String OUTPUT_DIR = "out_serial1";
 	public static Map<String, String> mapDsError = new LinkedHashMap<String, String>();
 	public static void main(String[] args) throws Exception {
 		StopWatch stopWatch = new StopWatch();
@@ -30,13 +30,13 @@ public class IndexCreator {
 		if(!fDir.exists()) {
 			fDir.mkdir();
 		}
-		System.out.println("IN_MEMORY: " + IN_MEMORY);
+		System.out.println("SERIAL-IN_MEMORY: " + IN_MEMORY);
 		
 		ExperimentNN exp = new ExperimentNN();
 		Set<String> ds = new LinkedHashSet<String>();
 //		ds.addAll(exp.getDatasets(new File("/media/andre/Seagate/personalDatasets/"), 1000000));
 //		ds.addAll(exp.getDatasets(new File("dirHDT"), 100000));
-		ds.addAll(exp.getDatasets(new File("dirHDTFamous"), 1000000));
+		ds.addAll(exp.getDatasets(new File("dirHDTFamous"), 3));
 //		ds.addAll(exp.getDatasets(new File("dirHDTtests"), 9999));
 //		ds.addAll(getEndpoints(new File("endpoints.txt")));
 //		Map<String, String> mapQuerySource = getSampleQueries(new File("queryDsInfo.txt"));
@@ -176,7 +176,8 @@ public class IndexCreator {
 			writer.println("Dataset_Source\tDataset_Target\t#ExactMatch\t#sim>0.9\t#PropDs\t#PropDt");
 			writerExact.println("Property\tSource\tTarget");
 			writerSim.println("PropertyS\tPropertyT\tSource\tTarget");
-//			Set<String> setAlreadyIncluded = new LinkedHashSet<String>();
+			Set<String> setS = new LinkedHashSet<String>();
+			Set<String> setT = new LinkedHashSet<String>();
 			for (Entry<String, Set<String>> entry : mapExactMatch.entrySet()) {
 				String fNameExact = entry.getKey();
 				String fNameSim = fNameExact.replaceAll("_Exact.txt", "_Sim.tsv");
@@ -186,7 +187,11 @@ public class IndexCreator {
 				String target = str[1].replaceAll("_Exact.txt", "");
 				String s = source.replaceAll("andre_", "");
 				String t = target.replaceAll("andre_", "");
-				String pair = s + "---" + t;
+				if((!setS.add(s)) || (!setT.add(t))){
+					if((!setS.add(t)) || (!setT.add(s))){
+						continue;
+					}
+				}
 //				if(setAlreadyIncluded.contains(s) && setAlreadyIncluded.contains(t)) {
 //					continue;
 //				}
@@ -203,7 +208,7 @@ public class IndexCreator {
 						writerExact.println(pExact + "\t" + s + "\t" + t);
 					}
 				} else {
-					writer.println(pair + "\t" + propExact.size() + "\t" + 0 + "\t" + mapDatasetProperties.get(source).size() + "\t" + mapDatasetProperties.get(target).size());
+					writer.println(s + "\t" + t + "\t" + propExact.size() + "\t" + 0 + "\t" + mapDatasetProperties.get(source).size() + "\t" + mapDatasetProperties.get(target).size());
 					for (String pExact : propExact) {
 						writerExact.println(pExact + "\t" + s + "\t" + t);
 					}

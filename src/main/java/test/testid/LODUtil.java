@@ -1,11 +1,10 @@
 package test.testid;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.apache.jena.query.Query;
@@ -19,7 +18,6 @@ import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.impl.ModelCom;
 import org.rdfhdt.hdt.exceptions.NotFoundException;
 import org.rdfhdt.hdt.hdt.HDT;
-import org.rdfhdt.hdt.hdt.HDTManager;
 import org.rdfhdt.hdt.header.Header;
 import org.rdfhdt.hdt.triples.IteratorTripleString;
 import org.rdfhdt.hdt.triples.TripleString;
@@ -29,12 +27,12 @@ public class LODUtil {
 
 	public static long getNumClasses(String ds, HDT hdt) {
 		String cSparql = "SELECT DISTINCT (count(?type) as ?c) WHERE {?s a ?type.}";
-		if(hdt != null) {
+		if (hdt != null) {
 			return execQueryHDT(hdt, cSparql);
 		}
-		Set<String> ret = execSparql(cSparql,ds);
+		Set<String> ret = execSparql(cSparql, ds);
 		for (String r : ret) {
-			if(Util.isNumeric(r)) {
+			if (Util.isNumeric(r)) {
 				return Long.parseLong(r);
 			}
 		}
@@ -57,12 +55,12 @@ public class LODUtil {
 
 	public static long getNumPredicates(String ds, HDT hdt) throws IOException, NotFoundException {
 		String cSparql = "Select distinct (count(?p) as ?c) where{?s ?p ?o}";
-		if(hdt != null) {
+		if (hdt != null) {
 			return execQueryHDT(hdt, cSparql);
 		}
-		Set<String> ret = execSparql(cSparql,ds);
+		Set<String> ret = execSparql(cSparql, ds);
 		for (String r : ret) {
-			if(Util.isNumeric(r)) {
+			if (Util.isNumeric(r)) {
 				return Long.parseLong(r);
 			}
 		}
@@ -70,14 +68,15 @@ public class LODUtil {
 	}
 
 	public static long getNumProperties(String ds, HDT hdt) {
-		//String cSparql = "SELECT DISTINCT (count(?p) as ?c) WHERE { ?p <http://www.w3.org/2000/01/rdf-schema#domain> ?class .}";
+		// String cSparql = "SELECT DISTINCT (count(?p) as ?c) WHERE { ?p
+		// <http://www.w3.org/2000/01/rdf-schema#domain> ?class .}";
 		String cSparql = "SELECT DISTINCT (count(?p) as ?c) WHERE { ?p a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Property> }";
-		if(hdt != null) {
+		if (hdt != null) {
 			return execQueryHDT(hdt, cSparql);
 		}
-		Set<String> ret = execSparql(cSparql,ds);
+		Set<String> ret = execSparql(cSparql, ds);
 		for (String r : ret) {
-			if(Util.isNumeric(r)) {
+			if (Util.isNumeric(r)) {
 				return Long.parseLong(r);
 			}
 		}
@@ -86,13 +85,13 @@ public class LODUtil {
 
 	public static long getNumSameAs(String ds, HDT hdt) {
 		String cSparql = "SELECT distinct (count(?s) as ?c) WHERE { ?s <http://www.w3.org/2002/07/owl#sameAs> ?o . }";
-		if(hdt != null) {
+		if (hdt != null) {
 			return execQueryHDT(hdt, cSparql);
 		}
-		
-		Set<String> ret = execSparql(cSparql,ds);
+
+		Set<String> ret = execSparql(cSparql, ds);
 		for (String r : ret) {
-			if(Util.isNumeric(r)) {
+			if (Util.isNumeric(r)) {
 				return Integer.parseInt(r);
 			}
 		}
@@ -122,13 +121,13 @@ public class LODUtil {
 						sb.append(qSolution.get(varName).toString() + " ");
 					}
 				}
-				if(Util.isNumeric(sb.toString().trim())) {
+				if (Util.isNumeric(sb.toString().trim())) {
 					ret = Integer.parseInt(sb.toString().trim());
 					break;
 				}
 			}
 			qe.close();
-		}catch(Exception e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		return ret;
@@ -136,12 +135,12 @@ public class LODUtil {
 
 	public static long getNumSubjects(String ds, HDT hdt) throws IOException, NotFoundException {
 		String cSparql = "Select distinct (count(?s) as ?c) where{?s ?p ?o}";
-		if(hdt != null) {
+		if (hdt != null) {
 			return execQueryHDT(hdt, cSparql);
 		}
-		Set<String> ret = execSparql(cSparql,ds);
+		Set<String> ret = execSparql(cSparql, ds);
 		for (String r : ret) {
-			if(Util.isNumeric(r)) {
+			if (Util.isNumeric(r)) {
 				return Long.parseLong(r);
 			}
 		}
@@ -150,12 +149,12 @@ public class LODUtil {
 
 	public static long getNumTriples(String ds, HDT hdt) throws IOException, NotFoundException {
 		String cSparql = "SELECT DISTINCT (count(*) as ?c) WHERE {?s ?p ?o }";
-		if(hdt != null) {
+		if (hdt != null) {
 			return execQueryHDT(hdt, cSparql);
 		}
-		Set<String> ret = execSparql(cSparql,ds);
+		Set<String> ret = execSparql(cSparql, ds);
 		for (String r : ret) {
-			if(Util.isNumeric(r)) {
+			if (Util.isNumeric(r)) {
 				return Long.parseLong(r);
 			}
 		}
@@ -190,9 +189,19 @@ public class LODUtil {
 		return 0;
 	}
 
-	public static Map<String, Integer> getDatasetsSimilar(String ds, HDT hdt) {
-		Map<String, Integer> ret = new LinkedHashMap<String, Integer>();
-		return ret;
+	public static int getNumSimilarDatasets(String ds, HDT hdt) {
+		Set<String> rDs = null;
+		try {
+			if (Util.isEndPoint(ds)) {
+				rDs = DatabaseMain.searchDB(ds);
+			} else {
+				File f = new File(ds);
+				rDs = DatabaseMain.searchDB(f.getName());
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return rDs.size();
 	}
 
 	public static long getMaxInOutDegree(String ds, HDT hdt) {
@@ -211,18 +220,18 @@ public class LODUtil {
 
 	public static long getNumObjects(String ds, HDT hdt) throws IOException, NotFoundException {
 		String cSparql = "Select distinct (count(?o) as ?c) where{?s ?p ?o}";
-		if(hdt != null) {
+		if (hdt != null) {
 			return execQueryHDT(hdt, cSparql);
 		}
-		Set<String> ret = execSparql(cSparql,ds);
+		Set<String> ret = execSparql(cSparql, ds);
 		for (String r : ret) {
-			if(Util.isNumeric(r)) {
+			if (Util.isNumeric(r)) {
 				return Long.parseLong(r);
 			}
 		}
 		return 0;
 	}
-	
+
 	private static Set<String> execSparql(String cSparql, String source) {
 		final Set<String> ret = new LinkedHashSet<String>();
 
@@ -230,7 +239,7 @@ public class LODUtil {
 			TimeOutBlock timeoutBlock = new TimeOutBlock(900000); // 15 minutes
 			Runnable block = new Runnable() {
 				public void run() {
-			//		ret.addAll(Util.execQueryEndPoint(cSparql, source));
+					// ret.addAll(Util.execQueryEndPoint(cSparql, source));
 					if (Util.isEndPoint(source)) {
 						ret.addAll(Util.execQueryEndPoint(cSparql, source));
 					} else {
@@ -242,25 +251,25 @@ public class LODUtil {
 		} catch (Throwable e) {
 			System.err.println("TIME-OUT-ERROR - dataset/source: " + source);
 		}
-		
+
 		return ret;
 	}
 
 	public static long getHeaderInfo(Header header, String type) throws NotFoundException {
 		IteratorTripleString it = null;
-		if(type.toLowerCase().contains("triples")) {
+		if (type.toLowerCase().contains("triples")) {
 			it = header.search("", "http://rdfs.org/ns/void#triples", "");
-		} else if(type.toLowerCase().contains("propert")) {
+		} else if (type.toLowerCase().contains("propert")) {
 			it = header.search("", "http://rdfs.org/ns/void#properties", "");
-		} else if(type.toLowerCase().contains("predicat")) {
+		} else if (type.toLowerCase().contains("predicat")) {
 			it = header.search("", "http://rdfs.org/ns/void#properties", "");
-		} else if(type.toLowerCase().contains("subject")) {
+		} else if (type.toLowerCase().contains("subject")) {
 			it = header.search("", "http://rdfs.org/ns/void#distinctSubjects", "");
-		} else if(type.toLowerCase().contains("object")) {
+		} else if (type.toLowerCase().contains("object")) {
 			it = header.search("", "http://rdfs.org/ns/void#distinctObjects", "");
 		}
 		String info = null;
-		if(it == null) {
+		if (it == null) {
 			return 0;
 		}
 		while (it.hasNext()) {

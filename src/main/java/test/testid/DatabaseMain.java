@@ -6,11 +6,11 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -20,51 +20,44 @@ import org.apache.jena.shared.PrefixMapping;
 import org.apache.jena.sparql.core.Prologue;
 
 public class DatabaseMain {
-	public static String TABLEMATCHING_PATH = "/media/andre/DATA/Dropbox/ws1/LDatasetGenerator/out_tests2/tableMatches.tsv";
-	public static String TABLEMATCHES_EXACT = "/media/andre/DATA/Dropbox/ws1/LDatasetGenerator/out_tests2/tableMatches_Exact.tsv";
-	public static String TABLEMATCHES_SIM = "/media/andre/DATA/Dropbox/ws1/LDatasetGenerator/out_tests2/tableMatches_Sim.tsv";
+	public static final String DIR_DB = readConfFile("/home/andre/dsconfig.txt");
+	public static String TABLEMATCHING_PATH = DIR_DB + "tableMatches.tsv";
+	public static String TABLEMATCHES_EXACT = DIR_DB + "tableMatches_Exact.tsv";
+	public static String TABLEMATCHES_SIM = DIR_DB + "tableMatches_Sim.tsv";
 	
 	public static void main(String[] args) throws IOException {
-		String dataset = "684434e8ddfd4590cd188a3178f0b9ae.hdt";
-		Set<String> ret = searchDB(dataset);
-		System.out.println("Dataset: " + dataset);
-		ret.forEach(System.out::println);
+//		String dataset = "6e9e97fa4f1c9ba28ae0dd3786c2de41.hdt";
+//		Set<String> ret = searchDB(dataset);
+//		System.out.println("Dataset: " + dataset);
+//		ret.forEach(System.out::println);
 
 		// String dataset = "SELECT ?s WHERE { ?s a <http://dbpedia.org/ontology/City>
 		// }";
-//		Set<String> properties = new LinkedHashSet<String>();
-//		properties.add("http://purl.org/dc/terms/date");
-//		properties.add("http://crime.rkbexplorer.com/id/location");
-//		properties.add("http://purl.org/dc/terms/subject");
-//		Set<String> retProp = searchDB(properties);
-//		retProp.forEach(System.out::println);
+		Set<String> properties = new LinkedHashSet<String>();
+		properties.add("http://purl.org/dc/terms/date");
+		properties.add("http://crime.rkbexplorer.com/id/location");
+		properties.add("http://purl.org/dc/terms/subject");
+		Set<String> retProp = searchDB(properties);
+		retProp.forEach(System.out::println);
 	}
 
-	public static void add(Map<String, Set<String>> mapExactMatch, Map<String, Map<String, String>> mapSim) {
-		for (Entry<String, Set<String>> entry : mapExactMatch.entrySet()) {
-			String fNameExact = entry.getKey();
-			Set<String> props = entry.getValue();
-			String fNameSim = fNameExact.replaceAll("_Exact.txt", "_Sim.tsv");
-			String[] str = fNameExact.replaceAll("_Exact.txt", "").split("---");
-			String source = str[0].replaceAll(IndexCreator.OUTPUT_DIR + "/", "");
-			String target = str[1].replaceAll("_Exact.txt", "");
-			if (!addDB(source, target, props.size(), mapSim.get(fNameSim).size())) {
-				System.err.println("Problem source: " + source + " target: " + target);
-			}
 
-//			if((mapSim.size() > 0) && (mapSim.get(fNameSim) != null)) {
-//				writer.println(fNameExact + "\t" + props.size() + "\t" + mapSim.get(fNameSim).size()+ "\t" + mapDatasetProperties.get(source).size() + "\t" + mapDatasetProperties.get(target).size());
-//			} else {
-//				writer.println(fNameExact + "\t" + props.size() + "\t" + 0 + "\t" + mapDatasetProperties.get(source).size() + "\t" + mapDatasetProperties.get(target).size());
-//			}
+	private static String readConfFile(String pathFile) {
+		String ret = null;
+		List<String> lstLines = null;
+		try {
+			lstLines = Files.readAllLines(Paths.get(pathFile));
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
-	}
-
-	public static boolean addDB(String source, String target, int sizeExact, int sizeSim) {
-		boolean ret = false;
-
+		for (String string : lstLines) {
+			ret=string;
+		}
+		
 		return ret;
 	}
+
 
 	public static Set<String> getResults(String dataset) throws IOException {
 		Set<String> results = searchDB(dataset);
@@ -117,10 +110,11 @@ public class DatabaseMain {
 		}
 		Set<String> ret1 = new LinkedHashSet<String>();
 		try (Stream<String> lines = Files.lines(Paths.get(TABLEMATCHING_PATH))) {
-			ret1 = lines.filter(line -> line.contains(dataset)).map(String::toUpperCase).collect(Collectors.toSet());
+			ret1.addAll(lines.filter(line -> line.contains(dataset)).map(String::toUpperCase).collect(Collectors.toSet()));
 		}
 		Set<String> ret = new LinkedHashSet<String>();
-		ret.add("Dataset\t#ExactMatch\t#SimMatch");
+		Set<String> sources = new LinkedHashSet<String>();
+		ret.add("Dataset\t#ExactMatch\t#SimMatch");		
 		for (String line : ret1) {
 			String s1 = line.replaceAll("OUT_TESTS/", "");
 			s1 = s1.replaceAll("ANDRE_", "");
@@ -129,16 +123,18 @@ public class DatabaseMain {
 			String split2[] = split1[0].split("---");
 			for (String st : split2) {
 				if (!st.contains(dataset.toUpperCase())) {
-					int numExact = Integer.parseInt(split1[1].trim());
-					int numSim = Integer.parseInt(split1[2].trim());
+					int numExact = Integer.parseInt(split1[2].trim());
+					int numSim = Integer.parseInt(split1[3].trim());
 					if ((numExact > 0) || (numSim > 0)) {
-						String sRet = st + "\t" + split1[1] + "\t" + split1[2];
-						ret.add(sRet);
+						String sRet = st + "\t" + numExact + "\t" + numSim;
+						if(sources.add(st)) {
+							ret.add(sRet);
+						}
 					}
 				}
 			}
 		}
-
+		
 		return ret;
 	}
 
@@ -156,6 +152,7 @@ public class DatabaseMain {
 		Set<String> ret = new LinkedHashSet<String>();
 
 		Set<String> propExact = new LinkedHashSet<String>();
+		Set<String> propSim = new LinkedHashSet<String>();
 		for (String prop : properties) {
 			try (Stream<String> lines = Files
 					.lines(Paths.get(TABLEMATCHES_EXACT))) {
@@ -164,7 +161,7 @@ public class DatabaseMain {
 						lines.filter(line -> line.contains(prop)).map(String::toUpperCase).collect(Collectors.toSet()));
 			}
 		}
-		Set<String> propSim = new LinkedHashSet<String>();
+		
 		for (String prop : properties) {
 			try (Stream<String> lines = Files
 					.lines(Paths.get(TABLEMATCHES_SIM))) {

@@ -8,29 +8,34 @@ import java.io.UnsupportedEncodingException;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import org.apache.commons.lang3.time.StopWatch;
 import org.rdfhdt.hdt.exceptions.NotFoundException;
 import org.rdfhdt.hdt.hdt.HDT;
 import org.rdfhdt.hdt.hdt.HDTManager;
 import org.rdfhdt.hdt.header.Header;
-import org.rdfhdt.hdt.triples.IteratorTripleString;
-import org.rdfhdt.hdt.triples.TripleString;
 
 public class LODDatasetsInfo {
 
 	public static void main(String[] args) throws Exception {
+		StopWatch stopWatch = new StopWatch();
+		stopWatch.start();
 		ExperimentNN exp = new ExperimentNN();
 		Set<String> datasets = new LinkedHashSet<String>();
 //		datasets.addAll(exp.getDatasets(new File("/media/andre/Seagate/personalDatasets/"), 1000000));
 //		datasets.addAll(exp.getDatasets(new File("dirHDT"), 100000));
-		datasets.addAll(exp.getDatasets(new File("dirHDTFamous"), 99));
+		datasets.addAll(exp.getDatasets(new File("dirHDTFamous"), 20));
 //		datasets.addAll(exp.getDatasets(new File("dirHDTtests"), 9999));
 //		datasets.addAll(getEndpoints(new File("endpoints.txt")));
+//		datasets.add("http://dbpedia.org/sparql");
+//		datasets.add("http://semanticweb.cs.vu.nl/dss/sparql/");
 		Set<LODDataset> lodDatasets = new LinkedHashSet<LODDataset>();
 		for (String ds : datasets) {
 			LODDataset lodDs = getLODDataset(ds);
 			lodDatasets.add(lodDs);
 		}
 		printInfo(lodDatasets, "LODDsStatitiscs.tsv");
+		stopWatch.stop();
+		System.out.println("Stopwatch time: " + stopWatch);
 	}
 
 	private static void printInfo(Set<LODDataset> lodDatasets, String fileName)
@@ -45,7 +50,7 @@ public class LODDatasetsInfo {
 						+ "\t" + lodDs.getNumObjects() + "\t" + lodDs.getNumTriples() + "\t" + lodDs.getNumSameAs()
 						+ "\t" + lodDs.getNumClasses() + "\t" + lodDs.getNumProperties() + "\t"
 						+ lodDs.getNumDuplicatedInstances() + "\t" + lodDs.getNumLoops() + "\t"
-						+ lodDs.getDatasetsSimilar().size() + "\t" + lodDs.getAvgInOutDegree() + "\t"
+						+ lodDs.getNumDatasetSimilar() + "\t" + lodDs.getAvgInOutDegree() + "\t"
 						+ lodDs.getMaxInOutDegree();
 				writer.println(line);
 			}
@@ -73,7 +78,7 @@ public class LODDatasetsInfo {
 
 				lodDs.setNumDuplicatedInstances(LODUtil.getNumDuplicateInstances(ds, hdt));
 				lodDs.setNumLoops(LODUtil.getNumLoops(ds, hdt));
-				lodDs.setDatasetsSimilar(LODUtil.getDatasetsSimilar(ds, hdt));
+				lodDs.setNumDatasetSimilar(LODUtil.getNumSimilarDatasets(ds, hdt));
 				lodDs.setAvgInOutDegree(LODUtil.getAvgInOutDegree(ds, hdt));
 				lodDs.setMaxInOutDegree(LODUtil.getMaxInOutDegree(ds, hdt));
 			} catch (Exception e) {
@@ -95,7 +100,7 @@ public class LODDatasetsInfo {
 
 			lodDs.setNumDuplicatedInstances(LODUtil.getNumDuplicateInstances(ds, hdt));
 			lodDs.setNumLoops(LODUtil.getNumLoops(ds, hdt));
-			lodDs.setDatasetsSimilar(LODUtil.getDatasetsSimilar(ds, hdt));
+			lodDs.setNumDatasetSimilar(LODUtil.getNumSimilarDatasets(ds, hdt));
 			lodDs.setAvgInOutDegree(LODUtil.getAvgInOutDegree(ds, hdt));
 			lodDs.setMaxInOutDegree(LODUtil.getMaxInOutDegree(ds, hdt));
 		}

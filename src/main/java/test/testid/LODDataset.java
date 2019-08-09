@@ -1,7 +1,5 @@
 package test.testid;
 
-import java.util.Map;
-
 public class LODDataset {
 	/*
 	 * -List of properties -Number of duplicated instances, triples with other
@@ -15,9 +13,15 @@ public class LODDataset {
 	 */
 	String datasetName;
 	long numDuplicatedInstances, numSameAs, numLoops, avgInOutDegree, maxInOutDegree, numSubjects, numPredicates,
-			numObjects, numTriples, numClasses, numProperties;
+			numObjects, numTriples, numClasses, numProperties, numDatasetSimilar;
 
-	Map<String, Integer> datasetsSimilar;
+	public long getNumDatasetSimilar() {
+		return numDatasetSimilar;
+	}
+
+	public void setNumDatasetSimilar(long numDatasetSimilar) {
+		this.numDatasetSimilar = numDatasetSimilar;
+	}
 
 	public String getDatasetName() {
 		return datasetName;
@@ -113,14 +117,6 @@ public class LODDataset {
 
 	public void setNumProperties(long numProperties) {
 		this.numProperties = numProperties;
-	}
-
-	public Map<String, Integer> getDatasetsSimilar() {
-		return datasetsSimilar;
-	}
-
-	public void setDatasetsSimilar(Map<String, Integer> datasetsSimilar) {
-		this.datasetsSimilar = datasetsSimilar;
 	}
 
 }
