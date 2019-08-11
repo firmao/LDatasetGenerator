@@ -16,12 +16,12 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.text.similarity.JaccardSimilarity;
 
-public class IndexCreator {
+public class IndexCreatorParallel {
 
 	public static final Map<String, String> mAlreadyCompared = new LinkedHashMap<String, String>();
 	public static final Map<String, Set<String>> mapDatasetProperties = new LinkedHashMap<String, Set<String>>();
 	public static final boolean IN_MEMORY = true;
-	public static final String OUTPUT_DIR = "out_serial2";
+	public static final String OUTPUT_DIR = "out_Parallel1";
 	public static Map<String, String> mapDsError = new LinkedHashMap<String, String>();
 	public static void main(String[] args) throws Exception {
 		StopWatch stopWatch = new StopWatch();
@@ -30,7 +30,7 @@ public class IndexCreator {
 		if(!fDir.exists()) {
 			fDir.mkdir();
 		}
-		System.out.println("SERIAL-IN_MEMORY: " + IN_MEMORY);
+		System.out.println("PARALLEL-IN_MEMORY: " + IN_MEMORY);
 		
 		ExperimentNN exp = new ExperimentNN();
 		Set<String> ds = new LinkedHashSet<String>();
@@ -280,15 +280,13 @@ public class IndexCreator {
 			return mapExactMatch;
 		}
 		
-		//PrintWriter writer = new PrintWriter(fileName, "UTF-8");
-		for (String pSource : propsSource) {
-			for (String pTarget : propsTarget) {
+		propsSource.parallelStream().forEach(pSource -> {
+			propsTarget.parallelStream().forEach(pTarget -> {
 				if (pSource.equalsIgnoreCase(pTarget)) {
 					propsMatched.add(pSource);
-					//writer.println(pSource);
 				}
-			}
-		}
+			});
+		});
 		mapExactMatch.put(fileName, propsMatched);
 		//writer.close();
 		return mapExactMatch;
