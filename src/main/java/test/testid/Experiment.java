@@ -488,7 +488,7 @@ public class Experiment {
 			for (File source : files) {
 				if (source.isFile()) {
 					try {
-						if (count >= limit)
+						if ((limit != -1) && (count >= limit))
 							break;
 						if (source.getName().endsWith(".hdt")) {
 							ret.add(source.getAbsolutePath());
@@ -508,6 +508,13 @@ public class Experiment {
 						}
 						if (source.getName().endsWith(".csv")) {
 							ret.add(convertHDT(source.getAbsolutePath()));
+							count++;
+						}
+						if(source.getName().startsWith("meta")) {
+							continue;
+						}
+						if(source.getName().equals("data.nq.gz")) {
+							ret.add(source.getAbsolutePath());
 							count++;
 						}
 					} catch (Exception e) {

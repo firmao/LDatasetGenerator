@@ -36,13 +36,14 @@ public class IndexCreatorParallel {
 		Set<String> ds = new LinkedHashSet<String>();
 //		ds.addAll(exp.getDatasets(new File("/media/andre/Seagate/personalDatasets/"), 1000000));
 //		ds.addAll(exp.getDatasets(new File("dirHDT"), 100000));
-		ds.addAll(exp.getDatasets(new File("dirHDTFamous"), 3));
+//		ds.addAll(exp.getDatasets(new File("dirHDTFamous"), 4));
+		ds.addAll(exp.getDatasets(new File("dirHDTLaundromat"),-1));
 //		ds.addAll(exp.getDatasets(new File("dirHDTtests"), 9999));
 //		ds.addAll(getEndpoints(new File("endpoints.txt")));
 //		Map<String, String> mapQuerySource = getSampleQueries(new File("queryDsInfo.txt"));
 //		ds.addAll(mapQuerySource.keySet());
 		
-		//ds.add("http://dbpedia.org/sparql");
+//		ds.add("http://dbpedia.org/sparql");
 		//ds.add("http://linkedgeodata.org/sparql");
 		//ds.add("dirHDT/mappingbased_properties_en.hdt");
 		//ds.add("dirHDT/DBPedia-3.9-en.hdt");
@@ -59,8 +60,6 @@ public class IndexCreatorParallel {
 		int count = 0;
 		for (String source : ds) {
 			for (String target : dt) {
-				
-				
 				if (source.equals(target))
 					continue;
 				if (alreadyCompared(source, target))
@@ -176,8 +175,7 @@ public class IndexCreatorParallel {
 			writer.println("Dataset_Source\tDataset_Target\t#ExactMatch\t#sim>0.9\t#PropDs\t#PropDt");
 			writerExact.println("Property\tSource\tTarget");
 			writerSim.println("PropertyS\tPropertyT\tSource\tTarget");
-			Set<String> setS = new LinkedHashSet<String>();
-			Set<String> setT = new LinkedHashSet<String>();
+			Set<String> setAlreadyIncluded = new LinkedHashSet<String>();
 			for (Entry<String, Set<String>> entry : mapExactMatch.entrySet()) {
 				String fNameExact = entry.getKey();
 				String fNameSim = fNameExact.replaceAll("_Exact.txt", "_Sim.tsv");
@@ -187,16 +185,11 @@ public class IndexCreatorParallel {
 				String target = str[1].replaceAll("_Exact.txt", "");
 				String s = source.replaceAll("andre_", "");
 				String t = target.replaceAll("andre_", "");
-				if((!setS.add(s)) || (!setT.add(t))){
-					if((!setS.add(t)) || (!setT.add(s))){
-						continue;
-					}
+				if(setAlreadyIncluded.contains(s + "---" + t) || setAlreadyIncluded.contains(t + "---" + s)) {
+					continue;
 				}
-//				if(setAlreadyIncluded.contains(s) && setAlreadyIncluded.contains(t)) {
-//					continue;
-//				}
-//				setAlreadyIncluded.add(s);
-//				setAlreadyIncluded.add(t);
+				setAlreadyIncluded.add(s + "---" + t);
+				setAlreadyIncluded.add(t + "---" + s);
 				if((mapSim.size() > 0) && (mapSim.get(fNameSim) != null) && (mapSim.get(fNameSim).size() > 0)) {
 					writer.println(s + "\t" + t + "\t" + propExact.size() + "\t" + mapSim.get(fNameSim).size()+ "\t" + mapDatasetProperties.get(source).size() + "\t" + mapDatasetProperties.get(target).size());
 					for (Entry<String, String> p : mapSim.get(fNameSim).entrySet()) {

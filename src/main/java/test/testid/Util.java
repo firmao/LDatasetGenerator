@@ -477,6 +477,9 @@ public class Util {
 			} else if (file.getName().toLowerCase().endsWith(".n3")) {
 				System.out.println("# Reading a Notation3 (N3) file...");
 				model.read(file.getAbsolutePath());
+			} else if (file.getName().toLowerCase().endsWith(".nq")) {
+				System.out.println("# Guessing the RDF format.");
+				model.read(file.getAbsolutePath());
 			} else if (file.getName().toLowerCase().endsWith(".json") || file.getName().toLowerCase().endsWith(".jsod")
 					|| file.getName().toLowerCase().endsWith(".jsonld")) {
 				System.out.println("# Trying to read a 'json-ld' file...");
