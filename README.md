@@ -44,4 +44,7 @@ Clone the repository and don't forget to put on the classpath all jar files from
 - Class reponsible for creating the LOD datasets relation index:
 - https://github.com/firmao/LDatasetGenerator/blob/master/src/main/java/test/testid/IndexCreator.java
 
+- Class responsible for creating a tsv file containing statistics about all LOD datasets.
+- https://github.com/firmao/LDatasetGenerator/blob/master/src/main/java/test/testid/LODDatasetsInfo.java
+
 <img src="http://139.18.13.76:8082/createIndex.png">
