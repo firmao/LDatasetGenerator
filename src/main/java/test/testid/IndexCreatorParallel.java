@@ -34,10 +34,11 @@ public class IndexCreatorParallel {
 		
 		ExperimentNN exp = new ExperimentNN();
 		Set<String> ds = new LinkedHashSet<String>();
-//		ds.addAll(exp.getDatasets(new File("/media/andre/Seagate/personalDatasets/"), 1000000));
-//		ds.addAll(exp.getDatasets(new File("dirHDT"), 100000));
-//		ds.addAll(exp.getDatasets(new File("dirHDTFamous"), 4));
-		ds.addAll(exp.getDatasets(new File("dirHDTLaundromat"),-1));
+		ds.addAll(exp.getDatasets(new File("/media/andre/Seagate/personalDatasets/"), -1));
+		ds.addAll(exp.getDatasets(new File("dirHDT"), -1));
+		ds.addAll(exp.getDatasets(new File("dirHDTFamous"), -1));
+		ds.addAll(exp.getDatasets(new File("/media/andre/Seagate/tomcat9_p8082/webapps/ROOT/dirHDTLaundromat/"), -1));
+//		ds.addAll(exp.getDatasets(new File("dirHDTLaundromat"),-1));
 //		ds.addAll(exp.getDatasets(new File("dirHDTtests"), 9999));
 //		ds.addAll(getEndpoints(new File("endpoints.txt")));
 //		Map<String, String> mapQuerySource = getSampleQueries(new File("queryDsInfo.txt"));

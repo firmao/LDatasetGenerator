@@ -150,6 +150,17 @@ public class LODUtil {
 	public static long getNumTriples(String ds, HDT hdt) throws IOException, NotFoundException {
 		String cSparql = "SELECT DISTINCT (count(*) as ?c) WHERE {?s ?p ?o }";
 		if (hdt != null) {
+			Header header = hdt.getHeader();
+			IteratorTripleString it = header.search("", "http://rdfs.org/ns/void#triples", "");
+			String numberTriples = null;
+			while (it.hasNext()) {
+				TripleString ts = it.next();
+				numberTriples = ts.getObject().toString();
+			}
+			long numTriples = Long.parseLong(numberTriples.trim().replaceAll("\"", ""));
+			if (numTriples > 0) {
+				return numTriples;
+			}
 			return execQueryHDT(hdt, cSparql);
 		}
 		Set<String> ret = execSparql(cSparql, ds);
@@ -205,16 +216,33 @@ public class LODUtil {
 	}
 
 	public static long getMaxInOutDegree(String ds, HDT hdt) {
-//		String cSparql = "";
-//		if(hdt != null) {
-//			return execQueryHDT(hdt, cSparql);
-//		}
-//		Set<String> ret = execSparql(cSparql,ds);
-//		for (String r : ret) {
-//			if(Util.isNumeric(r)) {
-//				return Long.parseLong(r);
-//			}
-//		}
+		String cSparql = "SELECT ?cent ((?indegree+?outdegree) AS ?degree) WHERE {\n"
+				+ "  {SELECT (?s AS ?cent) (COUNT(*) AS ?outdegree)\n" + "    { ?s ?p ?o }\n" + "    GROUP BY ?s\n"
+				+ "    ORDER BY DESC(?outdegree)\n" + "  }\n" + "  {SELECT (?o AS ?cent) (COUNT(*) AS ?indegree)\n"
+				+ "    { ?s ?p ?o }\n" + "    GROUP BY ?o\n" + "    ORDER BY DESC(?indegree)\n" + "  }\n" + "} limit 1";
+		if (hdt != null) {
+			try {
+				Header header = hdt.getHeader();
+				IteratorTripleString it = header.search("", "http://purl.org/HDT/hdt#dictionarynumSharedSubjectObject", "");
+				String numberTriples = null;
+				while (it.hasNext()) {
+					TripleString ts = it.next();
+					numberTriples = ts.getObject().toString();
+				}
+				long ret = Long.parseLong(numberTriples.trim().replaceAll("\"", ""));
+				if (ret > 0) {
+					return ret;
+				}
+			} catch (Exception e) {
+				return execQueryHDT(hdt, cSparql);
+			}
+		}
+		Set<String> ret = execSparql(cSparql, ds);
+		for (String r : ret) {
+			if (Util.isNumeric(r)) {
+				return Long.parseLong(r);
+			}
+		}
 		return 0;
 	}
 
