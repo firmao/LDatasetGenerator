@@ -47,4 +47,7 @@ Clone the repository and don't forget to put on the classpath all jar files from
 - Class responsible for creating a tsv file containing statistics about all LOD datasets.
 - https://github.com/firmao/LDatasetGenerator/blob/master/src/main/java/test/testid/LODDatasetsInfo.java
 
+- Class to identify datasets duplicated and chunks.
+- https://github.com/firmao/LDatasetGenerator/blob/master/src/main/java/test/testid/DuplicatesChunks.java
+
 <img src="http://139.18.13.76:8082/createIndex.png">
