@@ -543,6 +543,147 @@ public class Util {
 		return ret;
 	}
 
+	public static Map<String, Integer> execQueryRDFRes(String cSparql, String dataset) {
+		final Map<String, Integer> ret = new HashMap<String, Integer>();
+		File file = null;
+		try {
+			if (dataset.startsWith("http")) {
+				URL url = new URL(dataset);
+				file = new File(Util.getURLFileName(url));
+				if (!file.exists()) {
+					FileUtils.copyURLToFile(url, file);
+				}
+			} else {
+				file = new File(dataset);
+			}
+
+			file = unconpress(file);
+			// long limSize = 10000000; // 10 MB
+			// if (file.length() > limSize) {
+			// System.err.println("File: " + file.getAbsolutePath() + " is bigger than " +
+			// limSize + " bytes");
+			// ret.addAll(Util.execQueryEndPoint(cSparql, "http://dbpedia.org/sparql",
+			// true));
+			// return ret;
+			// }
+			if (file.getName().endsWith("hdt")) {
+				return execQueryHDTRes(cSparql, file.getAbsolutePath());
+			}
+
+			long start = System.currentTimeMillis();
+			org.apache.jena.rdf.model.Model model = org.apache.jena.rdf.model.ModelFactory.createDefaultModel();
+			org.apache.jena.sparql.engine.QueryExecutionBase qe = null;
+			org.apache.jena.query.ResultSet resultSet = null;
+			/* First check the IRI file extension */
+			if (file.getName().toLowerCase().endsWith(".ntriples") || file.getName().toLowerCase().endsWith(".nt")) {
+				System.out.println("# Reading a N-Triples file...");
+				model.read(file.getAbsolutePath(), "N-TRIPLE");
+			} else if (file.getName().toLowerCase().endsWith(".n3")) {
+				System.out.println("# Reading a Notation3 (N3) file...");
+				model.read(file.getAbsolutePath());
+			} else if (file.getName().toLowerCase().endsWith(".json") || file.getName().toLowerCase().endsWith(".jsod")
+					|| file.getName().toLowerCase().endsWith(".jsonld")) {
+				System.out.println("# Trying to read a 'json-ld' file...");
+				model.read(file.getAbsolutePath(), "JSON-LD");
+			} else {
+				String contentType = getContentType(dataset); // get the IRI
+																// content type
+				System.out.println("# IRI Content Type: " + contentType);
+				if (contentType.contains("application/ld+json") || contentType.contains("application/json")
+						|| contentType.contains("application/json+ld")) {
+					System.out.println("# Trying to read a 'json-ld' file...");
+					model.read(file.getAbsolutePath(), "JSON-LD");
+				} else if (contentType.contains("application/n-triples")) {
+					System.out.println("# Reading a N-Triples file...");
+					model.read(file.getAbsolutePath(), "N-TRIPLE");
+				} else if (contentType.contains("text/n3")) {
+					System.out.println("# Reading a Notation3 (N3) file...");
+					model.read(file.getAbsolutePath());
+				} else {
+					model.read(file.getAbsolutePath());
+				}
+			}
+
+			qe = (org.apache.jena.sparql.engine.QueryExecutionBase) org.apache.jena.query.QueryExecutionFactory
+					.create(cSparql, model);
+			resultSet = qe.execSelect();
+			if (resultSet != null) {
+				List<org.apache.jena.query.QuerySolution> lQuerySolution = ResultSetFormatter.toList(resultSet);
+				for (org.apache.jena.query.QuerySolution qSolution : lQuerySolution) {
+					String prop = qSolution.get("p").toString();
+					Integer qtd = qSolution.get("qtd").asLiteral().getInt();
+					
+					ret.put(prop, qtd);
+				}
+			}
+			long total = System.currentTimeMillis() - start;
+			System.out.println("Time to query dataset: " + total + "ms");
+			// file.delete();
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+
+		
+		return ret;
+	}
+	
+	private static Map<String, Integer> execQueryHDTRes(String cSparql, String dataset) throws IOException {
+		final Map<String, Integer>  ret = new HashMap<String, Integer> ();
+		File file = null;
+		HDT hdt = null;
+		try {
+			System.out.println("Dataset: " + dataset);
+			long start = System.currentTimeMillis();
+			if (dataset.startsWith("http")) {
+				URL url = new URL(dataset);
+				file = new File(Util.getURLFileName(url));
+				if (!file.exists()) {
+					FileUtils.copyURLToFile(url, file);
+				}
+			} else {
+				file = new File(dataset);
+			}
+			file = unconpress(file);
+//			long limSize = 10000000; // 10 MB
+//			if (file.length() > limSize) {
+//				System.err.println("File: " + file.getAbsolutePath() + " is bigger than " + limSize + " bytes");
+//				ret.addAll(Util.execQueryEndPoint(cSparql, "http://dbpedia.org/sparql", true));
+//				return ret;
+//			}
+			long total = System.currentTimeMillis() - start;
+			System.out.println("Time to download dataset: " + total + "ms");
+			start = System.currentTimeMillis();
+			hdt = HDTManager.mapHDT(file.getAbsolutePath(), null);
+			HDTGraph graph = new HDTGraph(hdt);
+			Model model = new ModelCom(graph);
+			Query query = QueryFactory.create(cSparql);
+			QueryExecution qe = QueryExecutionFactory.create(query, model);
+			ResultSet results = qe.execSelect();
+
+			List<org.apache.jena.query.QuerySolution> lQuerySolution = ResultSetFormatter.toList(results);
+			for (org.apache.jena.query.QuerySolution qSolution : lQuerySolution) {
+				String prop = qSolution.get("p").toString();
+				Integer qtd = qSolution.get("qtd").asLiteral().getInt();
+				
+				ret.put(prop, qtd);
+			}
+
+			total = System.currentTimeMillis() - start;
+			System.out.println("Time to query dataset: " + total + "ms");
+			qe.close();
+		} catch (Exception e) {
+			System.out.println("FAIL: " + dataset + " Error: " + e.getMessage());
+			DuplicatesChunks.dsError.add(dataset);
+		} finally {
+			// file.delete();
+			if (hdt != null) {
+				hdt.close();
+			}
+		}
+		
+		return ret;
+	}
+	
 	public static Set<String> execQueryHDTRes(String cSparql, String dataset, int maxEntities) throws IOException {
 		final Set<String> ret = new HashSet<String>();
 		File file = null;
@@ -728,6 +869,47 @@ public class Util {
 		return ret;
 	}
 
+	public static Map<String, Integer> execQueryEndPointMap(String cSparql, String endPoint) {
+		System.out.println("Query endPoint: " + endPoint);
+		final Map<String, Integer> ret = new HashMap<String, Integer>();
+		final long offsetSize = 9999;
+		long offset = 0;
+		do {
+			String sSparql = cSparql;
+			int indOffset = cSparql.toLowerCase().indexOf("offset");
+			int indLimit = cSparql.toLowerCase().indexOf("limit");
+			if((indLimit < 0) && (indOffset < 0)) {
+				sSparql = cSparql += " offset " + offset + " limit " + offsetSize;
+			}
+			Query query = QueryFactory.create(cSparql);
+			QueryExecution qexec = QueryExecutionFactory.sparqlService(endPoint, query);
+			try {
+
+				ResultSet results = qexec.execSelect();
+				List<QuerySolution> lst = ResultSetFormatter.toList(results);
+				for (QuerySolution qSolution : lst) {
+					String prop = qSolution.get("p").toString();
+					Integer qtd = qSolution.get("qtd").asLiteral().getInt();
+					
+					ret.put(prop, qtd);
+				}
+				
+				if((indLimit > 0) || (indOffset > 0)) {
+					break;
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+				break;
+			} finally {
+				qexec.close();
+			}
+			//System.out.print(offset);
+			offset += offsetSize;
+		} while (true);
+		
+		return ret;
+	}
+	
 	public static String getMax(Map<String, Integer> mBestDs) {
 		int max = 0;
 		String ds = null;

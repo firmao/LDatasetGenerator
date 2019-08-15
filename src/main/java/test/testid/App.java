@@ -1,12 +1,15 @@
 package test.testid;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.lang3.time.StopWatch;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.graph.Triple;
@@ -36,7 +39,7 @@ import org.rdfhdt.hdtjena.HDTGraph;
 
 public class App {
 
-	public static void main(String[] args) throws IOException, NotFoundException, ParserException {
+	public static void main(String[] args) throws Exception {
 //		Set<String> datasets = new LinkedHashSet<String>();
 //		datasets.add("dirHDT/3_ds_tests/hdt/d1.hdt");
 //		datasets.add("dirHDT/3_ds_tests/hdt/d2.hdt");
@@ -66,67 +69,57 @@ public class App {
 //		String cSparql = "SELECT DISTINCT * WHERE { <http://dbpedia.org/ontology/areaCode> ?p ?o } limit 10";
 //		System.out.println(execHDTString(ds, cSparql));
 //		System.exit(0);
-		
-		Set<String> datasets = new LinkedHashSet<String>();
-		int numberOfDs = 10000;
-		//datasets.add("UnionResultsSchemaMatching.hdt");
-		datasets.addAll(getDatasets(new File("dirHDTFamous"), numberOfDs));
-		//datasets.add("dirHDTFamous/DBPedia-3.9-en.hdt");
+		String dirHDT = "*";
 		String cSparql = "PREFIX dbo: <http://dbpedia.org/ontology/>\n" + 
 				"PREFIX geo: <http://www.w3.org/2003/01/geo/wgs84_pos#>\n" + 
 				"\n" + 
+				"SELECT distinct * WHERE {\n" + 
+				" ?s a <http://dbpedia.org/ontology/City> .} limit 1";
+		findDatasets("dbo_city.txt", cSparql, dirHDT);
+		cSparql = "PREFIX dbo: <http://dbpedia.org/ontology/>\n" + 
+				"PREFIX geo: <http://www.w3.org/2003/01/geo/wgs84_pos#>\n" + 
 				"\n" + 
 				"SELECT distinct * WHERE {\n" + 
-				" ?s a <http://schema.org/City> .\n" + 
-				" Optional {?s <http://www.w3.org/2000/01/rdf-schema#label> ?name}\n" + 
-				" Optional {?s <http://dbpedia.org/property/populationTotal> ?pop}\n" + 
-				" Optional {?s <http://dbpedia.org/ontology/populationTotal> ?popDBpedia}\n" + 
-				" Optional {?s <http://dbpedia.org/property/populationAsOf> ?popAsOf}\n" + 
-				" Optional {?s <http://dbpedia.org/ontology/populationDensity> ?pop5}\n" + 
-				" OPTIONAL {?city geo:long ?long.}\n" + 
-				" OPTIONAL {?city geo:lat ?lat.}\n" + 
-				"# Optional {?s <http://dbpedia.org/property/populationAsOf> ?popAsOf}\n" + 
-				"# Optional {?s <http://dbpedia.org/property/populationAsOf> ?popAsOf}\n" + 
-				"\n" + 
-				"} limit 10";
-		System.out.println(cSparql);
-		PrintWriter writer = new PrintWriter("sparqlOut.txt", "UTF-8");
-		int count = 0;
-		for (String ds : datasets) {
-			String ret = execHDTString(ds, cSparql);
-			writer.println("#### DATASET: " + ds);
-			writer.println(ret);
-			//System.out.println(ret);
-			if((ret != null) && !ret.contains("http")) {
-				count++;
-			}
+				" ?s a <http://schema.org/City> .} limit 1";
+		findDatasets("schema_city.txt", cSparql, dirHDT);
+	}
+
+	private static void findDatasets(String fileName, String cSparql, String dirHDT) throws Exception {		
+		StopWatch stopWatch = new StopWatch();
+		stopWatch.start();
+		ExperimentNN exp = new ExperimentNN();
+		final Set<String> datasets = new LinkedHashSet<String>();
+		if(dirHDT.equals("*")) {
+			datasets.addAll(exp.getDatasets(new File("/media/andre/Seagate/personalDatasets/"), -1));
+			datasets.addAll(exp.getDatasets(new File("dirHDT"), -1));
+			datasets.addAll(exp.getDatasets(new File("dirHDTFamous"), -1));
+			datasets.addAll(exp.getDatasets(new File("/media/andre/Seagate/tomcat9_p8082/webapps/ROOT/dirHDTLaundromat/"), -1));
+		} else {
+			datasets.addAll(exp.getDatasets(new File(dirHDT), -1));
 		}
-		writer.println("Datasets without owl:equivalentProperty: " + count);
+		System.out.println(cSparql);
+		PrintWriter writer = new PrintWriter(fileName, "UTF-8");
+		final Set<String> datasetsFound = new LinkedHashSet<String>();
+		datasets.parallelStream().forEach(ds -> {
+			String ret = null;
+			try {
+				ret = execHDTString(ds, cSparql);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			if((ret != null) && ret.contains("http")) {
+				writer.println("#### DATASET: " + ds);
+				writer.println(ret);
+				datasetsFound.add(ds);
+			}
+		});
+		stopWatch.stop();
+		writer.println("Stopwatch time: " + stopWatch);
+		writer.println("Datasets found: " + datasetsFound.size());
 		writer.println("Total datasets analised: " + datasets.size());
 		writer.close();
 	}
 
-	private static Set<String> getDatasets(File file, int limit) {
-		Set<String> ret = new LinkedHashSet<String>();
-		if (file.isDirectory()) {
-			File[] files = file.listFiles();
-			int count = 0;
-			for (File source : files) {
-				if (source.isFile()) {
-					if (count >= limit)
-						break;
-					if(source.getName().endsWith(".hdt")) {
-						ret.add(source.getAbsolutePath());
-						count++;
-					}
-				}
-			}
-		} else {
-			System.err.println(file.getName() + " is not a directory !");
-		}
-
-		return ret;
-	}
 	private static void createHDT() throws IOException, ParserException {
 		// Configuration variables
 		String baseURI = "http://example.com/mydataset";
