@@ -25,7 +25,7 @@ Clone the repository and don't forget to put on the classpath all jar files from
 - Property matching using gold Standard from webTables(http://www.webdatacommons.org/webtables/)
 - https://github.com/firmao/LDatasetGenerator/blob/master/src/main/java/test/testid/PropertyMatchingNN.java
 
-- Simple property matching with small gold standard and datasets:
+- Simple property matching with small gold standard and famous datasets:
 - https://github.com/firmao/LDatasetGenerator/blob/master/src/main/java/test/testid/PropertyMatching.java
 
 - Statistics about datasets relations from the LOD cloud:
