@@ -50,4 +50,3 @@ Clone the repository and don't forget to put on the classpath all jar files from
 - Class to identify datasets duplicated and chunks.
 - https://github.com/firmao/LDatasetGenerator/blob/master/src/main/java/test/testid/DuplicatesChunks.java
 
-<img src="http://139.18.13.76:8082/createIndex.png">
