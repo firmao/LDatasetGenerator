@@ -16,6 +16,7 @@ import org.apache.jena.query.ResultSet;
 import org.apache.jena.query.ResultSetFormatter;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.impl.ModelCom;
+import org.rdfhdt.hdt.dictionary.Dictionary;
 import org.rdfhdt.hdt.exceptions.NotFoundException;
 import org.rdfhdt.hdt.hdt.HDT;
 import org.rdfhdt.hdt.header.Header;
@@ -128,7 +129,8 @@ public class LODUtil {
 			}
 			qe.close();
 		} catch (Exception e) {
-			e.printStackTrace();
+			//System.err.println(e.getMessage());
+			return ret;
 		}
 		return ret;
 	}
@@ -216,33 +218,19 @@ public class LODUtil {
 	}
 
 	public static long getMaxInOutDegree(String ds, HDT hdt) {
-		String cSparql = "SELECT ?cent ((?indegree+?outdegree) AS ?degree) WHERE {\n"
-				+ "  {SELECT (?s AS ?cent) (COUNT(*) AS ?outdegree)\n" + "    { ?s ?p ?o }\n" + "    GROUP BY ?s\n"
-				+ "    ORDER BY DESC(?outdegree)\n" + "  }\n" + "  {SELECT (?o AS ?cent) (COUNT(*) AS ?indegree)\n"
-				+ "    { ?s ?p ?o }\n" + "    GROUP BY ?o\n" + "    ORDER BY DESC(?indegree)\n" + "  }\n" + "} limit 1";
-		if (hdt != null) {
-			try {
-				Header header = hdt.getHeader();
-				IteratorTripleString it = header.search("", "http://purl.org/HDT/hdt#dictionarynumSharedSubjectObject", "");
-				String numberTriples = null;
-				while (it.hasNext()) {
-					TripleString ts = it.next();
-					numberTriples = ts.getObject().toString();
-				}
-				long ret = Long.parseLong(numberTriples.trim().replaceAll("\"", ""));
-				if (ret > 0) {
-					return ret;
-				}
-			} catch (Exception e) {
-				return execQueryHDT(hdt, cSparql);
-			}
-		}
-		Set<String> ret = execSparql(cSparql, ds);
-		for (String r : ret) {
-			if (Util.isNumeric(r)) {
-				return Long.parseLong(r);
-			}
-		}
+//		String cSparql = "SELECT ?cent ((?indegree+?outdegree) AS ?degree) WHERE {\n"
+//				+ "  {SELECT (?s AS ?cent) (COUNT(*) AS ?outdegree)\n" + "    { ?s ?p ?o }\n" + "    GROUP BY ?s\n"
+//				+ "    ORDER BY DESC(?outdegree)\n" + "  }\n" + "  {SELECT (?o AS ?cent) (COUNT(*) AS ?indegree)\n"
+//				+ "    { ?s ?p ?o }\n" + "    GROUP BY ?o\n" + "    ORDER BY DESC(?indegree)\n" + "  }\n" + "} limit 1";
+//		if (hdt != null) {
+//			return execQueryHDT(hdt, cSparql);
+//		}
+//		Set<String> ret = execSparql(cSparql, ds);
+//		for (String r : ret) {
+//			if (Util.isNumeric(r)) {
+//				return Long.parseLong(r);
+//			}
+//		}
 		return 0;
 	}
 

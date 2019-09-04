@@ -20,7 +20,8 @@ import org.apache.jena.shared.PrefixMapping;
 import org.apache.jena.sparql.core.Prologue;
 
 public class DatabaseMain {
-	public static final String DIR_DB = readConfFile("/home/andre/dsconfig.txt");
+	//public static final String DIR_DB = readConfFile("/home/andre/dsconfig.txt");
+	public static final String DIR_DB = "indexLODRel/";
 	public static String TABLEMATCHING_PATH = DIR_DB + "tableMatches.tsv";
 	public static String TABLEMATCHES_EXACT = DIR_DB + "tableMatches_Exact.tsv";
 	public static String TABLEMATCHES_SIM = DIR_DB + "tableMatches_Sim.tsv";

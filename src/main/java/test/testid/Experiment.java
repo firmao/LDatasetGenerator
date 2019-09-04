@@ -172,8 +172,8 @@ public class Experiment {
 		return nameCsv;
 	}
 
-	private String convertCSV2NT(String pDs) throws IOException {
-		String fileNameNT = pDs.replaceAll(".csv", ".nt");
+	public String convertCSV2NT(String pDs) throws IOException {
+		String fileNameNT = pDs.replace(".csv", ".nt");
 		File fHdt = new File(fileNameNT);
 		if (fHdt.exists()) {
 			return fileNameNT;

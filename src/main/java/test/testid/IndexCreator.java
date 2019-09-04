@@ -5,6 +5,9 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -37,7 +40,8 @@ public class IndexCreator {
 //		ds.addAll(exp.getDatasets(new File("/media/andre/Seagate/personalDatasets/"), 1000000));
 //		ds.addAll(exp.getDatasets(new File("dirHDT"), 100000));
 //		ds.addAll(exp.getDatasets(new File("dirHDTFamous"), 1));
-		ds.addAll(exp.getDatasets(new File("dirHDTtests"), 9999));
+		ds.addAll(exp.getDatasets(new File("dirHDTtests"), -1));
+//		ds.addAll(exp.getDatasets(new File("dirHDTLaundromat"), -1));
 //		ds.addAll(getEndpoints(new File("endpoints.txt")));
 //		Map<String, String> mapQuerySource = getSampleQueries(new File("queryDsInfo.txt"));
 //		ds.addAll(mapQuerySource.keySet());
@@ -47,6 +51,9 @@ public class IndexCreator {
 		//ds.add("dirHDT/mappingbased_properties_en.hdt");
 		//ds.add("dirHDT/DBPedia-3.9-en.hdt");
 		
+		System.out.println("Total datasets(before filter): " + ds.size());
+		ds.removeAll(readFromFile("duplicates.txt"));
+		System.out.println("Total datasets(after filter): " + ds.size());
 		Set<String> dt = new LinkedHashSet<String>();
 		//dt.addAll(mapQuerySource.keySet());
 		dt.addAll(ds);
@@ -54,8 +61,7 @@ public class IndexCreator {
 		final Map<String, Map<String, String>> mapSim = new LinkedHashMap<String, Map<String, String>>();
 		
 		//for (String source : mapQuerySource.keySet()) {
-		int totalComparisons = ds.size() * dt.size();
-		System.out.println("Total datasets: " + ds.size());
+		long totalComparisons = ds.size() * dt.size();
 		int count = 0;
 		for (String source : ds) {
 			for (String target : dt) {
@@ -80,6 +86,18 @@ public class IndexCreator {
 		printErrors(mapDsError);
 		stopWatch.stop();
 		System.out.println("Stopwatch time: " + stopWatch);
+	}
+
+	private static Set<String> readFromFile(String file) {
+		List<String> lstLines = null;
+		try {
+			lstLines = Files.readAllLines(Paths.get(file));
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return new LinkedHashSet<String>(lstLines);
 	}
 
 	private static void printGoodDs(Set<String> ds) throws FileNotFoundException, UnsupportedEncodingException {

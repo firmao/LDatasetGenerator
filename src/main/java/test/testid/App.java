@@ -69,19 +69,25 @@ public class App {
 //		String cSparql = "SELECT DISTINCT * WHERE { <http://dbpedia.org/ontology/areaCode> ?p ?o } limit 10";
 //		System.out.println(execHDTString(ds, cSparql));
 //		System.exit(0);
-		String dirHDT = "*";
+		String dirHDT = "limbo";
 		String cSparql = "PREFIX dbo: <http://dbpedia.org/ontology/>\n" + 
 				"PREFIX geo: <http://www.w3.org/2003/01/geo/wgs84_pos#>\n" + 
 				"\n" + 
 				"SELECT distinct * WHERE {\n" + 
-				" ?s a <http://dbpedia.org/ontology/City> .} limit 1";
-		findDatasets("dbo_city.txt", cSparql, dirHDT);
+				" ?s a <http://purl.org/ontology/bibo/Book> .} limit 1";
+		findDatasets("dbo_book.txt", cSparql, dirHDT);
 		cSparql = "PREFIX dbo: <http://dbpedia.org/ontology/>\n" + 
 				"PREFIX geo: <http://www.w3.org/2003/01/geo/wgs84_pos#>\n" + 
 				"\n" + 
 				"SELECT distinct * WHERE {\n" + 
-				" ?s a <http://schema.org/City> .} limit 1";
-		findDatasets("schema_city.txt", cSparql, dirHDT);
+				" ?s a <http://dbpedia.org/ontology/School> .} limit 1";
+		findDatasets("dbo_school.txt", cSparql, dirHDT);
+		cSparql = "PREFIX dbo: <http://dbpedia.org/ontology/>\n" + 
+				"PREFIX geo: <http://www.w3.org/2003/01/geo/wgs84_pos#>\n" + 
+				"\n" + 
+				"SELECT distinct * WHERE {\n" + 
+				" ?s a <http://dbpedia.org/ontology/Software> .} limit 1";
+		findDatasets("dbo_software.txt", cSparql, dirHDT);
 	}
 
 	private static void findDatasets(String fileName, String cSparql, String dirHDT) throws Exception {		
@@ -94,7 +100,9 @@ public class App {
 			datasets.addAll(exp.getDatasets(new File("dirHDT"), -1));
 			datasets.addAll(exp.getDatasets(new File("dirHDTFamous"), -1));
 			datasets.addAll(exp.getDatasets(new File("/media/andre/Seagate/tomcat9_p8082/webapps/ROOT/dirHDTLaundromat/"), -1));
-		} else {
+		} else if(dirHDT.equals("*")) {
+			datasets.addAll(exp.getDatasets(new File("dirHDTLaundromat"), -1));
+		}else {
 			datasets.addAll(exp.getDatasets(new File(dirHDT), -1));
 		}
 		System.out.println(cSparql);

@@ -15,7 +15,7 @@ public class TestDatasets {
 		System.out.println("java -jar TestDatasets.jar <datasets:Dir or file> <SPARQL query>");
 		//String datasetsPlace = "endpoints.txt";
 		String datasetsPlace = "dirHDT";
-		String cSparql = "SELECT ?s WHERE { ?s a <http://dbpedia.org/ontology/City> } limit 10";
+		String cSparql = "select distinct ?Concept where {[] a ?Concept }";
 
 		if (args.length > 0) {
 			if (args[0] != null) {
@@ -35,7 +35,10 @@ public class TestDatasets {
 		} else {
 			setDatasets.addAll(loadDsFromFile(f));
 		}
-		PrintWriter writer = new PrintWriter("GoodDatasets.txt", "UTF-8");
+		setDatasets.clear();
+		setDatasets.add("http://dbpedia.org/sparql");
+		
+		PrintWriter writer = new PrintWriter("dbpClasses.txt", "UTF-8");
 		for (String ds : setDatasets) {
 			Set<String> goodDs = execSparql(cSparql, ds);
 			if (goodDs.size() > 1) {
@@ -59,7 +62,7 @@ public class TestDatasets {
 		final Set<String> ret = new LinkedHashSet<String>();
 
 		try {
-			TimeOutBlock timeoutBlock = new TimeOutBlock(180000); // 3 minutes
+			TimeOutBlock timeoutBlock = new TimeOutBlock(1800000); // 30 minutes
 			Runnable block = new Runnable() {
 				public void run() {
 					// ret.addAll(Util.execQueryEndPoint(cSparql, source));

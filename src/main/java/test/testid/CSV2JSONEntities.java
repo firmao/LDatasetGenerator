@@ -21,20 +21,24 @@ public class CSV2JSONEntities {
 
 	static int countSkiped = 0;
 	final static Set<String> setErrors = new LinkedHashSet<String>();
+	static long eId = 0;
 
 	public static void main(String[] args) throws IOException {
-		final String DIR_CSV = "cities_csv_en_norm1";
+		final String DIR_CSV = "cities_csv_en_1";
 		Experiment exp = new Experiment();
 		File files[] = (new File(DIR_CSV)).listFiles();
 		String sFileNT = null;
+		PrintWriter writer = new PrintWriter("bigFileFAMER.json", "UTF-8");
 		for (File file : files) {
-			File fDir = new File("JsonFAMERLODCities3/" + file.getName().replaceAll(".csv", "") + "/");
+			File fDir = new File("JsonFAMERLODCitiesOneFile/" + file.getName().replaceAll(".csv", "") + "/");
 			fDir.mkdirs();
 
 			// Map<String, Map<String, String>> mEntities = parseCSV(file);
 			Map<String, Map<String, String>> mEntities = parseCSVOpen(file);
 
-			printFiles(mEntities, fDir);
+			//printSeparatedFiles(mEntities, fDir);
+			String sBigFileFAMER = printUniqueJsonFAMER(mEntities, fDir);
+			writer.print(sBigFileFAMER);
 			printErrors();
 			try {
 				sFileNT = exp.convertCSV2NT(file.getAbsolutePath());
@@ -48,6 +52,7 @@ public class CSV2JSONEntities {
 			System.out.println("SkipedLines: " + countSkiped);
 			System.out.println("City File Errors: " + setErrors.size());
 		}
+		writer.close();
 
 	}
 
@@ -59,7 +64,7 @@ public class CSV2JSONEntities {
 		writer.close();
 	}
 
-	private static void printFiles(Map<String, Map<String, String>> mEntities, File fDir) throws IOException {
+	private static void printSeparatedFiles(Map<String, Map<String, String>> mEntities, File fDir) throws IOException {
 		for (Entry<String, Map<String, String>> entry : mEntities.entrySet()) {
 			String name = null;
 			if (entry.getKey().contains("http")) {
@@ -94,6 +99,48 @@ public class CSV2JSONEntities {
 			writer.close();
 		}
 
+	}
+	
+	private static String printUniqueJsonFAMER(Map<String, Map<String, String>> mEntities, File fDir) throws IOException {
+		StringBuffer sbRet = new StringBuffer();
+		for (Entry<String, Map<String, String>> entry : mEntities.entrySet()) {
+			String name = null;
+			if (entry.getKey().contains("http")) {
+				name = Util.getURLName(entry.getKey());
+			} else {
+				name = entry.getKey();
+			}
+			name = name.replaceAll("/", "");
+			name = name.replaceAll(" ", "");
+			name = name.trim();
+			//String fName = fDir + "/" + name + ".json";
+			String fName = fDir.getPath().split("/")[1];
+			File f = new File(fName);
+			try {
+				if (!f.exists()) {
+					f.createNewFile();
+				}
+			} catch (Exception e) {
+				setErrors.add(f.getAbsolutePath());
+				continue;
+			}
+			//PrintWriter writer = new PrintWriter(fName, "UTF-8");
+			sbRet.append("{");
+			StringBuffer sbLines = new StringBuffer();
+			for (Entry<String, String> atts : entry.getValue().entrySet()) {
+				String key = atts.getKey();
+				String value = atts.getValue();
+				sbLines.append("\"" + key + "\": " + "\"" + value + "\",");
+			}
+			sbLines.append("\"sourceWebSite\": " + "\"" + fName + "\",");
+			sbLines.append("\"category\": " + "\"city\",");
+			sbLines.append("\"eId\": " + (eId++) + ",\n");
+			String content = sbLines.toString().substring(0, sbLines.length() - 2);
+			sbRet.append(content);
+			sbRet.append("}\n");
+			//writer.close();
+		}
+		return sbRet.toString();
 	}
 
 	private static Map<String, Map<String, String>> parseCSVOpen(File file) {

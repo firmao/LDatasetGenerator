@@ -570,7 +570,7 @@ public class Util {
 				return execQueryHDTRes(cSparql, file.getAbsolutePath());
 			}
 
-			long start = System.currentTimeMillis();
+			//long start = System.currentTimeMillis();
 			org.apache.jena.rdf.model.Model model = org.apache.jena.rdf.model.ModelFactory.createDefaultModel();
 			org.apache.jena.sparql.engine.QueryExecutionBase qe = null;
 			org.apache.jena.query.ResultSet resultSet = null;
@@ -616,8 +616,8 @@ public class Util {
 					ret.put(prop, qtd);
 				}
 			}
-			long total = System.currentTimeMillis() - start;
-			System.out.println("Time to query dataset: " + total + "ms");
+			//long total = System.currentTimeMillis() - start;
+			//System.out.println("Time to query dataset: " + total + "ms");
 			// file.delete();
 		} catch (Exception ex) {
 			ex.printStackTrace();
@@ -633,7 +633,7 @@ public class Util {
 		HDT hdt = null;
 		try {
 			System.out.println("Dataset: " + dataset);
-			long start = System.currentTimeMillis();
+			//long start = System.currentTimeMillis();
 			if (dataset.startsWith("http")) {
 				URL url = new URL(dataset);
 				file = new File(Util.getURLFileName(url));
@@ -650,9 +650,9 @@ public class Util {
 //				ret.addAll(Util.execQueryEndPoint(cSparql, "http://dbpedia.org/sparql", true));
 //				return ret;
 //			}
-			long total = System.currentTimeMillis() - start;
-			System.out.println("Time to download dataset: " + total + "ms");
-			start = System.currentTimeMillis();
+//			long total = System.currentTimeMillis() - start;
+//			System.out.println("Time to download dataset: " + total + "ms");
+//			start = System.currentTimeMillis();
 			hdt = HDTManager.mapHDT(file.getAbsolutePath(), null);
 			HDTGraph graph = new HDTGraph(hdt);
 			Model model = new ModelCom(graph);
@@ -668,8 +668,8 @@ public class Util {
 				ret.put(prop, qtd);
 			}
 
-			total = System.currentTimeMillis() - start;
-			System.out.println("Time to query dataset: " + total + "ms");
+//			total = System.currentTimeMillis() - start;
+//			System.out.println("Time to query dataset: " + total + "ms");
 			qe.close();
 		} catch (Exception e) {
 			System.out.println("FAIL: " + dataset + " Error: " + e.getMessage());

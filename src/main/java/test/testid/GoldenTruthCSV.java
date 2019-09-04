@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.text.similarity.JaroWinklerDistance;
 
 import au.com.bytecode.opencsv.CSVReader;
@@ -24,21 +25,28 @@ public class GoldenTruthCSV {
 	public static final Map<String, String> mAlreadyCompared = new LinkedHashMap<String, String>();
 
 	public static void main(String[] args) throws Exception {
+		System.out.println("SERIAL !!!");
+		StopWatch stopWatch = new StopWatch();
+		stopWatch.start();
 		Set<String> ds = new LinkedHashSet<String>();
-		ds.add("cities_csv_en_norm1/dbpedia.csv");
-		ds.add("cities_csv_en_norm1/eea.europa.eu_most-populated-cities.csv");
-		ds.add("cities_csv_en_norm1/geonames-all-cities-with-a-population-1000.csv");
-		ds.add("cities_csv_en_norm1/lod.openlinksw.com_25sources.csv");
-		ds.add("cities_csv_en_norm1/mahnhein_searchJoins.webdatacommons.org.csv");
-		ds.add("cities_csv_en_norm1/wikidata.csv");
-		ds.add("cities_csv_en_norm1/yago.csv");
+		ds.add("citiesTest/d1.csv");
+		ds.add("citiesTest/d2.csv");
+		ds.add("citiesTest/d3.csv");
+		
+//		ds.add("cities_csv_en_norm1/dbpedia.csv");
+//		ds.add("cities_csv_en_norm1/eea.europa.eu_most-populated-cities.csv");
+//		ds.add("cities_csv_en_norm1/geonames-all-cities-with-a-population-1000.csv");
+//		ds.add("cities_csv_en_norm1/lod.openlinksw.com_25sources.csv");
+//		ds.add("cities_csv_en_norm1/mahnhein_searchJoins.webdatacommons.org.csv");
+//		ds.add("cities_csv_en_norm1/wikidata.csv");
+//		ds.add("cities_csv_en_norm1/yago.csv");
 		Set<String> dt = new LinkedHashSet<String>();
 		dt.addAll(ds);
 		long totalComparisons = ds.size() * dt.size();
 		System.out.println("Total datasets: " + ds.size());
 		int count = 0;
 		Set<Match> setMatches = new LinkedHashSet<Match>();
-		PrintWriter writer = new PrintWriter("matchScores.tsv", "UTF-8");
+		PrintWriter writer = new PrintWriter("matchScores_s.tsv", "UTF-8");
 		writer.println("DatasetSource\tDatasetTarget\tScore");
 		for (String source : ds) {
 			for (String target : dt) {
@@ -58,6 +66,8 @@ public class GoldenTruthCSV {
 		}
 		writer.close();
 		// printMatches(setMatches, 0.8);
+		stopWatch.stop();
+		System.out.println("Stopwatch time: " + stopWatch);
 	}
 
 	private static void printMatches(Set<Match> setMatches, double threshold)

@@ -14,6 +14,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.time.StopWatch;
 import org.rdfhdt.hdt.dictionary.Dictionary;
 import org.rdfhdt.hdt.exceptions.NotFoundException;
 import org.rdfhdt.hdt.hdt.HDT;
@@ -31,11 +32,15 @@ public class DuplicatesChunks {
 	public static final Set<String> setDuplicates = new LinkedHashSet<String>();
 	public static final Set<String> setDsToSkip = new LinkedHashSet<String>();
 
-	public static void main(String[] args) throws IOException, NotFoundException {
-
+	public static void main(String[] args) throws Exception {
+		StopWatch stopWatch = new StopWatch();
+		stopWatch.start();
+		
+		ExperimentNN exp = new ExperimentNN();
 		Set<String> datasets = new LinkedHashSet<String>();
-		//datasets.addAll(getDatasets(new File("dirHDT"), 600));
-		datasets.addAll(getDatasets(new File("dirHDT"), 100));
+		//datasets.addAll(getDatasets(new File("dirHDT"), 100));
+		datasets.addAll(exp.getDatasets(new File("/home/andrevaldestilhas/LODDatasetIndex/dirHDTLaundromat"), -1));
+		//datasets.addAll(getDatasets(new File("hdtTests"), 100));
 		// datasets.add("http://dbpedia.org/sparql");
 		// datasets.add("http://lod2.openlinksw.com/sparql");
 		// datasets.add("https://query.wikidata.org/");
@@ -45,23 +50,20 @@ public class DuplicatesChunks {
 //		datasets.add("b7081efa178bc4ab3ff3a6ef5abac9b2?type.hdt");
 //		datasets.add("c66ff6bbdb8eeac9c17adbe7dfe4efd5?type.hdt");
 
-		// File fOnto = OntologyMatching.generateMatchFile(datasets);
-		long start = System.currentTimeMillis();
 		// generateFileKMeans(datasets);
 		Set<String> clusterCandidates = generateFileArff(datasets);
-		long total = System.currentTimeMillis() - start;
-		// System.out.println("FINISHED in " + TimeUnit.MILLISECONDS.toMinutes(total) +
-		// " minutes");
 
+		stopWatch.stop();
+		System.out.println("Stopwatch time: " + stopWatch);
 		System.out.println("datasets: " + datasets.size());
 		System.out.println("clusterCandidates: " + clusterCandidates.size());
 		System.out.println("Datasets with error: " + dsError.size());
-		System.out.println("FINISHED in " + TimeUnit.MILLISECONDS.toSeconds(total) + " seconds");
 		System.out.println("Datasets\tChunks\tDuplicatesToSkip\tDuplicatesToAdd\tErrors\tTime(s)");
 		System.out.println(datasets.size() + "\t" + clusterCandidates.size() + "\t" + setDsToSkip.size() + "\t"
-				+ setDuplicates.size() + "\t" + dsError.size() + "\t" + TimeUnit.MILLISECONDS.toSeconds(total));
-		// generateFile(setDsToSkip, "duplicates.txt");
+				+ setDuplicates.size() + "\t" + dsError.size() + "\t" + stopWatch.getTime(TimeUnit.SECONDS));
+		generateFile(setDsToSkip, "duplicates.txt");
 		//deleteFiles();
+		
 	}
 
 	/*
@@ -69,7 +71,8 @@ public class DuplicatesChunks {
 	 */
 	private static void separateDuplicates(Set<String> duplicates) throws IOException, NotFoundException {
 		Set<String> setLines = new LinkedHashSet<String>();
-		for (String ds : duplicates) {
+		//for (String ds : duplicates) {
+		duplicates.parallelStream().forEach(ds -> {
 			if (!dsError.contains(ds)) {
 				try {
 					String hMetadata = getMetadataHDT(ds);
@@ -78,10 +81,11 @@ public class DuplicatesChunks {
 					}
 				} catch (Exception e) {
 					System.out.println(e.getMessage());
-					continue;
+					return;
 				}
 			}
-		}
+		});	
+		//}
 		System.out.println("Total Datasets duplicated:" + duplicates.size());
 		System.out.println("Datasets to skip: " + setDsToSkip.size());
 //		System.out.println("Those are the patterns repeated in the header metadata:");
@@ -112,7 +116,7 @@ public class DuplicatesChunks {
 			int count = 0;
 			for (File source : files) {
 				if (source.isFile()) {
-					if (count >= limit)
+					if ((limit != -1) && (count >= limit))
 						break;
 					ret.add(source.getAbsolutePath());
 					count++;
@@ -193,7 +197,7 @@ public class DuplicatesChunks {
 	}
 
 	private static Set<String> generateFileArff(Set<String> datasets) throws IOException, NotFoundException {
-		String fileName = "dense_ClusterKMeans.arff";
+		//String fileName = "dense_ClusterKMeans.arff";
 		String dataset_code_file = "Dataset_code.tsv";
 		String prop_code_file = "Property_code.tsv";
 		String prop_occur_file = "sparse_ClusterKMeans.tsv";
@@ -201,22 +205,19 @@ public class DuplicatesChunks {
 		String fileDuplicates = "duplicates.txt";
 		String sep = ",";
 
-		PrintWriter writer = new PrintWriter(fileName, "UTF-8");
 		final String cSparql = "Select ?p (count(?p) as ?qtd) where {\n" + "?s ?p ?o .\n" + "}\n" + "group by ?p";
-		// final String cSparql = "Select ?s (count(?s) as ?qtd) where {\n" + "?s ?p ?o
-		// .\n" + "}\n" + "group by ?s limit 10000";
-//		final String cSparql = "Select ?p (count(?p) as ?qtd) where {\n" + "?s ?p ?o .\n"
-//				+ "filter(?p=<http://www.aktors.org/ontology/extension#has-authority> || "
-//				+ "?p=<http://purl.org/dc/elements/1.1/description> || "
-//				+ "?p=<http://www.w3.org/2002/07/owl#imports> || "
-//				+ "?p=<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>)}\n" + "group by ?p";
-		System.out.println(cSparql);
-		// loadMaps(dataset_code_file);
-		// loadMaps(prop_code_file);
-		// loadMaps(prop_occur_file);
-		StringBuffer sbDs = new StringBuffer();
-		Set<String> setHeader = new LinkedHashSet<String>();
+
+		final StringBuffer sbDs = new StringBuffer();
+		final Set<String> setHeader = new LinkedHashSet<String>();
+		int totalDs = datasets.size();
+		int count = 0;
+		
+		StopWatch stopWatch = new StopWatch();
+		stopWatch.start();
 		for (String ds : datasets) {
+		//datasets.parallelStream().forEach(ds -> {
+			count++;
+			System.out.println("1Phase Dataset " + count + " from " + totalDs);
 			if (mDsPropOccur.get(ds) == null) {
 				mDsPropOccur.put(ds, execSparql(cSparql, ds));
 				sbDs.append(sep + getCodeDataset(ds));
@@ -224,21 +225,31 @@ public class DuplicatesChunks {
 			for (String prop : mDsPropOccur.get(ds).keySet()) {
 				setHeader.add(getCodeProp(prop));
 			}
+		//});
 		}
 
-		writer.println("@RELATION wimuQ");
-		writer.println("");
-		writer.println("@ATTRIBUTE dataset {" + sbDs.toString().trim().substring(1, sbDs.length()) + "}");
-		for (String header : setHeader) {
-			writer.println("@ATTRIBUTE " + header + " REAL");
-		}
-		writer.println("@DATA");
+		stopWatch.stop();
+		System.out.println("1Phase-Stopwatch time: " + stopWatch);
+//		PrintWriter writer = new PrintWriter(fileName, "UTF-8");
+//		writer.println("@RELATION wimuQ");
+//		writer.println("");
+//		writer.println("@ATTRIBUTE dataset {" + sbDs.toString().trim().substring(1, sbDs.length()) + "}");
+//		for (String header : setHeader) {
+//			writer.println("@ATTRIBUTE " + header + " REAL");
+//		}
+//		writer.println("@DATA");
 
 		Set<String> setLines = new LinkedHashSet<String>();
 		Set<String> setClusterCandidate = new LinkedHashSet<String>();
 		mDsPropOccur.clear();
 		// mPropertyCode.clear();
+		//final Set<Integer> sCount = new LinkedHashSet<Integer>();
+		stopWatch.start();
+		count = 0;
 		for (String ds : datasets) {
+		//datasets.parallelStream().forEach(ds -> {
+			count++;
+			System.out.println("2Phase Dataset " + count + " from " + totalDs);
 			String line = getCodeDataset(ds);
 			String lineComp = "";
 			if (mDsPropOccur.get(ds) == null) {
@@ -261,14 +272,17 @@ public class DuplicatesChunks {
 				line += sep + codeP;
 				lineComp += sep + codeP;
 			}
-			writer.println(line);
+			//writer.println(line);
 			if (setLines.contains(lineComp)) {
 				setClusterCandidate.add(ds);
 			} else {
 				setLines.add(lineComp);
 			}
+		//});
 		}
-		writer.close();
+		//writer.close();
+		stopWatch.stop();
+		System.out.println("2Phase-Stopwatch time: " + stopWatch);
 		generateFile(mDatasetCode, dataset_code_file);
 		generateFile(mPropertyCode, prop_code_file);
 		generateFileMprop(mDsPropOccur, prop_occur_file);
@@ -276,9 +290,9 @@ public class DuplicatesChunks {
 		separateDuplicates(setDuplicates);
 		setClusterCandidate.removeAll(setDuplicates);
 		System.out.println("Datasets with duplicates: " + setDuplicates.size());
-		 generateFile(setClusterCandidate, fileChunks);
+		generateFile(setClusterCandidate, fileChunks);
 		setDuplicates.removeAll(setDsToSkip);
-		 generateFile(setDuplicates, "filesToAdd.txt");
+		generateFile(setDuplicates, "filesToAdd.txt");
 		// plotGraphKNN(fileName);
 		return setClusterCandidate;
 	}
@@ -357,12 +371,14 @@ public class DuplicatesChunks {
 		writer.close();
 	}
 
-	private static void generateFile(Set<String> setCandidates, String fileName) throws IOException {
-
+	private static void generateFile(final Set<String> setCandidates, String fileName) throws IOException {
+		setCandidates.addAll(dsError);
 		PrintWriter writer = new PrintWriter(fileName, "UTF-8");
-		for (String ds : setCandidates) {
+		//for (String ds : setCandidates) {
+		setCandidates.parallelStream().forEach(ds -> {
 			writer.println(ds);
-		}
+		});	
+		//}
 		writer.close();
 	}
 
@@ -399,7 +415,7 @@ public class DuplicatesChunks {
 			sbRet.append("\t" + nProp);
 		} catch (Exception e) {
 			if(!e.getMessage().contains("Adjacency list")) {
-				e.printStackTrace();
+				//e.printStackTrace();
 				//System.gc();
 			}
 		} finally {
