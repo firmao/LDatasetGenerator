@@ -23,7 +23,7 @@ public class IndexCreatorParallel {
 	public static final Map<String, String> mAlreadyCompared = new LinkedHashMap<String, String>();
 	public static final Map<String, Set<String>> mapDatasetProperties = new LinkedHashMap<String, Set<String>>();
 	public static final boolean IN_MEMORY = true;
-	public static final String OUTPUT_DIR = "out_Parallel1";
+	public static final String OUTPUT_DIR = "index_5000";
 	public static Map<String, String> mapDsError = new LinkedHashMap<String, String>();
 
 	public static void main(String[] args) throws Exception {
@@ -37,13 +37,13 @@ public class IndexCreatorParallel {
 
 		ExperimentNN exp = new ExperimentNN();
 		Set<String> ds = new LinkedHashSet<String>();
-//		ds.addAll(exp.getDatasets(new File("/media/andre/Seagate/personalDatasets/"), -1));
+		//ds.addAll(exp.getDatasets(new File("/media/andre/Seagate/personalDatasets/"), -1));
 //		ds.addAll(exp.getDatasets(new File("dirHDT"), -1));
-//		ds.addAll(exp.getDatasets(new File("dirHDTFamous"), -1));
-//		ds.addAll(exp.getDatasets(new File("/media/andre/Seagate/tomcat9_p8082/webapps/ROOT/dirHDTLaundromat/"), -1));
-		ds.addAll(exp.getDatasets(new File("/home/andrevaldestilhas/LODDatasetIndex/dirHDTLaundromat"), -1));
+		//ds.addAll(exp.getDatasets(new File("dirHDTFamous"), -1));
+//		ds.addAll(exp.getDatasets(new File("/media/andre/Seagate/tomcat9_p8082/webapps/ROOT/dirHDTLaundromat/"), 2000));
+		ds.addAll(exp.getDatasets(new File("/home/andrevaldestilhas/LODDatasetIndex/dirHDTLaundromat"), 2000)); //LIMBO server
 //		ds.addAll(exp.getDatasets(new File("dirHDTtests"), -1));
-//		ds.addAll(getEndpoints(new File("endpoints.txt")));
+		ds.addAll(getEndpoints(new File("endpoints.txt")));
 //		Map<String, String> mapQuerySource = getSampleQueries(new File("queryDsInfo.txt"));
 //		ds.addAll(mapQuerySource.keySet());
 
@@ -61,9 +61,7 @@ public class IndexCreatorParallel {
 		final Map<String, Map<String, String>> mapSim = new LinkedHashMap<String, Map<String, String>>();
 
 		// for (String source : mapQuerySource.keySet()) {
-		long totalComparisons = ds.size() * dt.size();
 		System.out.println("Total datasets: " + ds.size());
-		int count = 0;
 		//for (String source : ds) {
 		ds.parallelStream().forEach(source -> {
 			for (String target : dt) {
@@ -77,7 +75,6 @@ public class IndexCreatorParallel {
 					//return;
 				}
 
-				System.out.println("Starting dataset comparison: " + count + " from " + totalComparisons);
 				System.out.println(source + "---" + target);
 				// count++;
 				try {
@@ -88,6 +85,7 @@ public class IndexCreatorParallel {
 				}
 				mAlreadyCompared.put(source, target);
 				mAlreadyCompared.put(target, source);
+				System.out.println("Comparisons already done: " + mAlreadyCompared.size());
 			//});
 			}
 		});
@@ -220,6 +218,9 @@ public class IndexCreatorParallel {
 			String target = str[1].replaceAll("_Exact.txt", "");
 			String s = source.replaceAll("andre_", "");
 			String t = target.replaceAll("andre_", "");
+			//Approach do Edgard aqui.
+			// source = getURIDomainEdgard(source)
+			// target = getURIDomainEdgard(target)
 			if (setAlreadyIncluded.contains(s + "---" + t) || setAlreadyIncluded.contains(t + "---" + s)) {
 				continue;
 			}
@@ -344,7 +345,7 @@ public class IndexCreatorParallel {
 
 	private static Set<String> execSparql(String cSparql, String source) {
 		final Set<String> ret = new LinkedHashSet<String>();
-
+		//Colocar o approach do Claus aqui...
 		try {
 			TimeOutBlock timeoutBlock = new TimeOutBlock(900000); // 15 minutes
 			Runnable block = new Runnable() {

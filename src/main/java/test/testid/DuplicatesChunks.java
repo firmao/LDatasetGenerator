@@ -38,8 +38,9 @@ public class DuplicatesChunks {
 		
 		ExperimentNN exp = new ExperimentNN();
 		Set<String> datasets = new LinkedHashSet<String>();
-		//datasets.addAll(getDatasets(new File("dirHDT"), 100));
-		datasets.addAll(exp.getDatasets(new File("/home/andrevaldestilhas/LODDatasetIndex/dirHDTLaundromat"), -1));
+		//datasets.addAll(getDatasets(new File("dirHDT"), 10));
+		//datasets.addAll(exp.getDatasets(new File("/home/andrevaldestilhas/LODDatasetIndex/dirHDTLaundromat"), -1));
+		datasets.addAll(exp.getDatasets(new File("/media/andre/Seagate/tomcat9_p8082/webapps/ROOT/dirHDTLaundromat/"), 5000));
 		//datasets.addAll(getDatasets(new File("hdtTests"), 100));
 		// datasets.add("http://dbpedia.org/sparql");
 		// datasets.add("http://lod2.openlinksw.com/sparql");
@@ -244,6 +245,7 @@ public class DuplicatesChunks {
 		mDsPropOccur.clear();
 		// mPropertyCode.clear();
 		//final Set<Integer> sCount = new LinkedHashSet<Integer>();
+		stopWatch.reset();
 		stopWatch.start();
 		count = 0;
 		for (String ds : datasets) {
