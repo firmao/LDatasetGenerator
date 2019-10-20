@@ -325,6 +325,10 @@ public class IndexCreatorParallel {
 	}
 
 	private static Set<String> getProps(String source, String fName) {
+		//Colocar o approach do Claus aqui...
+		//instead of execute the SPARQL at the Dataset, we query the Dataset Catalog from Claus to obtain a list of properties and classes.
+		//This should be faster then query the dataset, because there are some datasets/Endpoints extremely slow, more than 3 minutes.
+		//return getPropsClaus(source)
 		String cSparqlP = "Select DISTINCT ?p where {?s ?p ?o}";
 		String cSparqlC = "select distinct ?p where {[] a ?p}";
 		Set<String> ret = new LinkedHashSet<String>();
@@ -345,7 +349,6 @@ public class IndexCreatorParallel {
 
 	private static Set<String> execSparql(String cSparql, String source) {
 		final Set<String> ret = new LinkedHashSet<String>();
-		//Colocar o approach do Claus aqui...
 		try {
 			TimeOutBlock timeoutBlock = new TimeOutBlock(900000); // 15 minutes
 			Runnable block = new Runnable() {
