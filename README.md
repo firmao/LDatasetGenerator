@@ -6,7 +6,7 @@ DOCUMENTATION AND THE CODE ARE NOT COMPLETE YET, STILL REFACTORING AND FINISHING
 ## Web Interface to query the index (Proof of concept)
 https://github.com/firmao/LODDatasetRelationsWeb
 
-<img src="http://139.18.13.76:8082/queryIndex.png">
+<img src="http://141.57.11.86:8082/queryIndex.png">
 
 ## Including: 
 An approach for automatic dataset matching.
@@ -50,4 +50,4 @@ Clone the repository and don't forget to put on the classpath all jar files from
 - Class to identify datasets duplicated and chunks.
 - https://github.com/firmao/LDatasetGenerator/blob/master/src/main/java/test/testid/DuplicatesChunks.java
 
-<img src="http://139.18.13.76:8082/createIndex.png">
+<img src="http://141.57.11.86:8082/createIndex.png">
