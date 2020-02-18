@@ -1,0 +1,5 @@
+http://crime.rkbexplorer.com/sparql/
+http://141.57.11.86:8082/dirHDTLaundromat/decompressed/bd/bdb6b0953b51e3f7271c42ebed473ab0/bdb6b0953b51e3f7271c42ebed473ab0.hdt
+http://141.57.11.86:8082/dirHDTLaundromat/decompressed/b9/b9798208ca9e2c14ff28530c0d269390/b9798208ca9e2c14ff28530c0d269390.hdt
+http://141.57.11.86:8082/dirHDTLaundromat/decompressed/db/db7d5748553cdf09e48ef83c3255888b/db7d5748553cdf09e48ef83c3255888b.hdt
+http://141.57.11.86:8082/dirHDTLaundromat/decompressed/f3/f33415a6eee922ea226d0d7649c52bc3/f33415a6eee922ea226d0d7649c52bc3.hdt
