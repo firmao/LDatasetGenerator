@@ -1,0 +1,44 @@
+-----Query 1:
+-----Dataset (wimuQ) + results: 
+
+
+Datasets ReLOD:
+-----Relevant Datasets from ReLOD + extra results:
+
+*********************************
+-----Query 2: SELECT DISTINCT  ?s ?p WHERE { <http://dbpedia.org/ontology/City> ?s ?p }
+-----Dataset (wimuQ) + results: http://gaia.infor.uva.es/hdt/dbpedia2015.hdt.gz
+| <http://www.w3.org/2000/01/rdf-schema#comment>     | "un asentamiento permanente y relativamente grande, especialmente un gran asentamiento urbano"@es                                                    |
+| <http://www.w3.org/2000/01/rdf-schema#label>       | "cidade"@gl                                                                                                                                          |                                                                                                                                               |
+| <http://www.w3.org/2000/01/rdf-schema#label>       | "città"@it                                                                                                                                           |
+| <http://www.w3.org/2000/01/rdf-schema#label>       | "miasto"@pl                                                                                                                                          |
+| <http://www.w3.org/2000/01/rdf-schema#comment>     | "Actualmente considérase como unha entidade urbana con alta densidade de poboación na que predominan fundamentalmente a industria e os servizos."@gl |
+| <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  | <http://www.w3.org/2002/07/owl#Class>                                                                                                                |
+| <http://www.w3.org/2002/07/owl#equivalentClass>    | <http://www.wikidata.org/entity/Q515>                                                                                                                |
+| <http://www.w3.org/2007/05/powder-s#describedby>   | <http://dbpedia.org/ontology/data/definitions.ttl>                                                                                                   |
+| <http://www.w3.org/2000/01/rdf-schema#isDefinedBy> | <http://dbpedia.org/ontology/>                                                                                                                       |
+| <http://www.w3.org/ns/prov#wasDerivedFrom>         | <http://mappings.dbpedia.org/index.php/OntologyClass:City>                                                                                           |
+| <http://www.w3.org/2000/01/rdf-schema#label>       | "cidade"@pt                                                                                                                                          |
+| <http://www.w3.org/2000/01/rdf-schema#label>       | "ciudad"@es                                                                                                                                          |
+| <http://www.w3.org/2000/01/rdf-schema#label>       | "ville"@fr                                                                                                                                           |
+| <http://www.w3.org/2000/01/rdf-schema#label>       | "| <http://www.w3.org/2000/01/rdf-schema#subClassOf>  | <http://umbel.org/umbel/rc/City>                                                                                                                     |
+| <http://www.w3.org/2000/01/rdf-schema#comment>     | "a relatively large and permanent settlement, particularly a large urban settlement"@en                                                              |
+| <http://www.w3.org/2000/01/rdf-schema#label>       | "Stadt"@de                                                                                                                                           |
+| <http://www.w3.org/2000/01/rdf-schema#subClassOf>  | <http://dbpedia.org/ontology/Settlement>                                                                                                             |
+| <http://www.w3.org/2000/01/rdf-schema#label>       | "| <http://www.w3.org/2000/01/rdf-schema#label>       | "city"@en                                                                                                                                            |
+| <http://www.w3.org/2000/01/rdf-schema#label>       | "=============================================================================================================================================================================================================
+| <http://www.w3.org/2000/01/rdf-schema#label>       | "stad"@nl                                                                                                                                            |
+| <http://www.w3.org/2000/01/rdf-schema#label>       | "cathair"@ga                                                                                                                                         |
+| <http://www.w3.org/2002/07/owl#equivalentClass>    | <http://schema.org/City>         
+
+Datasets ReLOD:
+-----Relevant Datasets from ReLOD + extra results: http://km.aifb.kit.edu/projects/btc-2009/btc-2009-chunk-021.gz
+http://www.semanticdesktop.org/ontologies/2007/01/19/nie#mimeType "application/xhtml+xml"
+http://www.semanticdesktop.org/ontologies/2007/01/19/nie#title "About: City" 
+http://www.w3.org/1999/02/22-rdf-syntax-ns#type http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#HtmlDocument>            
+***********************************
+
+-----Comments on ReLOD:
+Query by SPARQL query.                                                                                       
+
+ 
