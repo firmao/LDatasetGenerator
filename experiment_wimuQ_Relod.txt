@@ -1,8 +1,9 @@
 #1
 --Query(All wikiPageWikiLink from dbr:Leipzig): SELECT DISTINCT  ?p ?o WHERE { <http://dbpedia.org/resource/Leipzig> <http://dbpedia.org/ontology/wikiPageWikiLink> ?o }
 wimuQ: 
---Datasets:  http://downloads.dbpedia.org/2016-10/core-i18n/en/infobox_properties_en.ttl.bz2, http://141.57.11.86:8082/dirHDTLaundromat/decompressed/0b/0b02ffc7e6f645ad5e91b330bf4e0431/0b02ffc7e6f645ad5e91b330bf4e0431.hdt
---Results (#467):
+--Datasets:  http://downloads.dbpedia.org/2016-10/core-i18n/en/infobox_properties_en.ttl.bz2, http://141.57.11.86:8082/dirHDTLaundromat/decompressed/0b/0b02ffc7e6f645ad5e91b330bf4e0431/0b02ffc7e6f645ad5e91b330bf4e0431.hdt, https://api.krr.triply.cc/datasets/krr/lod-a-lot/fragments
+
+--Results (#1584):
 |   | <http://dbpedia.org/resource/Bachfest_Leipzig>                                                                            |
 |   | <http://dbpedia.org/resource/Wilhelm_Souchon>                                                                             |
 |   | <http://dbpedia.org/resource/Deutscher_Wetterdienst>                                                                      |
