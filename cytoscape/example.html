@@ -1,0 +1,106 @@
+<html lang="en">
+<title>Cytoscape ShaclGui</title>
+<style>
+#cy {
+  width: 400px;
+  height: 300px;
+  display: block;
+  background-color: #fff;
+}
+</style>
+<script>
+  window.console = window.console || function(t) {};
+</script>
+<script>
+  if (document.location.search.match(/type=embed/gi)) {
+    window.parent.postMessage("resize", "*");
+  }
+</script>
+</head>
+<body translate="no">
+<div id="cy"></div>
+<script src="https://static.codepen.io/assets/common/stopExecutionOnTimeout-157cd5b220a5c80d4ff8e0e70ac069bffd87a61252088146915e8726e5d9f147.js"></script>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.9.4/cytoscape.min.js'></script>
+<script id="rendered-js">
+let cy = cytoscape({
+
+  container: document.getElementById('cy'), // container to render in
+
+  elements: [],
+
+  style: [// the stylesheet for the graph
+  {
+    selector: 'node',
+    style: {
+      'background-color': '#69e',
+      'label': 'data(id)' } },
+  {
+    selector: 'edge',
+    style: {
+      'width': 1,
+      'line-color': '#369',
+      'target-arrow-color': '#369',
+      'target-arrow-shape': 'triangle',
+      'label': 'data(label)',
+      'font-size': '14px',
+      'color': '#777' } }],
+
+  style: cytoscape.stylesheet().
+  selector('edge').
+  css({
+    'width': 3,
+    'line-color': '#369',
+    'target-arrow-color': '#369',
+    'target-arrow-shape': 'triangle',
+    'label': 'data(label)',
+    'font-size': '14px',
+    'color': '#777' }).
+
+  selector('node').
+  css({
+    'content': 'data(id)',
+    'text-valign': 'center',
+    'color': 'white',
+    'text-outline-width': 2,
+    'text-outline-color': '#888',
+    'background-color': '#888' }).
+
+  selector(':selected').
+  css({
+    'background-color': 'black',
+    'line-color': 'black',
+    'target-arrow-color': 'black',
+    'source-arrow-color': 'black',
+    'text-outline-color': 'black' }),
+
+
+  layout: {
+    name: 'grid',
+    rows: 1 } });
+
+cy.add([
+{ group: 'nodes', data: { id: 'dbpedia', name: 'n11' }, position: { x: 50, y: 200 } },
+{ group: 'nodes', data: { id: 'yago', name: 'n2' }, position: { x: 131, y: 226 } },
+{ group: 'nodes', data: { id: 'geonames', name: 'n3' }, position: { x: 128, y: 143 } },
+{ group: 'nodes', data: { id: 'dblp', name: 'n4' }, position: { x: 249, y: 142 } },
+{ group: 'nodes', data: { id: 'linkedgeodata', name: 'n5' }, position: { x: 191, y: 62 } },
+{ group: 'nodes', data: { id: 'swdf', name: 'n6' }, position: { x: 66, y: 83 } },
+
+{ group: 'edges', data: { id: 'e0', source: 'dbpedia', target: 'yago', label: 6 } },
+{ group: 'edges', data: { id: 'e1', source: 'yago', target: 'geonames', label: 1 } },
+{ group: 'edges', data: { id: 'e2', source: 'dbpedia', target: 'swdf', label: 22 } },
+{ group: 'edges', data: { id: 'e3', source: 'dbpedia', target: 'geonames', label: 4 } },
+{ group: 'edges', data: { id: 'e4', source: 'yago', target: 'dblp', label: 5 } },
+{ group: 'edges', data: { id: 'e5', source: 'geonames', target: 'dblp', label: 3 } },
+{ group: 'edges', data: { id: 'e6', source: 'geonames', target: 'swdf', label: 6 } },
+{ group: 'edges', data: { id: 'e7', source: 'swdf', target: 'linkedgeodata', label: 6 } },
+{ group: 'edges', data: { id: 'e8', source: 'linkedgeodata', target: 'dblp', label: 3 } }]);
+
+cy.on('click', 'node', function (evt) {
+  var node = evt.target;
+  console.clear();
+  console.log(node.position());
+});
+    </script>
+</body>
+</html>
