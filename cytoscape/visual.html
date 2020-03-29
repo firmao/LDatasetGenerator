@@ -1,0 +1,70 @@
+<html lang="en">
+<title>Andre First Try</title>
+<head>
+<title></title>
+<script
+	src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.9.4/cytoscape.min.js"></script>
+<script
+	src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+</head>
+
+<style>
+#cy {
+  width: 800px;
+  height: 600px;
+  display: block;
+  background-color: #fff;
+}
+</style>
+
+<body>
+	<div id="cy">
+		
+	</div>
+	<script>
+		var cy = null;
+		var d1 = null;
+		$.getJSON("cyto.json", function(data) {
+			d1 = data;
+			//console.log(data);
+			cy = cytoscape({
+				container : document.getElementById('cy'),
+				elements : data,
+				style : [ {
+					selector : 'node',
+					style : {
+						'label' : 'data(label)',
+						'width' : '60px',
+						'height' : '60px',
+						'color' : 'blue',
+						'background-fit' : 'contain',
+						'background-clip' : 'none'
+					}
+				}, {
+					selector : 'edge',
+					style : {
+						'label' : 'data(label)',
+						'text-background-color' : 'yellow',
+						'text-background-opacity' : 0.4,
+						'width' : '6px',
+						'target-arrow-shape' : 'triangle',
+						'control-point-step-size' : '140px'
+					}
+				} ],
+				layout : {
+					name : 'circle'
+				},
+			});
+			cy.on('click', 'node', function(evt) {
+				var node = evt.target;
+				console.clear();
+				console.log(node.position());
+				console.log(node.id());
+			});
+		});
+
+
+	</script>
+</body>
+</html>
+
