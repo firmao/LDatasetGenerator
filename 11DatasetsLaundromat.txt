@@ -12,6 +12,8 @@ D9:	021642e37183517f9692904e0281db53.hdt
 D10:	028d00d01fcd0d5154c4ef6753002e5d.hdt	
 D11:	02d1f5a880110df519eee0fa9dd62281.hdt	
 
+Chunks: D2, D3, D4, D5, D9, D10, D11
+
 Datasets: 11	
 Chunks: 7
 class: DuplicatesChunks.java
