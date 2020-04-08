@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Examples</title>
+</head>
+<body>
+	<h1>Examples</h1>
+	<p>
+		<span style="color: #0000ff;"><span style="color: #000000;">An
+				example of how useful is this index can be the following: Given the
+				following SPARQL query that works on CKAN SPARQL endpoint <a
+				href="https://linked.opendata.cz/sparql" target="_blank"
+				rel="noopener">https://linked.opendata.cz/sparql</a>:
+		</span><br />
+		<br />
+		<span style="background-color: #ccffff; color: #000000;">Select
+				* where { ?s ?p ?o.</span><br />
+		<span style="background-color: #ccffff; color: #000000;">&nbsp;
+				&nbsp; Filter(?s=&lt;<a
+				style="background-color: #ccffff; color: #000000;"
+				href="http://purl.org/dc/terms/date" target="_blank" rel="noopener">http://purl.org/dc/terms/date</a>&gt;
+				||
+		</span><br />
+		<span style="background-color: #ccffff; color: #000000;">&nbsp;
+				&nbsp; ?s=&lt;<a style="background-color: #ccffff; color: #000000;"
+				href="http://crime.rkbexplorer.com/id/location" target="_blank"
+				rel="noopener">http://crime.rkbexplorer.com/id/location</a>&gt; ||
+		</span><br />
+		<span style="background-color: #ccffff; color: #000000;">&nbsp;
+				&nbsp; ?s=&lt;<a style="background-color: #ccffff; color: #000000;"
+				href="http://purl.org/dc/terms/subject" target="_blank"
+				rel="noopener">http://purl.org/dc/terms/subject</a>&gt;
+		</span><br />
+		<span style="background-color: #ccffff; color: #000000;">)}</span><br />
+		<br />
+		<span style="color: #000000;">Thanks to the index we are able
+				to know that we can also execute the query at <a
+				href="https://eu.dbpedia.org/sparql" target="_blank" rel="noopener">https://eu.dbpedia.org/sparql</a>
+				but not at <a href="http://dbpedia.org/sparql" target="_blank"
+				rel="noopener">http://dbpedia.org/sparql</a>, and we can execute at
+				least in more 5 datasets also complementing the results.
+		</span></span>
+	</p>
+<p><strong>Datasets</strong>:</p>
+<ul>
+<li>Sparql endpoints:
+<ul>
+<li><a href="http://query.wikidata.org/sparql">http://query.wikidata.org/sparql</a></li>
+<li><a href="http://linked.opendata.cz/sparql">http://linked.opendata.cz/sparql</a></li>
+<li><a href="http://eu.dbpedia.org/sparql">http://eu.dbpedia.org/sparql</a></li>
+<li><a href="http://es.dbpedia.org/sparql">http://es.dbpedia.org/sparql</a></li>
+<li><a href="http://eventmedia.eurecom.fr/sparql">http://eventmedia.eurecom.fr/sparql</a></li>
+</ul>
+</li>
+<li>HDT files from LOD Laundromat:
+<ul>
+<li><a href="http://139.18.13.76:8082/dirHDTLaundromat/decompressed/44/449ffaddb6023ae27686a0b416447677/">449ffaddb6023ae27686a0b416447677.hdt</a></li>
+<li><a href="http://139.18.13.76:8082/dirHDTLaundromat/decompressed/76/7682278f9dd608f09c4c073a915e58a1/">7682278f9dd608f09c4c073a915e58a1.hdt</a></li>
+<li><a href="http://139.18.13.76:8082/dirHDTLaundromat/decompressed/62/62f1f8087724003a0d5cec3bfd00f5c5/">62f1f8087724003a0d5cec3bfd00f5c5.hdt</a></li>
+<li><a href="http://139.18.13.76:8082/dirHDTLaundromat/decompressed/0f/0fb5cc2fb77fcd6c187ef3b4856f7813/">0fb5cc2fb77fcd6c187ef3b4856f7813.hdt</a></li>
+<li><a href="http://139.18.13.76:8082/dirHDTLaundromat/decompressed/2d/2d08f44861fc6eb7c0bf70ed42c7dcb9/">2d08f44861fc6eb7c0bf70ed42c7dcb9.hdt</a></li>
+</ul>
+</li>
+</ul>
+<p><strong>Properties or classes</strong>:</p>
+<ul>
+<li>Set of properties/classes separated by comma ",":
+<ul>
+<li>http://purl.org/dc/terms/date,http://crime.rkbexplorer.com/id/location,http://purl.org/dc/terms/subject</li>
+</ul>
+</li>
+<li>Exact Match:
+<ul>
+<li><a href="http://purl.org/dc/terms/date">http://purl.org/dc/terms/date</a></li>
+<li><a href="http://purl.org/dc/terms/subject">http://purl.org/dc/terms/subject</a></li>
+</ul>
+</li>
+<li>Similar Match:
+<ul>
+<li><a href="http://crime.rkbexplorer.com/id/location">http://crime.rkbexplorer.com/id/location</a></li>
+<li><a href="http://swrc.ontoware.org/ontology#location">http://swrc.ontoware.org/ontology#location</a></li>
+<li><a href="http://www.w3.org/2003/01/geo/wgs84_pos#location">http://www.w3.org/2003/01/geo/wgs84_pos#location</a></li>
+</ul>
+</li>
+</ul>
+<h3>Filtering datasets by class:</h3>
+<p><span style="color: #ff0000;"><strong>Note</strong></span>: Here we consider class also as a concept or type of entity.</p>
+<p>For instance, if you want all the datasets containing a given class.</p>
+<p><strong>Example</strong>: All datasets containing information about the class <a href="http://dbpedia.org/ontology/City" target="_blank" rel="noopener"><strong>city</strong></a> that are similar to <a href="http://dbpedia.org/sparql" target="_blank" rel="noopener"><strong>DBpedia</strong></a> dataset.</p>
+<p>You just need to provide the URI of the required class/concept/type, in this case, the input will be:</p>
+<p><a href="http://dbpedia.org/ontology/City">http://dbpedia.org/ontology/City</a></p>
+<p>In this way is possible to know all datasets about&nbsp;<a href="http://dbpedia.org/ontology/City" target="_blank" rel="noopener"><strong>city</strong></a> from LOD cloud.</p>
+<p>More examples with classes:</p>
+<ul>
+<li>TBA</li>
+<li>TBA</li>
+</ul>
+<p>&nbsp;</p>
+<p><strong>SPARQL query</strong>:</p>
+<ul>
+<li>Select * where { ?s ?p ?o.<br />&nbsp; &nbsp; Filter(?s=&lt;<a href="http://purl.org/dc/terms/date" target="_blank" rel="noopener">http://purl.org/dc/terms/date</a>&gt; ||&nbsp;<br />&nbsp; &nbsp; ?s=&lt;<a href="http://crime.rkbexplorer.com/id/location" target="_blank" rel="noopener">http://crime.rkbexplorer.com/id/location</a>&gt; ||&nbsp;<br />&nbsp; &nbsp; ?s=&lt;<a href="http://purl.org/dc/terms/subject" target="_blank" rel="noopener">http://purl.org/dc/terms/subject</a>&gt;&nbsp;<br />)}</li>
+<li>Select ?s ?p ?o where {?s &lt;<a href="http://purl.org/dc/terms/date">http://purl.org/dc/terms/date</a>&gt; ?o}</li>
+</ul>
+	<h2>Work still in progress...</h2>
+</body>
+</html>
