@@ -1,13 +1,16 @@
 package web.servlet.matching;
 
+import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
 public class Tests {
 
-	public static void main(String[] args) {
-		testGetEdges();
+	public static void main(String[] args) throws IOException {
+		String cSPARQL = "Select * where {?s ?p ?o} limit 10";
+		String source = "http://141.57.11.86:8082/dirHDTLaundromat/decompressed/76/7682278f9dd608f09c4c073a915e58a1/7682278f9dd608f09c4c073a915e58a1.hdt";
+		System.out.println("OUT: " + Util.execQueryHDTRes(cSPARQL, source, -1));
 	}
 
 	public static void testGetEdges() {

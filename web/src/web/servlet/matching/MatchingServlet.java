@@ -4,10 +4,8 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -25,15 +23,6 @@ import org.rdfhdt.hdt.hdt.HDTManager;
 import org.rdfhdt.hdt.header.Header;
 import org.rdfhdt.hdt.triples.IteratorTripleString;
 import org.rdfhdt.hdt.triples.TripleString;
-
-import com.hp.hpl.jena.query.Query;
-import com.hp.hpl.jena.query.QueryFactory;
-import com.hp.hpl.jena.query.QuerySolution;
-import com.hp.hpl.jena.query.ResultSet;
-import com.hp.hpl.jena.query.ResultSetFormatter;
-import com.hp.hpl.jena.sparql.engine.http.QueryEngineHTTP;
-
-import web.servlet.matching.wikidata.WikidataQuery;
 
 /**
  * Servlet implementation class MatchingServlet
@@ -56,9 +45,11 @@ public class MatchingServlet extends HttpServlet {
 	 */
 	protected void doGet(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
-		// TODO Auto-generated method stub
-		// response.getWriter().append("Served at: ").append(request.getContextPath());
-		if (request.getParameter("query") != null) {
+		/*if(request.getParameter("hdtinsert") != null) {
+			String data = request.getParameter("hdtinsert").trim();
+			String retInsert = insertHDT(data);
+			response.getOutputStream().println(retInsert);
+		} else*/ if (request.getParameter("query") != null) {
 			Set<String> ret = new LinkedHashSet<String>();
 			Set<String> dsService = new HashSet<String>();
 			String dataset = request.getParameter("query").trim();
@@ -175,14 +166,16 @@ public class MatchingServlet extends HttpServlet {
 								ds = ds.replaceAll("_exact.txt", "");
 								double score = getScore(dataset, ds, s[1]);
 								// if (score > 0.04) {
-								datasets.add(ds + ";" + score);
+								
 								// }
-								if (bService) {
-									dsService.add(getDsLink(ds) + "\n");
-								} else {
-									ds = getLinkHref(s[0]);
-									bRet.append("<tr>\n" + "    <td>" + ds + "</td>\n" + "    <td>" + s[1] + "</td>\n"
-											+ "    <td>" + s[2] + "</td>\n" + "  </tr>");
+								if (datasets.add(ds + ";" + score) && (!dataset.replaceAll("_", "/").equalsIgnoreCase(ds))) {
+									if (bService) {
+										dsService.add(getDsLink(ds) + "\n");
+									} else {
+										ds = getLinkHref(s[0]);
+										bRet.append("<tr>\n" + "    <td>" + ds + "</td>\n" + "    <td>" + s[1] + "</td>\n"
+												+ "<td>" + s[2] + "</td>\n" + "<td><button onclick=alert('Shared Properties:????')>details</button></td>\n" + "</tr>");
+									}
 								}
 
 							}
@@ -208,6 +201,7 @@ public class MatchingServlet extends HttpServlet {
 				}
 				request.getSession().setAttribute("edges", mapEdges);
 				// ret.forEach(response.getWriter()::println);
+				request.getSession().setAttribute("origQuery", origQuery);
 				if (bService) {
 					response.getOutputStream().println(dsService.toString());
 				} else {
