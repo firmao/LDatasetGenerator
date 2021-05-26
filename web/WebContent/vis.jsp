@@ -1,3 +1,4 @@
+<%@page import="web.servlet.matching.DatabaseMain"%>
 <%@page import="java.util.Map.Entry"%>
 <%@page import="java.util.LinkedHashMap"%>
 <%@page import="java.util.Map"%>
@@ -17,6 +18,8 @@
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/fetch/2.0.3/fetch.min.js"></script>
 	<script src="https://unpkg.com/cytoscape/dist/cytoscape.min.js"></script>
 	<script src="https://unpkg.com/weaverjs@1.2.0/dist/weaver.min.js"></script>
+	<script src="https://unpkg.com/webcola/WebCola/cola.min.js"></script>
+	<script src="cytoscape-cola.js"></script>
 
 	<style>
 		body {
@@ -47,7 +50,7 @@
 
 				layout: {
 					/*name: 'spread',*/
-					name: 'circle'
+					name: 'cola'
 				},
 
 				style: [
@@ -57,9 +60,7 @@
 							'label' : 'data(label)',
 							'background-color': '#ea8a31'
 						}
-					},
-
-					{
+					}, {
 						selector: 'edge',
 						style: {
 							'label' : 'data(label)',
@@ -69,11 +70,24 @@
 							'opacity': 0.666,
 							'line-color': '#fcc694'
 						}
+					}, {
+						selector: 'node[type="query"]',
+						style: {
+							'shape': 'triangle',
+							'background-color': 'red',
+							'label' : 'data(label)',
+							'width' : '120px',
+							'height' : '120px',
+							'color' : 'blue',
+							'background-fit' : 'contain',
+							'background-clip' : 'none'
+						}
 					}
 				],
 				elements: {
 					"nodes": [
 						<%
+						String query = (String)session.getAttribute("origQuery");
 						Set<String> setNodes = new LinkedHashSet<String>();
 						setNodes.addAll((Set)session.getAttribute("datasets"));
 						StringBuffer sbNodes = new StringBuffer();
@@ -81,10 +95,39 @@
 							if(ds == null) continue;
 							String s[] = ds.split(";");
 							if(s == null) continue;
+							String nodeName = null;
 							if(s.length > 0){
-								sbNodes.append("{ \"data\": {\"id\": \""+s[0]+"\", \"label\": \""+s[0]+"\"}},\n");
+								nodeName = s[0];
 							} else{
-								sbNodes.append("{ \"data\": {\"id\": \""+ds+"\", \"label\": \""+ds+"\"}},\n");
+								nodeName = ds;
+							}
+							
+							if(query.toLowerCase().contains("select")){
+								Set<String> setQuery = DatabaseMain.extractProperties(query);
+								for (String sDs : setQuery) {
+									if(nodeName.toLowerCase().contains(sDs.toLowerCase())){
+										sbNodes.append("{ \"data\": {\"id\": \""+nodeName+"\", \"label\": \""+nodeName+"\", \"type\": \"query\"}},\n");									
+									} else {
+										sbNodes.append("{ \"data\": {\"id\": \""+nodeName+"\", \"label\": \""+nodeName+"\"}},\n");									
+									}
+								}
+							} else if(query.indexOf(",") > 0){
+								String sDs[] = query.split(",");
+								for(int i=0; i<sDs.length; i++){
+									if(nodeName.toLowerCase().contains(sDs[i].toLowerCase())){
+										sbNodes.append("{ \"data\": {\"id\": \""+nodeName+"\", \"label\": \""+nodeName+"\", \"type\": \"query\"}},\n");									
+									} else {
+										sbNodes.append("{ \"data\": {\"id\": \""+nodeName+"\", \"label\": \""+nodeName+"\"}},\n");									
+									}
+								}
+							} else {
+								query = query.toLowerCase().replaceAll("http://", "");
+								query = query.toLowerCase().replaceAll("https://", "");
+								if(nodeName.toLowerCase().contains(query)){
+									sbNodes.append("{ \"data\": {\"id\": \""+nodeName+"\", \"label\": \""+nodeName+"\", \"type\": \"query\"}},\n");									
+								} else {
+									sbNodes.append("{ \"data\": {\"id\": \""+nodeName+"\", \"label\": \""+nodeName+"\"}},\n");									
+								}
 							}
 						}
 						String nodes = sbNodes.toString();

@@ -12,12 +12,15 @@
 		var q = null;
 		if ( idx == 0 ) {
 			q = "http://query.wikidata.org/sparql";
+			document.getElementById("dataset").checked = true;
 		}
 		else if ( idx == 1 ) {
 			q = "http://purl.org/dc/terms/date,http://crime.rkbexplorer.com/id/location,http://purl.org/dc/terms/subject";
+			document.getElementById("properties").checked = true;
 		}
 		else if ( idx == 2 ) {
 			q = "Select ?s ?p ?o where {?s <http://purl.org/dc/terms/date> ?o}";
+			document.getElementById("sparql").checked = true;
 		}
 		else if ( idx == 3 ) {
 			q = "SELECT DISTINCT ?s ?p	WHERE { <http://mpii.de/yago/resource/The_Last_Ninja> ?s ?p }";
@@ -34,6 +37,7 @@
 		else if ( idx == 7 ) {
 			q = "SELECT DISTINCT ?s ?p	WHERE { <http://citeseer.rkbexplorer.com/id/resource-CS116606> ?s ?p }";
 		}
+		
 		if ( q != null ) {
 			document.getElementById("queryForm").query.value = q;
 		}
@@ -66,9 +70,12 @@
 		<p>The <strong>output</strong> is divided into <strong>2 types</strong>: (<strong>1</strong>) <strong>Exact matches</strong>, where is represented JSON format, containing the property and the datasets where the property was found (<strong>2</strong>) A table containing the <strong>similar matches</strong>, with properties and dataset indicating the <strong>Source and Target</strong>.&nbsp;</p>
 	</p>
 	<div style="margin-left:5%">
-			Examples:
+			<p>
+				<strong>NEW (May 2021) - </strong><a href="http://141.57.11.86:8083/dSimilarity/index.jsp">Compare your own datasets/endpoints (Takes more time because is new comparison, not indexed)</a>
+			</p>
+			<br/> Examples:
 			<ol style="margin-top:0px">
-				<li><a href="javascript:selectQuery(0);">Dataset</a></li>
+				<li><a href="javascript:selectQuery(0);">Dataset</a>(Compare 1 Dataset to all datasets)</li>
 				<li><a href="javascript:selectQuery(1);">Set of properties or classes
 				(URIs) separated by comma ","</a></li>
 				<li><a href="javascript:selectQuery(2);">SPARQL query</a></li>
@@ -82,11 +89,11 @@
 			Preferred Result Format:
 			<input type="radio" name="output" value="json" checked="checked"/> JSON
 			<br/>
-			<input type="radio" name="opt" value="dataset"/> Search by the dataset name
+			<input type="radio" id="dataset" name="opt" value="dataset"/> Search by the dataset name
 			<br/>
-			<input type="radio" name="opt" value="properties"/> Search by property/class
+			<input type="radio" id="properties" name="opt" value="properties"/> Search by property/class
 			<br/>
-			<input type="radio" name="opt" value="sparql"/> Search by SPARQL query
+			<input type="radio" id="sparql" name="opt" value="sparql"/> Search by SPARQL query
 			<br/>
 	 		<input type="submit" value="Execute" />
 		</fieldset>
