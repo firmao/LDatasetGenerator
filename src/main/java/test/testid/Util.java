@@ -1,4 +1,4 @@
-package test.testid;
+package web.servlet.matching;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -56,8 +56,6 @@ import org.apache.jena.riot.system.StreamRDF;
 import org.apache.jena.shared.PrefixMapping;
 import org.apache.jena.sparql.core.Prologue;
 import org.apache.jena.sparql.core.Quad;
-import org.rauschig.jarchivelib.Archiver;
-import org.rauschig.jarchivelib.ArchiverFactory;
 import org.rdfhdt.hdt.hdt.HDT;
 import org.rdfhdt.hdt.hdt.HDTManager;
 import org.rdfhdt.hdt.header.Header;
@@ -65,6 +63,8 @@ import org.rdfhdt.hdt.triples.IteratorTripleString;
 import org.rdfhdt.hdt.triples.TripleString;
 import org.rdfhdt.hdtjena.HDTGraph;
 import org.tukaani.xz.XZInputStream;
+
+import web.servlet.matching.wikidata.WikidataQuery;
 
 public class Util {
 
@@ -395,17 +395,12 @@ public class Util {
 		for (String url : resources) {
 
 			try {
-				TimeOutBlock timeoutBlock = new TimeOutBlock(60000); // 1 minute
-				Runnable block = new Runnable() {
-					public void run() {
-						if (!isGoodURL(url)) {
-							ret.add(url);
-						}
-					}
-				};
-				timeoutBlock.addBlock(block);// execute the runnable block
-			} catch (Throwable e) {
-				System.out.println("TIME-OUT-ERROR - verifying URL: " + url);
+
+				if (!isGoodURL(url)) {
+					ret.add(url);
+				}
+			} catch (Exception e) {
+				System.out.println("ERROR - verifying URL: " + url);
 			}
 
 		}
@@ -531,14 +526,11 @@ public class Util {
 			}
 			long total = System.currentTimeMillis() - start;
 			System.out.println("Time to query dataset: " + total + "ms");
-			// file.delete();
+			file.delete();
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
 
-		if (ret.size() > 0) {
-			Main.goodSources.add(dataset);
-		}
 
 		return ret;
 	}
@@ -570,7 +562,7 @@ public class Util {
 				return execQueryHDTRes(cSparql, file.getAbsolutePath());
 			}
 
-			//long start = System.currentTimeMillis();
+			// long start = System.currentTimeMillis();
 			org.apache.jena.rdf.model.Model model = org.apache.jena.rdf.model.ModelFactory.createDefaultModel();
 			org.apache.jena.sparql.engine.QueryExecutionBase qe = null;
 			org.apache.jena.query.ResultSet resultSet = null;
@@ -612,28 +604,27 @@ public class Util {
 				for (org.apache.jena.query.QuerySolution qSolution : lQuerySolution) {
 					String prop = qSolution.get("p").toString();
 					Integer qtd = qSolution.get("qtd").asLiteral().getInt();
-					
+
 					ret.put(prop, qtd);
 				}
 			}
-			//long total = System.currentTimeMillis() - start;
-			//System.out.println("Time to query dataset: " + total + "ms");
+			// long total = System.currentTimeMillis() - start;
+			// System.out.println("Time to query dataset: " + total + "ms");
 			// file.delete();
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
 
-		
 		return ret;
 	}
-	
+
 	private static Map<String, Integer> execQueryHDTRes(String cSparql, String dataset) throws IOException {
-		final Map<String, Integer>  ret = new HashMap<String, Integer> ();
+		final Map<String, Integer> ret = new HashMap<String, Integer>();
 		File file = null;
 		HDT hdt = null;
 		try {
 			System.out.println("Dataset: " + dataset);
-			//long start = System.currentTimeMillis();
+			// long start = System.currentTimeMillis();
 			if (dataset.startsWith("http")) {
 				URL url = new URL(dataset);
 				file = new File(Util.getURLFileName(url));
@@ -664,7 +655,7 @@ public class Util {
 			for (org.apache.jena.query.QuerySolution qSolution : lQuerySolution) {
 				String prop = qSolution.get("p").toString();
 				Integer qtd = qSolution.get("qtd").asLiteral().getInt();
-				
+
 				ret.put(prop, qtd);
 			}
 
@@ -673,17 +664,16 @@ public class Util {
 			qe.close();
 		} catch (Exception e) {
 			System.out.println("FAIL: " + dataset + " Error: " + e.getMessage());
-			DuplicatesChunks.dsError.add(dataset);
 		} finally {
 			// file.delete();
 			if (hdt != null) {
 				hdt.close();
 			}
 		}
-		
+
 		return ret;
 	}
-	
+
 	public static Set<String> execQueryHDTRes(String cSparql, String dataset, int maxEntities) throws IOException {
 		final Set<String> ret = new HashSet<String>();
 		File file = null;
@@ -706,18 +696,6 @@ public class Util {
 //				return ret;
 //			}
 			hdt = HDTManager.mapHDT(file.getAbsolutePath(), null);
-			if (SparqlMatching.mapDsNumTriples.get(dataset) == null) {
-				Header header = hdt.getHeader();
-				IteratorTripleString it = header.search("", "http://rdfs.org/ns/void#triples", "");
-				String numberTriples = null;
-				while (it.hasNext()) {
-					TripleString ts = it.next();
-					numberTriples = ts.getObject().toString();
-				}
-				long numTriples = Long.parseLong(numberTriples.trim().replaceAll("\"", ""));
-				SparqlMatching.mapDsNumTriples.put(dataset, numTriples);
-				System.out.println("Dataset: " + dataset + "\nTriples: " + numberTriples);
-			}
 
 			HDTGraph graph = new HDTGraph(hdt);
 			Model model = new ModelCom(graph);
@@ -756,9 +734,6 @@ public class Util {
 			}
 		}
 
-		if (ret.size() > 0) {
-			Main.goodSources.add(dataset);
-		}
 
 		return ret;
 	}
@@ -815,9 +790,6 @@ public class Util {
 		long seconds = TimeUnit.MILLISECONDS.toSeconds(total);
 		System.out.println("Time to get all resources(seconds): " + seconds);
 
-		if (ret.size() > 0) {
-			Main.goodSources.add(endPoint);
-		}
 		return ret;
 	}
 
@@ -863,9 +835,6 @@ public class Util {
 		long seconds = TimeUnit.MILLISECONDS.toSeconds(total);
 		System.out.println("Time to get all resources(seconds): " + seconds);
 
-		if (ret.size() > 0) {
-			Main.goodSources.add(endPoint);
-		}
 		return ret;
 	}
 
@@ -878,7 +847,7 @@ public class Util {
 			String sSparql = cSparql;
 			int indOffset = cSparql.toLowerCase().indexOf("offset");
 			int indLimit = cSparql.toLowerCase().indexOf("limit");
-			if((indLimit < 0) && (indOffset < 0)) {
+			if ((indLimit < 0) && (indOffset < 0)) {
 				sSparql = cSparql += " offset " + offset + " limit " + offsetSize;
 			}
 			Query query = QueryFactory.create(cSparql);
@@ -890,11 +859,11 @@ public class Util {
 				for (QuerySolution qSolution : lst) {
 					String prop = qSolution.get("p").toString();
 					Integer qtd = qSolution.get("qtd").asLiteral().getInt();
-					
+
 					ret.put(prop, qtd);
 				}
-				
-				if((indLimit > 0) || (indOffset > 0)) {
+
+				if ((indLimit > 0) || (indOffset > 0)) {
 					break;
 				}
 			} catch (Exception e) {
@@ -903,13 +872,13 @@ public class Util {
 			} finally {
 				qexec.close();
 			}
-			//System.out.print(offset);
+			// System.out.print(offset);
 			offset += offsetSize;
 		} while (true);
-		
+
 		return ret;
 	}
-	
+
 	public static String getMax(Map<String, Integer> mBestDs) {
 		int max = 0;
 		String ds = null;
@@ -923,43 +892,7 @@ public class Util {
 		return ds;
 	}
 
-	public static void generateStatistics(List<String> lstDs, String fileName)
-			throws FileNotFoundException, UnsupportedEncodingException {
-		Set<String> datasets = new HashSet<String>(lstDs);
-		String cSparql = "Select ?date where{\n" + "?s <http://purl.org/dc/terms/modified> ?date\n"
-				+ "} order by DESC(?date) limit 1";
-		Map<String, String> mDsTimeStamp = new HashMap<String, String>();
-		Set<String> ret = new HashSet<String>();
-		PrintWriter writer = new PrintWriter(fileName, "UTF-8");
-
-		for (String source : datasets) {
-			// lstSources.parallelStream().forEach( source -> {
-			try {
-				TimeOutBlock timeoutBlock = new TimeOutBlock(300000); // 3 minutes
-				Runnable block = new Runnable() {
-					public void run() {
-
-						if (Util.isEndPoint(source)) {
-							// ret.addAll(execQueryEndPoint(cSparql, source));
-							ret.addAll(Util.execQueryEndPoint(cSparql, source, true, -1));
-						} else {
-							ret.addAll(Util.execQueryRDFRes(cSparql, source, -1));
-						}
-						for (String timeStamp : ret) {
-							mDsTimeStamp.put(source, timeStamp);
-							writer.println(source + "\t" + timeStamp);
-						}
-						ret.clear();
-					}
-				};
-				timeoutBlock.addBlock(block);// execute the runnable block
-			} catch (Throwable e) {
-				System.out.println("TIME-OUT-ERROR - dataset/source: " + source);
-			}
-		}
-		writer.close();
-		System.out.println("File Generated: " + fileName);
-	}
+	
 
 	public static boolean isGreaterDate(String timeStamp, String previous) {
 		boolean bRet = false;
