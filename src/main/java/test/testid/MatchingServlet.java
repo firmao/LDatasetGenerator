@@ -3,6 +3,7 @@ package web.servlet.matching;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -172,9 +173,11 @@ public class MatchingServlet extends HttpServlet {
 									if (bService) {
 										dsService.add(getDsLink(ds) + "\n");
 									} else {
-										ds = getLinkHref(s[0]);
+										String myDs = getDsLink(dataset.replaceAll("_", "/"));
+										String myDt = getDsLink(s[0]);
+										String nDatasets = URLEncoder.encode(myDs + ", " + myDt, "UTF-8");
 										bRet.append("<tr>\n" + "    <td>" + ds + "</td>\n" + "    <td>" + s[1] + "</td>\n"
-												+ "<td>" + s[2] + "</td>\n" + "<td><button onclick=alert('Shared Properties:????')>details</button></td>\n" + "</tr>");
+												+ "<td>" + s[2] + "</td>\n" + "<td><a id=\"myLink\" href=\"http://141.57.11.86:8083/dSimilarity/SimilarityServlet?datasets="+nDatasets+"&opt=exact&simlevel=0.9&rdf=rdf\" target=\"_blank\">Details</a></td>\n" + "</tr>");
 									}
 								}
 
