@@ -1,0 +1,541 @@
+{
+  "_comment": "Empty ontology for WebVOWL Editor [Additional Information added by WebVOWL Exporter Version: 1.1.7]",
+  "header": {
+    "languages": [
+      "en"
+    ],
+    "baseIris": [
+      "http://www.w3.org/2000/01/rdf-schema"
+    ],
+    "iri": "http://w3id.org/relod/relodOntology/",
+    "title": "ReLOD ontology",
+    "description": "Ontology for Dataset Similarity index ReLOD",
+    "version": "1.0",
+    "author": "Andre Valdestilhas"
+  },
+  "namespace": [],
+  "settings": {
+    "global": {
+      "zoom": "0.56",
+      "translation": [
+        402.42,
+        256.53
+      ],
+      "paused": false
+    },
+    "gravity": {
+      "classDistance": 200,
+      "datatypeDistance": 120
+    },
+    "filter": {
+      "checkBox": [
+        {
+          "id": "datatypeFilterCheckbox",
+          "checked": false
+        },
+        {
+          "id": "objectPropertyFilterCheckbox",
+          "checked": false
+        },
+        {
+          "id": "subclassFilterCheckbox",
+          "checked": false
+        },
+        {
+          "id": "disjointFilterCheckbox",
+          "checked": true
+        },
+        {
+          "id": "setoperatorFilterCheckbox",
+          "checked": false
+        }
+      ],
+      "degreeSliderValue": "0"
+    },
+    "modes": {
+      "checkBox": [
+        {
+          "id": "pickandpinModuleCheckbox",
+          "checked": false
+        },
+        {
+          "id": "nodescalingModuleCheckbox",
+          "checked": true
+        },
+        {
+          "id": "compactnotationModuleCheckbox",
+          "checked": false
+        },
+        {
+          "id": "colorexternalsModuleCheckbox",
+          "checked": true
+        }
+      ],
+      "colorSwitchState": false
+    }
+  },
+  "class": [
+    {
+      "id": "Class1",
+      "type": "owl:Class"
+    },
+    {
+      "id": "Class3",
+      "type": "owl:Class"
+    },
+    {
+      "id": "Class4",
+      "type": "owl:Class"
+    },
+    {
+      "id": "Class6",
+      "type": "owl:Class"
+    },
+    {
+      "id": "NodeId8",
+      "type": "rdfs:Datatype"
+    },
+    {
+      "id": "NodeId9",
+      "type": "rdfs:Datatype"
+    },
+    {
+      "id": "Class10",
+      "type": "owl:Class"
+    },
+    {
+      "id": "NodeId11",
+      "type": "rdfs:Datatype"
+    },
+    {
+      "id": "Class13",
+      "type": "owl:Class"
+    },
+    {
+      "id": "NodeId14",
+      "type": "rdfs:Datatype"
+    },
+    {
+      "id": "NodeId15",
+      "type": "rdfs:Datatype"
+    },
+    {
+      "id": "NodeId16",
+      "type": "rdfs:Datatype"
+    },
+    {
+      "id": "Class17",
+      "type": "owl:Class"
+    }
+  ],
+  "classAttribute": [
+    {
+      "id": "Class1",
+      "iri": "http://w3id.org/relod/relodOntology/DatasetMatch",
+      "baseIri": "http://visualdataweb.org/newOntology/",
+      "label": "DatasetMatch",
+      "pos": [
+        543.23,
+        345.66
+      ]
+    },
+    {
+      "id": "Class3",
+      "iri": "http://w3id.org/relod/relodOntology/PropSim",
+      "baseIri": "http://visualdataweb.org/newOntology/",
+      "label": "PropSim",
+      "pos": [
+        827.47,
+        -161.42
+      ]
+    },
+    {
+      "id": "Class4",
+      "iri": "http://w3id.org/relod/relodOntology/Dataset",
+      "baseIri": "http://visualdataweb.org/newOntology/",
+      "label": "Source",
+      "pos": [
+        870.97,
+        221.8
+      ]
+    },
+    {
+      "id": "Class6",
+      "iri": "http://w3id.org/relod/relodOntology/Target",
+      "baseIri": "http://visualdataweb.org/newOntology/",
+      "label": "Target",
+      "pos": [
+        938.45,
+        157.45
+      ]
+    },
+    {
+      "id": "NodeId8",
+      "iri": "http://www.w3.org/2001/XMLSchema#integer",
+      "baseIri": "http://www.w3.org/2001/XMLSchema#",
+      "label": "integer",
+      "attributes": [
+        "datatype"
+      ],
+      "pos": [
+        291.92,
+        341.09
+      ]
+    },
+    {
+      "id": "NodeId9",
+      "iri": "http://www.w3.org/2001/XMLSchema#integer",
+      "baseIri": "http://www.w3.org/2001/XMLSchema#",
+      "label": "integer",
+      "attributes": [
+        "datatype"
+      ],
+      "pos": [
+        361.38,
+        545.24
+      ]
+    },
+    {
+      "id": "Class10",
+      "iri": "http://w3id.org/relod/relodOntology/DatasetRelod",
+      "baseIri": "http://visualdataweb.org/newOntology/",
+      "label": "Dataset",
+      "pos": [
+        848.94,
+        581.92
+      ]
+    },
+    {
+      "id": "NodeId11",
+      "iri": "http://www.w3.org/2001/XMLSchema#integer",
+      "baseIri": "http://www.w3.org/2001/XMLSchema#",
+      "label": "integer",
+      "attributes": [
+        "datatype"
+      ],
+      "pos": [
+        709.68,
+        809.98
+      ]
+    },
+    {
+      "id": "Class13",
+      "iri": "http://w3id.org/relod/relodOntology/Property",
+      "baseIri": "http://visualdataweb.org/newOntology/",
+      "label": "Property",
+      "pos": [
+        1159.16,
+        769.17
+      ]
+    },
+    {
+      "id": "NodeId14",
+      "iri": "http://www.w3.org/2001/XMLSchema#integer",
+      "baseIri": "http://www.w3.org/2001/XMLSchema#",
+      "label": "integer",
+      "attributes": [
+        "datatype"
+      ],
+      "pos": [
+        1240.7,
+        994.07
+      ]
+    },
+    {
+      "id": "NodeId15",
+      "iri": "http://www.w3.org/2001/XMLSchema#string",
+      "baseIri": "http://www.w3.org/2001/XMLSchema#",
+      "label": "string",
+      "pos": [
+        766.5,
+        -397.16
+      ]
+    },
+    {
+      "id": "NodeId16",
+      "iri": "http://www.w3.org/2001/XMLSchema#string",
+      "baseIri": "http://www.w3.org/2001/XMLSchema#",
+      "label": "string",
+      "pos": [
+        580.99,
+        -196.46
+      ]
+    },
+    {
+      "id": "Class17",
+      "iri": "http://w3id.org/relod/relodOntology/PropExact",
+      "baseIri": "http://visualdataweb.org/newOntology/",
+      "label": "PropExact",
+      "pos": [
+        1207.18,
+        401.45
+      ]
+    }
+  ],
+  "property": [
+    {
+      "id": "objectProperty8",
+      "type": "owl:ObjectProperty"
+    },
+    {
+      "id": "objectProperty10",
+      "type": "owl:ObjectProperty"
+    },
+    {
+      "id": "datatypeProperty11",
+      "type": "owl:DatatypeProperty"
+    },
+    {
+      "id": "datatypeProperty12",
+      "type": "owl:DatatypeProperty"
+    },
+    {
+      "id": "datatypeProperty13",
+      "type": "owl:DatatypeProperty"
+    },
+    {
+      "id": "datatypeProperty15",
+      "type": "owl:DatatypeProperty"
+    },
+    {
+      "id": "objectProperty16",
+      "type": "owl:ObjectProperty"
+    },
+    {
+      "id": "objectProperty18",
+      "type": "rdfs:subClassOf"
+    },
+    {
+      "id": "objectProperty19",
+      "type": "rdfs:subClassOf"
+    },
+    {
+      "id": "datatypeProperty23",
+      "type": "owl:DatatypeProperty"
+    },
+    {
+      "id": "datatypeProperty24",
+      "type": "owl:DatatypeProperty"
+    },
+    {
+      "id": "objectProperty25",
+      "type": "owl:ObjectProperty"
+    },
+    {
+      "id": "objectProperty26",
+      "type": "owl:ObjectProperty"
+    },
+    {
+      "id": "objectProperty27",
+      "type": "owl:ObjectProperty"
+    },
+    {
+      "id": "objectProperty28",
+      "type": "owl:ObjectProperty"
+    },
+    {
+      "id": "objectProperty29",
+      "type": "owl:ObjectProperty"
+    }
+  ],
+  "propertyAttribute": [
+    {
+      "id": "objectProperty8",
+      "iri": "http://visualdataweb.org/newOntology/DatasetSource",
+      "baseIri": "http://visualdataweb.org/newOntology/",
+      "label": "contains",
+      "domain": "Class1",
+      "range": "Class4",
+      "pos": [
+        707.1,
+        283.73
+      ]
+    },
+    {
+      "id": "objectProperty10",
+      "iri": "http://visualdataweb.org/newOntology/contains",
+      "baseIri": "http://visualdataweb.org/newOntology/",
+      "label": "contains",
+      "domain": "Class1",
+      "range": "Class6",
+      "pos": [
+        740.84,
+        251.56
+      ]
+    },
+    {
+      "id": "datatypeProperty11",
+      "iri": "http://w3id.org/relod/relodOntology/NumExact",
+      "baseIri": "http://visualdataweb.org/newOntology/",
+      "label": "NumExact",
+      "domain": "Class1",
+      "range": "NodeId8",
+      "pos": [
+        406.83,
+        343.18
+      ]
+    },
+    {
+      "id": "datatypeProperty12",
+      "iri": "http://w3id.org/relod/relodOntology/numSim",
+      "baseIri": "http://visualdataweb.org/newOntology/",
+      "label": "numSim",
+      "domain": "Class1",
+      "range": "NodeId9",
+      "pos": [
+        440.02,
+        458.93
+      ]
+    },
+    {
+      "id": "datatypeProperty13",
+      "iri": "http://w3id.org/relod/relodOntology/numProperties",
+      "baseIri": "http://visualdataweb.org/newOntology/",
+      "label": "numProperties",
+      "domain": "Class10",
+      "range": "NodeId11",
+      "pos": [
+        769.33,
+        712.28
+      ]
+    },
+    {
+      "id": "datatypeProperty15",
+      "iri": "http://w3id.org/relod/relodOntology/nameURI",
+      "baseIri": "http://visualdataweb.org/newOntology/",
+      "label": "nameURI",
+      "domain": "Class13",
+      "range": "NodeId14",
+      "pos": [
+        1206.64,
+        900.12
+      ]
+    },
+    {
+      "id": "objectProperty16",
+      "iri": "http://visualdataweb.org/newOntology/contains",
+      "baseIri": "http://visualdataweb.org/newOntology/",
+      "label": "contain",
+      "domain": "Class13",
+      "range": "Class10",
+      "pos": [
+        1004.05,
+        675.54
+      ]
+    },
+    {
+      "id": "objectProperty18",
+      "iri": "http://visualdataweb.org/newOntology/objectProperty18",
+      "baseIri": "http://visualdataweb.org/newOntology/",
+      "label": "Subclass of",
+      "domain": "Class4",
+      "range": "Class10",
+      "pos": [
+        859.96,
+        401.86
+      ]
+    },
+    {
+      "id": "objectProperty19",
+      "iri": "http://visualdataweb.org/newOntology/objectProperty19",
+      "baseIri": "http://visualdataweb.org/newOntology/",
+      "label": "Subclass of",
+      "domain": "Class6",
+      "range": "Class10",
+      "pos": [
+        893.69,
+        369.69
+      ]
+    },
+    {
+      "id": "datatypeProperty23",
+      "iri": "http://w3id.org/relod/relodOntology/propS",
+      "baseIri": "http://visualdataweb.org/newOntology/",
+      "label": "propS",
+      "domain": "Class3",
+      "range": "NodeId15",
+      "pos": [
+        792.02,
+        -298.49
+      ]
+    },
+    {
+      "id": "datatypeProperty24",
+      "iri": "http://w3id.org/relod/relodOntology/propT",
+      "baseIri": "http://visualdataweb.org/newOntology/",
+      "label": "propT",
+      "domain": "Class3",
+      "range": "NodeId16",
+      "pos": [
+        691.73,
+        -180.72
+      ]
+    },
+    {
+      "id": "objectProperty25",
+      "iri": "http://visualdataweb.org/newOntology/contains",
+      "baseIri": "http://visualdataweb.org/newOntology/",
+      "label": "contains",
+      "attributes": [
+        "object"
+      ],
+      "domain": "Class3",
+      "range": "Class6",
+      "pos": [
+        882.96,
+        -1.98
+      ]
+    },
+    {
+      "id": "objectProperty26",
+      "iri": "http://visualdataweb.org/newOntology/contains",
+      "baseIri": "http://visualdataweb.org/newOntology/",
+      "label": "contains",
+      "domain": "Class3",
+      "range": "Class4",
+      "pos": [
+        849.22,
+        30.19
+      ]
+    },
+    {
+      "id": "objectProperty27",
+      "iri": "http://visualdataweb.org/newOntology/contains",
+      "baseIri": "http://visualdataweb.org/newOntology/",
+      "label": "contains",
+      "attributes": [
+        "object"
+      ],
+      "domain": "Class17",
+      "range": "Class13",
+      "pos": [
+        1183.17,
+        585.31
+      ]
+    },
+    {
+      "id": "objectProperty28",
+      "iri": "http://w3id.org/relod/relodOntology/contains",
+      "baseIri": "http://visualdataweb.org/newOntology/",
+      "label": "contains",
+      "domain": "Class17",
+      "range": "Class4",
+      "pos": [
+        1039.07,
+        311.62
+      ]
+    },
+    {
+      "id": "objectProperty29",
+      "iri": "http://visualdataweb.org/newOntology/contains",
+      "baseIri": "http://visualdataweb.org/newOntology/",
+      "label": "contains",
+      "domain": "Class17",
+      "range": "Class6",
+      "pos": [
+        1072.81,
+        279.45
+      ]
+    }
+  ]
+}
