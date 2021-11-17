@@ -17,13 +17,17 @@ import java.util.Set;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.text.similarity.JaccardSimilarity;
+import org.rdfhdt.hdt.hdt.HDT;
+import org.rdfhdt.hdt.hdt.HDTManager;
+import org.rdfhdt.hdt.triples.IteratorTripleString;
+import org.rdfhdt.hdt.triples.TripleString;
 
 public class IndexCreatorParallel {
 
 	public static final Map<String, String> mAlreadyCompared = new LinkedHashMap<String, String>();
 	public static final Map<String, Set<String>> mapDatasetProperties = new LinkedHashMap<String, Set<String>>();
 	public static final boolean IN_MEMORY = true;
-	public static final String OUTPUT_DIR = "index_5000";
+	public static final String OUTPUT_DIR = "index_onto";
 	public static Map<String, String> mapDsError = new LinkedHashMap<String, String>();
 
 	public static void main(String[] args) throws Exception {
@@ -37,13 +41,18 @@ public class IndexCreatorParallel {
 
 		ExperimentNN exp = new ExperimentNN();
 		Set<String> ds = new LinkedHashSet<String>();
-		//ds.addAll(exp.getDatasets(new File("/media/andre/Seagate/personalDatasets/"), -1));
-//		ds.addAll(exp.getDatasets(new File("dirHDT"), -1));
-		//ds.addAll(exp.getDatasets(new File("dirHDTFamous"), -1));
-//		ds.addAll(exp.getDatasets(new File("/media/andre/Seagate/tomcat9_p8082/webapps/ROOT/dirHDTLaundromat/"), 2000));
-		ds.addAll(exp.getDatasets(new File("/home/andrevaldestilhas/LODDatasetIndex/dirHDTLaundromat"), 2000)); //LIMBO server
+		ds.addAll(exp.getDatasets(new File("/media/andre/DATA/SemanticMaterials/ontologies/exp1/"), -1));
+		// ds.addAll(exp.getDatasets(new File("/media/andre/Seagate/personalDatasets/"),
+		// -1));
+		// ds.addAll(exp.getDatasets(new File("dirHDT"), 20));
+//		ds.addAll(exp.getDatasets(new File("dirHDTFamous"), -1));
+//		ds.addAll(exp.getDatasets(new File("dirHDT20paper"), -1)); // famous + 10 from http://s001.adaptcentre.ie/lod/hdtdumps/
+		// ds.addAll(exp.getDatasets(new
+		// File("/media/andre/Seagate/tomcat9_p8082/webapps/ROOT/dirHDTLaundromat/"),
+		// 2000));
+//		ds.addAll(exp.getDatasets(new File("/home/andrevaldestilhas/LODDatasetIndex/dirHDTLaundromat"), 2000)); //LIMBO server
 //		ds.addAll(exp.getDatasets(new File("dirHDTtests"), -1));
-		ds.addAll(getEndpoints(new File("endpoints.txt")));
+		// ds.addAll(getEndpoints(new File("endpoints.txt")));
 //		Map<String, String> mapQuerySource = getSampleQueries(new File("queryDsInfo.txt"));
 //		ds.addAll(mapQuerySource.keySet());
 
@@ -62,17 +71,17 @@ public class IndexCreatorParallel {
 
 		// for (String source : mapQuerySource.keySet()) {
 		System.out.println("Total datasets: " + ds.size());
-		//for (String source : ds) {
-		ds.parallelStream().forEach(source -> {
+		for (String source : ds) {
+			// ds.parallelStream().forEach(source -> {
 			for (String target : dt) {
-			//dt.parallelStream().forEach(target -> {
+				// dt.parallelStream().forEach(target -> {
 				if (source.equals(target)) {
 					continue;
-					//return;
+					// return;
 				}
 				if (alreadyCompared(source, target)) {
 					continue;
-					//return;
+					// return;
 				}
 
 				System.out.println(source + "---" + target);
@@ -86,10 +95,10 @@ public class IndexCreatorParallel {
 				mAlreadyCompared.put(source, target);
 				mAlreadyCompared.put(target, source);
 				System.out.println("Comparisons already done: " + mAlreadyCompared.size());
-			//});
+				// });
 			}
-		});
-		//}
+			// });
+		}
 		String sFile = OUTPUT_DIR + "/tableMatches.tsv";
 		System.out.println("Printing file: " + sFile);
 		printMap(mapExactMatch, mapSim, sFile);
@@ -107,10 +116,10 @@ public class IndexCreatorParallel {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
+
 		return new LinkedHashSet<String>(lstLines);
 	}
-	
+
 	private static void printGoodDs(Set<String> ds) throws FileNotFoundException, UnsupportedEncodingException {
 		System.out.println("JUST TESTING DATASETS");
 		String cSparql = "SELECT ?s WHERE { ?s a <http://dbpedia.org/ontology/City> }";
@@ -181,23 +190,70 @@ public class IndexCreatorParallel {
 
 		// PrintWriter writer = new PrintWriter(fileName, "UTF-8");
 		JaccardSimilarity sim = new JaccardSimilarity();
-		propsSource.parallelStream().forEach(pSource -> {
-		//for(String pSource : propsSource) {
+		// propsSource.parallelStream().forEach(pSource -> {
+		for (String pSource : propsSource) {
 			propsTarget.parallelStream().forEach(pTarget -> {
-			//for(String pTarget : propsTarget) {
+				// for(String pTarget : propsTarget) {
 				String p1 = Util.getURLName(pSource);
 				String p2 = Util.getURLName(pTarget);
 				double dSim = sim.apply(p1, p2);
 				if (dSim >= threshold) {
-					propsMatched.put(pSource, pTarget);
+					if (isSameDataTypeInstance(source, pSource, target, pTarget)) {
+						propsMatched.put(pSource, pTarget);
+					}
+				} else if (dSim > 0.5) {
+					if (isSameDataTypeInstance(source, pSource, target, pTarget)) {
+						propsMatched.put(pSource, pTarget);
+					}
 				}
 			});
-			//}	
-		});
-		//}
+			// }
+			// });
+		}
 		mapSim.put(fileName, propsMatched);
 		// writer.close();
 		return mapSim;
+	}
+
+	/*
+	 * Comparing the data type of the instance
+	 */
+	private static boolean isSameDataTypeInstance(String ds, String pSource, String dt, String pTarget) {
+		String dTypeS = null;
+		String dTypeT = null;
+		if (ds.endsWith(".hdt")) {
+			try {
+				System.out.println(ds);
+				HDT hdt = HDTManager.loadHDT(ds, null);
+
+				// Search pattern: Empty string means "any"
+				IteratorTripleString it = hdt.search("", pSource, "");
+				while (it.hasNext()) {
+					TripleString ts = it.next();
+					String obj = ts.getObject().toString();
+					dTypeS = obj.substring(obj.indexOf("^^<http")+3).replace(">", "");
+					System.out.println(dTypeS);
+					if(dTypeS.length() > 6) break;
+				}
+				System.out.println(dt);
+				hdt = HDTManager.loadHDT(dt, null);
+				// Search pattern: Empty string means "any"
+				it = hdt.search("", pTarget, "");
+				while (it.hasNext()) {
+					TripleString ts = it.next();
+					String obj = ts.getObject().toString();
+					dTypeT = obj.substring(obj.indexOf("^^<http")+3).replace(">", "");
+					System.out.println(dTypeT);
+					if(dTypeT.length() > 6) break;
+				}
+				hdt.close();
+				hdt = null;
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+
+		return dTypeS.trim().equalsIgnoreCase(dTypeT.trim());
 	}
 
 	private static void printMap(Map<String, Set<String>> mapExactMatch, Map<String, Map<String, String>> mapSim,
@@ -218,7 +274,7 @@ public class IndexCreatorParallel {
 			String target = str[1].replaceAll("_Exact.txt", "");
 			String s = source.replaceAll("andre_", "");
 			String t = target.replaceAll("andre_", "");
-			//Approach do Edgard aqui.
+			// Approach do Edgard aqui.
 			// source = getURIDomainEdgard(source)
 			// target = getURIDomainEdgard(target)
 			if (setAlreadyIncluded.contains(s + "---" + t) || setAlreadyIncluded.contains(t + "---" + s)) {
@@ -325,10 +381,12 @@ public class IndexCreatorParallel {
 	}
 
 	private static Set<String> getProps(String source, String fName) {
-		//Colocar o approach do Claus aqui...
-		//instead of execute the SPARQL at the Dataset, we query the Dataset Catalog from Claus to obtain a list of properties and classes.
-		//This should be faster then query the dataset, because there are some datasets/Endpoints extremely slow, more than 3 minutes.
-		//return getPropsClaus(source)
+		// Put Claus approach here...
+		// instead of execute the SPARQL at the Dataset, we query the Dataset Catalog
+		// from Claus to obtain a list of properties and classes.
+		// This should be faster then query the dataset, because there are some
+		// datasets/Endpoints extremely slow, more than 3 minutes.
+		// return getPropsClaus(source)
 		String cSparqlP = "Select DISTINCT ?p where {?s ?p ?o}";
 		String cSparqlC = "select distinct ?p where {[] a ?p}";
 		Set<String> ret = new LinkedHashSet<String>();
