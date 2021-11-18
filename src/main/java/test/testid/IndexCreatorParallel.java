@@ -71,17 +71,17 @@ public class IndexCreatorParallel {
 
 		// for (String source : mapQuerySource.keySet()) {
 		System.out.println("Total datasets: " + ds.size());
-		for (String source : ds) {
-			// ds.parallelStream().forEach(source -> {
-			for (String target : dt) {
-				// dt.parallelStream().forEach(target -> {
+		// for (String source : ds) {
+		ds.parallelStream().forEach(source -> {
+			// for (String target : dt) {
+			dt.parallelStream().forEach(target -> {
 				if (source.equals(target)) {
-					continue;
-					// return;
+					// continue;
+					return;
 				}
 				if (alreadyCompared(source, target)) {
-					continue;
-					// return;
+					// continue;
+					return;
 				}
 
 				System.out.println(source + "---" + target);
@@ -95,10 +95,10 @@ public class IndexCreatorParallel {
 				mAlreadyCompared.put(source, target);
 				mAlreadyCompared.put(target, source);
 				System.out.println("Comparisons already done: " + mAlreadyCompared.size());
-				// });
-			}
-			// });
-		}
+			});
+			// }
+		});
+		// }
 		String sFile = OUTPUT_DIR + "/tableMatches.tsv";
 		System.out.println("Printing file: " + sFile);
 		printMap(mapExactMatch, mapSim, sFile);
@@ -113,6 +113,7 @@ public class IndexCreatorParallel {
 		try {
 			lstLines = Files.readAllLines(Paths.get(file));
 		} catch (IOException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
@@ -189,8 +190,8 @@ public class IndexCreatorParallel {
 
 		// PrintWriter writer = new PrintWriter(fileName, "UTF-8");
 		JaccardSimilarity sim = new JaccardSimilarity();
-		// propsSource.parallelStream().forEach(pSource -> {
-		for (String pSource : propsSource) {
+		propsSource.parallelStream().forEach(pSource -> {
+			// for (String pSource : propsSource) {
 			// propsTarget.parallelStream().forEach(pTarget -> {
 			for (String pTarget : propsTarget) {
 				String p1 = Util.getURLName(pSource);
@@ -207,8 +208,8 @@ public class IndexCreatorParallel {
 				}
 				// });
 			}
-			// });
-		}
+		});
+		// }
 		mapSim.put(fileName, propsMatched);
 		// writer.close();
 		return mapSim;
