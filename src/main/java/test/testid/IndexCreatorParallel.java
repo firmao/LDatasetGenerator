@@ -192,8 +192,8 @@ public class IndexCreatorParallel {
 		JaccardSimilarity sim = new JaccardSimilarity();
 		// propsSource.parallelStream().forEach(pSource -> {
 		for (String pSource : propsSource) {
-			propsTarget.parallelStream().forEach(pTarget -> {
-				// for(String pTarget : propsTarget) {
+			// propsTarget.parallelStream().forEach(pTarget -> {
+			for (String pTarget : propsTarget) {
 				String p1 = Util.getURLName(pSource);
 				String p2 = Util.getURLName(pTarget);
 				double dSim = sim.apply(p1, p2);
@@ -201,13 +201,13 @@ public class IndexCreatorParallel {
 					if (isSameDataTypeInstance(source, pSource, target, pTarget)) {
 						propsMatched.put(pSource, pTarget);
 					}
-				} else if (dSim > 0.5) {
+				} else if (dSim >= 0.5) {
 					if (isSameDataTypeInstance(source, pSource, target, pTarget)) {
 						propsMatched.put(pSource, pTarget);
 					}
 				}
-			});
-			// }
+				// });
+			}
 			// });
 		}
 		mapSim.put(fileName, propsMatched);
@@ -221,30 +221,34 @@ public class IndexCreatorParallel {
 	private static boolean isSameDataTypeInstance(String ds, String pSource, String dt, String pTarget) {
 		String dTypeS = null;
 		String dTypeT = null;
+		String objS = null;
+		String objT = null;
 		if (ds.endsWith(".hdt")) {
 			try {
-				System.out.println(ds);
 				HDT hdt = HDTManager.loadHDT(ds, null);
-
-				// Search pattern: Empty string means "any"
 				IteratorTripleString it = hdt.search("", pSource, "");
 				while (it.hasNext()) {
 					TripleString ts = it.next();
 					String obj = ts.getObject().toString();
-					dTypeS = obj.substring(obj.indexOf("^^<http")+3).replace(">", "");
-					System.out.println(dTypeS);
-					if(dTypeS.length() > 6) break;
+					if (obj.indexOf("^^<http") > 0) {
+						dTypeS = obj.substring(obj.indexOf("^^<http") + 3).replace(">", "");
+					} else {
+						objS = obj;
+					}
+					break;
 				}
 				System.out.println(dt);
 				hdt = HDTManager.loadHDT(dt, null);
-				// Search pattern: Empty string means "any"
 				it = hdt.search("", pTarget, "");
 				while (it.hasNext()) {
 					TripleString ts = it.next();
 					String obj = ts.getObject().toString();
-					dTypeT = obj.substring(obj.indexOf("^^<http")+3).replace(">", "");
-					System.out.println(dTypeT);
-					if(dTypeT.length() > 6) break;
+					if (obj.indexOf("^^<http") > 0) {
+						dTypeT = obj.substring(obj.indexOf("^^<http") + 3).replace(">", "");
+					} else {
+						objT = obj;
+					}
+					break;
 				}
 				hdt.close();
 				hdt = null;
@@ -253,7 +257,13 @@ public class IndexCreatorParallel {
 			}
 		}
 
-		return dTypeS.trim().equalsIgnoreCase(dTypeT.trim());
+		if (objS != null || objT != null) {
+			JaccardSimilarity sim = new JaccardSimilarity();
+			double dSim = sim.apply(objS, objT);
+			return (dSim > 0.6);
+		} else {
+			return dTypeS.trim().equalsIgnoreCase(dTypeT.trim());
+		}
 	}
 
 	private static void printMap(Map<String, Set<String>> mapExactMatch, Map<String, Map<String, String>> mapSim,
