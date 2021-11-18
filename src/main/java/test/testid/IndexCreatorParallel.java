@@ -113,7 +113,6 @@ public class IndexCreatorParallel {
 		try {
 			lstLines = Files.readAllLines(Paths.get(file));
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
