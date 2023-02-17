@@ -1,0 +1,115 @@
+#################################################################
+###  Generated with the experimental alpha version of the TTL exporter of WebVOWL (version 1.1.7)  http://visualdataweb.de/webvowl/   ###
+#################################################################
+
+@prefix : 		<http://w3id.org/relod/relodOntology/> .
+@prefix rdf: 		<http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: 		<http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: 		<http://www.w3.org/2002/07/owl#> .
+@prefix xsd: 		<http://www.w3.org/2001/XMLSchema#> .
+@prefix dc: 		<http://purl.org/dc/elements/1.1/#> .
+@prefix xml: 		<http://www.w3.org/XML/1998/namespace> .
+@base 			<http://w3id.org/relod/relodOntology/> .
+
+<http://w3id.org/relod/relodOntology/> rdf:type owl:Ontology ;
+                                       dc:title "ReLOD ontology"@en;
+                                       dc:description "Ontology for Dataset Similarity index ReLOD"@en;
+                                       owl:versionInfo "1.0"@en;
+                                       dc:creator "Andre Valdestilhas" . 
+#################################################################
+
+###  Property Definitions (Number of Property) 14 ###
+#  --------------------------- Property 0------------------------- 
+<http://visualdataweb.org/newOntology/DatasetSource> rdf:type owl:ObjectProperty ;
+                                                     rdfs:label "contains"@en; 
+                                                     rdfs:domain :DatasetMatch;
+                                                     rdfs:range :Dataset . 
+#  --------------------------- Property 1------------------------- 
+<http://visualdataweb.org/newOntology/contains> rdf:type owl:ObjectProperty ;
+                                                rdfs:label "contains"@en; 
+                                                rdfs:domain :DatasetMatch;
+                                                rdfs:range :Target . 
+#  --------------------------- Property 2------------------------- 
+:NumExact rdf:type owl:DatatypeProperty ;
+          rdfs:label "NumExact"@en; 
+          rdfs:domain :DatasetMatch;
+          rdfs:range xsd:integer . 
+#  --------------------------- Property 3------------------------- 
+:numSim rdf:type owl:DatatypeProperty ;
+        rdfs:label "numSim"@en; 
+        rdfs:domain :DatasetMatch;
+        rdfs:range xsd:integer . 
+#  --------------------------- Property 4------------------------- 
+:numProperties rdf:type owl:DatatypeProperty ;
+               rdfs:label "numProperties"@en; 
+               rdfs:domain :DatasetRelod;
+               rdfs:range xsd:integer . 
+#  --------------------------- Property 5------------------------- 
+:nameURI rdf:type owl:DatatypeProperty ;
+         rdfs:label "nameURI"@en; 
+         rdfs:domain :Property;
+         rdfs:range xsd:integer . 
+#  --------------------------- Property 6------------------------- 
+<http://visualdataweb.org/newOntology/contains> rdf:type owl:ObjectProperty ;
+                                                rdfs:label "contain"@en; 
+                                                rdfs:domain :Property;
+                                                rdfs:range :DatasetRelod . 
+#  --------------------------- Property 7------------------------- 
+:propS rdf:type owl:DatatypeProperty ;
+       rdfs:label "propS"@en; 
+       rdfs:domain :PropSim;
+       rdfs:range xsd:string . 
+#  --------------------------- Property 8------------------------- 
+:propT rdf:type owl:DatatypeProperty ;
+       rdfs:label "propT"@en; 
+       rdfs:domain :PropSim;
+       rdfs:range xsd:string . 
+#  --------------------------- Property 9------------------------- 
+<http://visualdataweb.org/newOntology/contains> rdf:type owl:ObjectProperty ;
+                                                rdfs:label "contains"@en; 
+                                                rdfs:domain :PropSim;
+                                                rdfs:range :Target . 
+#  --------------------------- Property 10------------------------- 
+<http://visualdataweb.org/newOntology/contains> rdf:type owl:ObjectProperty ;
+                                                rdfs:label "contains"@en; 
+                                                rdfs:domain :PropSim;
+                                                rdfs:range :Dataset . 
+#  --------------------------- Property 11------------------------- 
+<http://visualdataweb.org/newOntology/contains> rdf:type owl:ObjectProperty ;
+                                                rdfs:label "contains"@en; 
+                                                rdfs:domain :PropExact;
+                                                rdfs:range :Property . 
+#  --------------------------- Property 12------------------------- 
+:contains rdf:type owl:ObjectProperty ;
+          rdfs:label "contains"@en; 
+          rdfs:domain :PropExact;
+          rdfs:range :Dataset . 
+#  --------------------------- Property 13------------------------- 
+<http://visualdataweb.org/newOntology/contains> rdf:type owl:ObjectProperty ;
+                                                rdfs:label "contains"@en; 
+                                                rdfs:domain :PropExact;
+                                                rdfs:range :Target . 
+###  Class Definitions (Number of Classes) 7 ###
+#  --------------------------- Class  0------------------------- 
+:DatasetMatch rdf:type owl:Class; 
+              rdfs:label "DatasetMatch"@en . 
+#  --------------------------- Class  1------------------------- 
+:PropSim rdf:type owl:Class; 
+         rdfs:label "PropSim"@en . 
+#  --------------------------- Class  2------------------------- 
+:Dataset rdf:type owl:Class; 
+         rdfs:subClassOf :DatasetRelod ;
+         rdfs:label "Source"@en . 
+#  --------------------------- Class  3------------------------- 
+:Target rdf:type owl:Class; 
+        rdfs:subClassOf :DatasetRelod ;
+        rdfs:label "Target"@en . 
+#  --------------------------- Class  4------------------------- 
+:DatasetRelod rdf:type owl:Class; 
+              rdfs:label "Dataset"@en . 
+#  --------------------------- Class  5------------------------- 
+:Property rdf:type owl:Class; 
+          rdfs:label "Property"@en . 
+#  --------------------------- Class  6------------------------- 
+:PropExact rdf:type owl:Class; 
+           rdfs:label "PropExact"@en . 
